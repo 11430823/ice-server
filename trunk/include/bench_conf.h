@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	读取bench.ini配置文件
+	purpose:	璇诲彇bench.ini閰嶇疆鏂囦欢
 	brief:		
 *********************************************************************/
 #pragma once
@@ -13,14 +13,14 @@ class bench_conf_t
 {
 public:
 	//************************************
-	// Brief:     加载配置文件bench.ini
-	// Returns:   int(0:正确,其它:错误)
+	// Brief:     鍔犺浇閰嶇疆鏂囦欢bench.ini
+	// Returns:   int(0:姝ｇ‘,鍏跺畠:閿欒)
 	//************************************
 	int load();
 	std::string& get_liblogic_path();
 private:
-	std::string libdata_path;//数据段SO路径
-	std::string liblogic_path;//代码段SO路径
+	std::string libdata_path;//鏁版嵁娈礢O璺緞
+	std::string liblogic_path;//浠ｇ爜娈礢O璺緞
 };
 
 extern bench_conf_t bench_conf;
