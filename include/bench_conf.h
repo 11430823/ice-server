@@ -17,10 +17,10 @@ public:
 	// Returns:   int(0:正确,其它:错误)
 	//************************************
 	int load();
-	std::string& get_liblogic_path();
+	const char* get_liblogic_path() const;
 private:
 	std::string libdata_path;//数据段SO路径
 	std::string liblogic_path;//代码段SO路径
 };
 
-extern bench_conf_t bench_conf;
+extern bench_conf_t g_bench_conf;

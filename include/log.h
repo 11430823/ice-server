@@ -16,3 +16,5 @@
 #define ALERT_LOG printf
 #define ERROR_RETURN printf
 #define TRACE_LOG printf
+
+#define WARN_LOG printf
