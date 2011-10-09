@@ -3,7 +3,7 @@ CC=g++
 
 #编译选项
 #FLAG=-Wall -DDEBUG -g -o
-FLAG=-w -DDEBUG -g -o0 -o
+FLAG=-Wall -DDEBUG -g -o0 -o
 
 #包含的头文件
 INCLUDES=-I/usr/include -I../include/

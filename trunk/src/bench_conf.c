@@ -1,9 +1,10 @@
 #include <glib.h>
+#include <stdint.h>
 
 #include "bench_conf.h"
 #include "log.h"
 
-bench_conf_t bench_conf;
+bench_conf_t g_bench_conf;
 
 namespace {
 
@@ -26,7 +27,7 @@ namespace {
 				group_name, key_name);
 			return -1;  
 		}else{
-			for (int i = 0; i < len; i++){
+			for (uint32_t i = 0; i < len; i++){
 				data += a[i];
 			}
 		}
@@ -67,7 +68,7 @@ ret:
 	return ret;
 }
 
-std::string& bench_conf_t::get_liblogic_path()
+const char* bench_conf_t::get_liblogic_path() const
 {
-	return liblogic_path;
+	return liblogic_path.c_str();
 }
