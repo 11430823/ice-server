@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "bind_conf.h"
 #include "log.h"
@@ -9,6 +10,7 @@
 bind_config_t g_bind_conf;
 
 namespace {
+
 	void start(GMarkupParseContext *context,
 		const gchar *element_name,
 		const gchar **attribute_names,
@@ -35,7 +37,7 @@ namespace {
 				DEBUG_LOG("id:%d, name:%s, ip:%s, port:%d\r\n",
 					elem.online_id, elem.online_name.c_str(), 
 					elem.bind_ip.c_str(), elem.bind_port);
-				g_bind_conf.elems.push_back(elem);
+				g_bind_conf.add_elem(elem);
 			}
 			name_cursor++;
 			value_cursor++;
@@ -49,7 +51,7 @@ int bind_config_t::load()
 	gchar * buf = NULL; 
 	gsize length = 0; 
 
-	g_file_get_contents( "./bind.xml" , & buf, & length, NULL ); 
+	g_file_get_contents( "./bind.xml" , &buf, &length, NULL ); 
 
 	GMarkupParser parser;
 	parser.start_element = start;
@@ -62,6 +64,7 @@ int bind_config_t::load()
 	context = g_markup_parse_context_new(&parser, (GMarkupParseFlags)0, NULL, NULL);
 	if (!g_markup_parse_context_parse(context, buf, length, NULL)){
 		ERROR_LOG("Couldn't load xml\r\n");
+		return -1;
 	}
 
 	g_markup_parse_context_free(context);
@@ -69,12 +72,13 @@ int bind_config_t::load()
 
 	atomic_t t;
 	atomic_set(&t, 0);
-	g_daemon.child_pids.resize(elems.size(), t);
+	g_daemon.child_pids.resize(g_bind_conf.get_elem_num(), t);
+	return 0;
 }
 
 int bind_config_t::get_bind_conf_idx( const bind_config_elem_t* bc_elem ) const
 {
-	for (int i = 0 ; i < elems.size(); i++){
+	for (uint32_t i = 0 ; i < elems.size(); i++){
 		if (elems[i].online_id == bc_elem->online_id){
 			return i;
 		}
@@ -85,4 +89,21 @@ int bind_config_t::get_bind_conf_idx( const bind_config_elem_t* bc_elem ) const
 uint32_t bind_config_t::get_elem_num() const
 {
 	return elems.size();
+}
+
+bind_config_elem_t* bind_config_t::get_elem( uint32_t index )
+{
+	return &elems[index];
+}
+
+void bind_config_t::add_elem(const bind_config_elem_t& elem )
+{
+	elems.push_back(elem);
+}
+
+bind_config_elem_t::bind_config_elem_t()
+{
+	online_id = 0;
+	bind_port = 0;
+	restart_cnt = 0;
 }
