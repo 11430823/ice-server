@@ -23,15 +23,17 @@ public:
 	//************************************
 	// Brief:     注册插件
 	// Returns:   int 0:success -1:error
-	// Parameter: const char * file_name
-	// Parameter: E_PLUGIN_FLAG flag
 	//************************************
 	int  register_plugin(const char* file_name, E_PLUGIN_FLAG flag);
-	int  register_data_plugin(const char* file_name);
 	void unregister_plugin();
+	//************************************
+	// Brief:     注册数据段插件
+	// Returns:   int 0:success. -1:error
+	//************************************
+	int  register_data_plugin(const char* file_name);
 	void unregister_data_plugin();
-	void*   data_handle; // Hold the handle returned by dlopen
-	void*   handle; // Hold the handle returned by dlopen
+	void* data_handle;
+	void* handle;
 
 	/* The following 5 interfaces are called only by the child process */
 
@@ -39,21 +41,24 @@ public:
 	  * Called each time before processing packages from clients. Optional interface.
 	  * Calling interval of this interface is no much longer than 100ms at maximum.
 	  */
-	void	(*on_events)();
+	//************************************
+	// Brief:     在请求到来前调用(每个调用间隔不会超过100MS)
+	//************************************
+	void (*on_events)();
 	/*!
 	  * Called to process packages from clients. Called once for each package. \n
 	  * Return non-zero if you want to close the client connection from which the `pkg` is sent,
 	  * otherwise returns 0. If non-zero is returned, `on_client_conn_closed` will be called too.
 	  */
-	int		(*proc_pkg_from_client)(void* pkg, int pkglen, fdsession_t* fdsess);
+	int (*proc_pkg_from_client)(void* pkg, int pkglen, fdsession_t* fdsess);
 	/*! Called to process packages from servers that the child connects to. Called once for each package. */
-	void	(*proc_pkg_from_serv)(int fd, void* pkg, int pkglen);
+	void (*proc_pkg_from_serv)(int fd, void* pkg, int pkglen);
 	/*! Called to process multicast packages from the specified `mcast_ip` and `mcast_port`. Called once for each package. */
-	void	(*proc_mcast_pkg)(const void* data, int len);
+	void (*proc_mcast_pkg)(const void* data, int len);
 	/*! Called each time when a client close a connection, or when `proc_pkg_from_client` returns -1. */
-	void	(*on_client_conn_closed)(int fd);
+	void (*on_client_conn_closed)(int fd);
 	/*! Called each time on close of the FDs opened by the child. */
-	void	(*on_fd_closed)(int fd);
+	void (*on_fd_closed)(int fd);
 
 	/* The following 3 interfaces are called both by the parent and child process */
 
