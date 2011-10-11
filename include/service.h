@@ -24,3 +24,13 @@ extern fd_array_session_t	fds;
 void run_worker_process(struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc);
 void handle_recv_queue();
 int handle_close(int fd);
+
+class service_t
+{
+public:
+	void worker_process(struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc);
+protected:
+private:
+};
+
+extern service_t g_service;

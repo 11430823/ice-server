@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <stdint.h>
+#include <sstream>
 
 #include "bench_conf.h"
 #include "log.h"
@@ -15,7 +16,8 @@ namespace {
 	// Returns:   int(0:成功.其它:失败)
 	// Parameter: std::string & data(传出值)
 	//************************************
-	int get_val(std::string& data, GKeyFile* keyfile,
+	template <typename T>
+	int get_val(T& data, GKeyFile* keyfile,
 		const char* group_name, const char* key_name)
 	{
 		gchar **a = NULL;
@@ -23,13 +25,16 @@ namespace {
 
 		if (NULL == (a = g_key_file_get_string_list (keyfile, 
 			group_name, key_name, &len, NULL))){
-			ERROR_LOG("read bench config file key err [group_name:%s, key_name:%s]",
+			ALERT_LOG("READ BENCH CONFIG FILE KEY ERR [GROUP_NAME:%s, KEY_NAME:%s]\r\n",
 				group_name, key_name);
 			return -1;  
 		}else{
+			std::string val;
 			for (uint32_t i = 0; i < len; i++){
-				data += a[i];
+				val += a[i];
 			}
+			std::stringstream ss(val);
+			ss >> data;
 		}
 		g_strfreev(a);
 		return 0;
@@ -43,20 +48,24 @@ int bench_conf_t::load()
 	GKeyFile *key = NULL;
 	
 	if (!g_file_test (bench_config_path, G_FILE_TEST_EXISTS)){	
-		ERROR_LOG("read bench config file exists err");
+		ALERT_LOG("READ BENCH CONFIG FILE EXISTS ERR");
 		ret = -1;
 		goto ret;
 	}
 
 	key = g_key_file_new();
 	if (!g_key_file_load_from_file (key, bench_config_path, G_KEY_FILE_NONE, NULL)){
-		ERROR_LOG("read bench config file err");
+		ALERT_LOG("READ BENCH CONFIG FILE ERR");
 		ret = -1;
 		goto ret;
 	}
 
-	//读取数据
 	if (0 != get_val(liblogic_path, key, "plugin", "liblogic")){
+		ret = -1;
+		goto ret;
+	}
+
+	if (0 != get_val(max_fd_num, key, "common", "max_fd_num")){
 		ret = -1;
 		goto ret;
 	}
@@ -71,4 +80,14 @@ ret:
 const char* bench_conf_t::get_liblogic_path() const
 {
 	return liblogic_path.c_str();
+}
+
+uint32_t bench_conf_t::get_max_fd_num() const
+{
+	return max_fd_num;
+}
+
+bench_conf_t::bench_conf_t()
+{
+	max_fd_num = 0;
 }

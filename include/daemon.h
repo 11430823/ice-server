@@ -27,9 +27,6 @@ public:
 	// Returns:   void
 	//************************************
 	void killall_children();
-
-	int get_max_fd_num();
-
 	//程序名称
 	std::string prog_name;
 	//当前目录
@@ -38,8 +35,8 @@ public:
 	volatile bool stop;
 	//true:重启.false:继续(无改变)
 	volatile bool restart;
-	//打开文件的最大数量
-	int max_fd_num;
+	
+
 	//子进程ID
 	std::vector<atomic_t> child_pids;
 };

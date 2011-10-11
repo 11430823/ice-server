@@ -10,6 +10,7 @@
 #include "daemon.h"
 #include "bind_conf.h"
 #include "log.h"
+#include "bench_conf.h"
 
 daemon_info_t g_daemon;
 
@@ -17,20 +18,19 @@ namespace {
 
 std::vector<std::string> g_argvs;
 const char version[] = "0.0.1";
-const int MAX_FD_NUM = 200;
 
 void sigterm_handler(int signo) 
 {
 	g_daemon.stop     = true;
 	g_daemon.restart  = false;
- 	DEBUG_LOG("SIG_TERM from pid=%d", getpid());
+ 	ALERT_LOG("SIG_TERM from pid=%d", getpid());
 }
 
 void sighup_handler(int signo) 
 {
 	g_daemon.restart  = true;
 	g_daemon.stop     = true;
-	 DEBUG_LOG("sighup_handler from pid=%d", getpid());
+	ALERT_LOG("sighup_handler from pid=%d", getpid());
 }
 
 void sigchld_handler(int signo, siginfo_t *si, void * p) 
@@ -52,17 +52,18 @@ void rlimit_reset()
 	struct rlimit rlim;
 
 	/* set open files */
-	rlim.rlim_cur = g_daemon.get_max_fd_num();
-	rlim.rlim_max = g_daemon.get_max_fd_num();
+	rlim.rlim_cur = g_bench_conf.get_max_fd_num();
+	rlim.rlim_max = g_bench_conf.get_max_fd_num();
 	if (-1 == setrlimit(RLIMIT_NOFILE, &rlim)) {
-		ALERT_LOG("INIT FD RESOURCE FAILED");
+		ALERT_LOG("INIT FD RESOURCE FAILED [OPEN FILES NUMBER:%d]", g_bench_conf.get_max_fd_num());
 	}
 
 	/* set core dump */
-	rlim.rlim_cur = 1 << 30;
-	rlim.rlim_max = 1 << 30;
+	int size = 1 << 30;
+	rlim.rlim_cur = size;
+	rlim.rlim_max = size;
 	if (-1 == setrlimit(RLIMIT_CORE, &rlim)) {
-		ALERT_LOG("INIT CORE FILE RESOURCE FAILED");
+		ALERT_LOG("INIT CORE FILE RESOURCE FAILED [CORE DUMP SIZE:%d]", size);
 	}
 }
 
@@ -110,7 +111,6 @@ daemon_info_t::daemon_info_t()
 {
 	stop = false;
 	restart = false;
-	max_fd_num = 0;
 }
 
 void daemon_info_t::prase_args( int argc, char** argv )
@@ -119,8 +119,6 @@ void daemon_info_t::prase_args( int argc, char** argv )
 	char* dir = get_current_dir_name();
 	current_dir = dir;
 	free(dir);
-
-	max_fd_num = MAX_FD_NUM;
 
 	rlimit_reset();
 	set_signal();
@@ -131,7 +129,7 @@ void daemon_info_t::prase_args( int argc, char** argv )
 daemon_info_t::~daemon_info_t()
 {
 	if (g_daemon.restart && !g_daemon.prog_name.empty() && g_argvs.size() > 0) {
-		WARN_LOG("%s", "Server restarting...");
+		WARNING_LOG("%s", "Server restarting...");
 		chdir(g_daemon.current_dir.c_str());
 		char* argvs[200];
 		int i = 0;
@@ -140,7 +138,7 @@ daemon_info_t::~daemon_info_t()
 		}
 
 		execv(g_daemon.prog_name.c_str(), argvs);
-		WARN_LOG("%s", "Restart Failed...");
+		WARNING_LOG("%s", "Restart Failed...");
 	}
 }
 
@@ -163,9 +161,4 @@ WAIT_AGAIN:
 		}
 		return;
 	}
-}
-
-int daemon_info_t::get_max_fd_num()
-{
-	return max_fd_num;
 }
