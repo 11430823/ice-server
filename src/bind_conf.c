@@ -34,7 +34,7 @@ namespace {
 			}
 			if (strcmp (*name_cursor, "port") == 0){
 				elem.port = atoi(*value_cursor);
-				DEBUG_LOG("id:%d, name:%s, ip:%s, port:%d\r\n",
+				DEBUG_LOG("bind config [id:%d, name:%s, ip:%s, port:%d]",
 					elem.id, elem.name.c_str(), 
 					elem.ip.c_str(), elem.port);
 				g_bind_conf.add_elem(elem);
@@ -63,7 +63,7 @@ int bind_config_t::load()
 	GMarkupParseContext * context; 
 	context = g_markup_parse_context_new(&parser, (GMarkupParseFlags)0, NULL, NULL);
 	if (!g_markup_parse_context_parse(context, buf, length, NULL)){
-		ERROR_LOG("Couldn't load xml\r\n");
+		ALERT_LOG("COULDN'T LOAD BIND CONFIG");
 		return -1;
 	}
 

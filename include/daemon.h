@@ -35,8 +35,6 @@ public:
 	volatile bool stop;
 	//true:重启.false:继续(无改变)
 	volatile bool restart;
-	
-
 	//子进程ID
 	std::vector<atomic_t> child_pids;
 };

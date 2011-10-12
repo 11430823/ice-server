@@ -23,6 +23,7 @@ struct shm_queue_t {
 	shm_head_t* addr;
 	u_int length;
 	int pipe_handles[2];
+	shm_queue_t();
 };
 
 struct shm_block_t {

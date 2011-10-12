@@ -352,7 +352,7 @@ void proc_reload_plugin(reload_text_pkg_t* pkg, int len)
 
 //	DEBUG_LOG("RELOAD %s", pkg->new_so_name);
 
-	if (g_dll.register_plugin(pkg->new_so_name, e_plugin_flag_reload) == -1) {
+	if (0 != g_dll.register_plugin(pkg->new_so_name, e_plugin_flag_reload)) {
 		exit(-1);
 	}
 

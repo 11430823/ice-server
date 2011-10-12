@@ -288,3 +288,10 @@ void shmq_t::close_pipe( struct bind_config_t* bc, int idx, int is_child )
 		close(bc->get_elem(idx)->sendq.pipe_handles[1]);
 	}
 }
+
+shm_queue_t::shm_queue_t()
+{
+	addr = NULL;
+	length = 0;
+	memset(pipe_handles, 0, sizeof(pipe_handles)/sizeof(pipe_handles[0]));
+}

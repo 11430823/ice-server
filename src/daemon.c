@@ -70,7 +70,7 @@ namespace {
 		}
 	}
 
-	void dup_argv(int argc, char** argv)
+	void save_argv(int argc, char** argv)
 	{
 		for (int i = 0; i < argc; i++){
 			std::string str = argv[i];
@@ -125,7 +125,7 @@ void daemon_info_t::prase_args( int argc, char** argv )
 
 	rlimit_reset();
 	set_signal();
-	dup_argv(argc, argv);
+	save_argv(argc, argv);
 	if (g_bench_conf.is_daemon()){
 		daemon (1, 1);
 	}
@@ -157,14 +157,14 @@ void daemon_info_t::killall_children()
 	}
 
 	/* wait for all child exit*/
-WAIT_AGAIN:
-	while (1) {
+	bool done = false;
+	while (!done) {
 		for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
 			if (0 != atomic_read(&child_pids[i])) {
 				usleep(100);
-				goto WAIT_AGAIN;
+				break;
 			}
 		}
-		return;
+		done = true;
 	}
 }
