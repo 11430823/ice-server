@@ -17,3 +17,6 @@
 #undef  unlikely
 #endif
 #define unlikely(x)  __builtin_expect(!!(x), 0)
+
+#define FOREACH(container,it) \
+	for(typeof((container).begin()) it = (container).begin();it!=(container).end();++it)

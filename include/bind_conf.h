@@ -15,10 +15,10 @@
 #include "shmq.h"
 
 struct bind_config_elem_t {
-	uint32_t		online_id;
-	std::string		online_name;
-	std::string		bind_ip;
-	in_port_t		bind_port;
+	uint32_t		id;
+	std::string		name;
+	std::string		ip;
+	in_port_t		port;
 	uint8_t			restart_cnt;//重启过的次数
 	shm_queue_t		sendq;
 	shm_queue_t		recvq;
@@ -30,7 +30,7 @@ class bind_config_t
 public:
 	//************************************
 	// Brief:     加载配置文件
-	// Returns:   int
+	// Returns:   int 0:success, -1:error
 	//************************************
 	int load();
 	//************************************

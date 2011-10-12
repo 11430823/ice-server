@@ -440,7 +440,7 @@ static int handle_pipe_event(int fd, int pos, int is_conn)
 //			CRIT_LOG("CHILD PROCESS CRASHED!\t[olid=%u olname=%s]", bc->online_id, bc->online_name);
 
 			char buf[100];
-			snprintf(buf, sizeof(buf), "%s.%s", bc->online_name.c_str(), "child.core");
+			snprintf(buf, sizeof(buf), "%s.%s", bc->name.c_str(), "child.core");
 //  [9/12/2011 meng]asynsvr_send_warning(buf, bc->online_id, bc->bind_ip);
 
 			// close all connections that are related to the crashed child process

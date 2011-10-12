@@ -1,4 +1,4 @@
-pkill -9 ice-server.exe
+./kill.sh
 cd ../bin/
-./ice-server.exe
+./ice-server.exe kevinmeng
 cd -

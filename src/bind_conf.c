@@ -24,19 +24,19 @@ namespace {
 		bind_config_elem_t elem;
 		while (*name_cursor) {
 			if (strcmp (*name_cursor, "id") == 0){
-				elem.online_id = atoi(*value_cursor);
+				elem.id = atoi(*value_cursor);
 			}
 			if (strcmp (*name_cursor, "name") == 0){
-				elem.online_name = *value_cursor;
+				elem.name = *value_cursor;
 			}
 			if (strcmp (*name_cursor, "ip") == 0){
-				elem.bind_ip = *value_cursor;
+				elem.ip = *value_cursor;
 			}
 			if (strcmp (*name_cursor, "port") == 0){
-				elem.bind_port = atoi(*value_cursor);
+				elem.port = atoi(*value_cursor);
 				DEBUG_LOG("id:%d, name:%s, ip:%s, port:%d\r\n",
-					elem.online_id, elem.online_name.c_str(), 
-					elem.bind_ip.c_str(), elem.bind_port);
+					elem.id, elem.name.c_str(), 
+					elem.ip.c_str(), elem.port);
 				g_bind_conf.add_elem(elem);
 			}
 			name_cursor++;
@@ -79,7 +79,7 @@ int bind_config_t::load()
 int bind_config_t::get_bind_conf_idx( const bind_config_elem_t* bc_elem ) const
 {
 	for (uint32_t i = 0 ; i < elems.size(); i++){
-		if (elems[i].online_id == bc_elem->online_id){
+		if (elems[i].id == bc_elem->id){
 			return i;
 		}
 	}
@@ -103,7 +103,7 @@ void bind_config_t::add_elem(const bind_config_elem_t& elem )
 
 bind_config_elem_t::bind_config_elem_t()
 {
-	online_id = 0;
-	bind_port = 0;
+	id = 0;
+	port = 0;
 	restart_cnt = 0;
 }
