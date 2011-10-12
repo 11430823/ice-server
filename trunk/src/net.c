@@ -668,7 +668,7 @@ inline void del_from_etin_queue (int fd)
 int net_t::init( int size, int maxevents )
 {
 	if ((epi.epfd = epoll_create(maxevents)) < 0) {
-		ERROR_LOG ("epoll_create failed, %s", strerror (errno));
+		ALERT_LOG("EPOLL_CREATE FAILED [error:%s]", strerror (errno));
 		return -1;
 	}
 

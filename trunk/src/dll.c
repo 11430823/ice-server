@@ -8,16 +8,21 @@
 
 dll_t g_dll;
 
-#define DLFUNC(h, v, name, type) \
-	do { \
+namespace {
+
+	#define DLFUNC(h, v, name, type) \
+	{\
 		v = (type)dlsym (h, name);\
-		if ((error = dlerror ()) != NULL) { \
-			ERROR_LOG("dlsym error, %s %p\r\n", error, v);\
-			dlclose(h); \
-			h = NULL; \
-			goto out; \
-		} \
-	} while (0)
+		if (NULL != (error = dlerror())) {\
+			ALERT_LOG("DLSYM ERROR [error:%s, fn:%p]", error, v);\
+			dlclose(h);\
+			h = NULL;\
+			goto out;\
+		}\
+	}
+
+}//end of namespace
+
 
 uint32_t get_server_id()
 {
@@ -62,7 +67,7 @@ int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
 
 	g_dll.handle = dlopen(file_name, RTLD_NOW);
 	if ((error = dlerror()) != NULL) {
-		ERROR_LOG("dlopen error, %s \r\n", error);
+		ALERT_LOG("DLOPEN ERROR [error:%s]", error);
 		goto out;
 	}
  	DLFUNC(g_dll.handle, g_dll.get_pkg_len, "get_pkg_len", int(*)(int, const void*, int, int));
@@ -81,17 +86,17 @@ int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
 	ret_code = 0;
 
 out:
-	if (!flag) {
-		SHOW_LOG("dlopen %s, %d\r\n", file_name, ret_code);
-	} else {
-		DEBUG_LOG("RELOAD %s\t[%s]\r\n", file_name, (ret_code ? "FAIL" : "OK"));
-		return ret_code;
+	if (e_plugin_flag_load == flag) {
+		SHOW_LOG("dlopen [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
+	} else if (e_plugin_flag_reload == flag){
+		INFO_LOG("RELOAD [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
 	}
-	return 0;
+	return ret_code;
 }
 
 int dll_t::register_data_plugin( const char* file_name )
 {
+	return 0;
 	char* error; 
 	int   ret_code = 0;
 	if (file_name == NULL){

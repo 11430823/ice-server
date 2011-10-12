@@ -23,13 +23,17 @@ int main(int argc, char* argv[]){
 	if (0 != g_bind_conf.load()){
 		return -1;
 	}
-	g_dll.register_data_plugin("");
-	g_dll.register_plugin(g_bench_conf.get_liblogic_path(),
-		e_plugin_flag_load);
+
+	//g_dll.register_data_plugin("");
+	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path(),e_plugin_flag_load)){
+		return -1;
+	}
 
 	//asynsvr_init_warning_system();
 
-	g_net.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num());
+	if (0 != g_net.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num())){
+		return -1;
+	}
 
 	if (g_dll.init_service(1) != 0) {
 		SHOW_LOG("FAILED TO INIT PARENT PROCESS");
