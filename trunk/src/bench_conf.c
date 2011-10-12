@@ -25,7 +25,7 @@ namespace {
 
 		if (NULL == (a = g_key_file_get_string_list (keyfile, 
 			group_name, key_name, &len, NULL))){
-			ALERT_LOG("READ BENCH CONFIG FILE KEY ERR [GROUP_NAME:%s, KEY_NAME:%s]\r\n",
+			ALERT_LOG("READ BENCH CONFIG FILE KEY ERR [GROUP_NAME:%s, KEY_NAME:%s]",
 				group_name, key_name);
 			return -1;  
 		}else{
@@ -70,6 +70,11 @@ int bench_conf_t::load()
 		goto ret;
 	}
 
+	if (0 != get_val(daemon, key, "common", "is_daemon")){
+		ret = -1;
+		goto ret;
+	}
+
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -90,4 +95,10 @@ uint32_t bench_conf_t::get_max_fd_num() const
 bench_conf_t::bench_conf_t()
 {
 	max_fd_num = 0;
+	daemon = 0;
+}
+
+bool bench_conf_t::is_daemon()
+{
+	return 1 == daemon;
 }

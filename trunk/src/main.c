@@ -47,13 +47,13 @@ int main(int argc, char* argv[]){
 			DEBUG_LOG("parent process\r\n");
 			g_shmq.close_pipe(&g_bind_conf, i, 0);
 			do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, 0, bc_elem);			
-			net_start(bc_elem->bind_ip.c_str(), bc_elem->bind_port, bc_elem);
+			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
 			sleep(2);
 			DEBUG_LOG("child process\r\n");
-			g_listen_port = bc_elem->bind_port;
-			g_listen_ip = bc_elem->bind_ip;
+			g_listen_port = bc_elem->port;
+			g_listen_ip = bc_elem->ip;
 			g_service.worker_process(&g_bind_conf, i, i + 1);
 		}
 	}
@@ -68,7 +68,6 @@ int main(int argc, char* argv[]){
 	while (!g_daemon.stop || g_dll.fini_service(1) != 0) {
 		net_loop(-1, page_size, 1);
 	}
-
 	g_daemon.killall_children();
 
 	net_exit();

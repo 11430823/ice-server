@@ -337,7 +337,7 @@ void proc_reload_plugin(reload_text_pkg_t* pkg, int len)
 	} else {
 		bind_config_t* bc = &g_bind_conf;
 		if ( (bc->get_elem_num() == 0)
-			|| strcmp(pkg->svr_name, bc->get_elem(0)->online_name.c_str())
+			|| strcmp(pkg->svr_name, bc->get_elem(0)->name.c_str())
 			|| (pkg->svr_id != 0) ) {
 				return;
 		}

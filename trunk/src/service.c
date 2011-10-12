@@ -176,19 +176,17 @@ void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n
 	do_add_conn(bc_elem->recvq.pipe_handles[0], fd_type_pipe, 0, 0);
 
 	if ( handle_init(bc_elem) != 0 ) {
-		ERROR_LOG("fail to init worker process. olid=%u olname=%s", bc_elem->online_id, bc_elem->online_name.c_str());
+		ERROR_LOG("fail to init worker process. olid=%u olname=%s", bc_elem->id, bc_elem->name.c_str());
 		goto fail;
 	}
 
 	while ( !g_daemon.stop || !handle_fini() ) {
 		net_loop(100, page_size, 0);
 	}
-
 fail:
 	do_destroy_shmq(bc_elem);
 	net_exit();
 	g_dll.unregister_data_plugin();
 	g_dll.unregister_plugin();
-
 	exit(0);
 }

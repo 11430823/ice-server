@@ -21,7 +21,7 @@ dll_t g_dll;
 
 uint32_t get_server_id()
 {
-	return config_cache.bc_elem->online_id;
+	return config_cache.bc_elem->id;
 }
 
 uint32_t get_cli_ip2( int fd )
@@ -42,17 +42,17 @@ uint32_t get_cli_ip( const fdsession_t* fdsess )
 
 in_port_t get_server_port()
 {
-	return config_cache.bc_elem->bind_port;
+	return config_cache.bc_elem->port;
 }
 
 const char* get_server_ip()
 {
-	return config_cache.bc_elem->bind_ip.c_str();
+	return config_cache.bc_elem->ip.c_str();
 }
 
 const char* get_server_name()
 {
-	return config_cache.bc_elem->online_name.c_str();
+	return config_cache.bc_elem->name.c_str();
 }
 
 int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
