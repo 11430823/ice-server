@@ -674,12 +674,17 @@ int net_t::init( int size, int maxevents )
 
 	epi.evs = (epoll_event*)calloc(maxevents, sizeof(struct epoll_event));
 	if (!epi.evs) {
-		goto events_fail;
+		close (epi.epfd);
+		ALERT_LOG ("CALLOC EPOLL_EVENT FAILED [size=%d]", maxevents);
+		return -1;
 	}
 
 	epi.fds = (struct fdinfo_t*) calloc (size, sizeof (struct fdinfo_t));
 	if (!epi.fds){
-		goto fd_fail;
+		free (epi.evs);
+		close (epi.epfd);
+		ALERT_LOG ("CALLOC FDINFO_T FAILED [size=%d]", size);
+		return -1;
 	}
 
 	epi.max_ev_num = maxevents;
@@ -688,11 +693,4 @@ int net_t::init( int size, int maxevents )
 	INIT_LIST_HEAD (&epi.etin_head);
 	INIT_LIST_HEAD (&epi.close_head);
 	return 0;
-
-fd_fail:	
-	free (epi.evs);
-events_fail:
-	close (epi.epfd);
-	ERROR_LOG ("malloc failed, size=%d", size);
-	return -1;
 }

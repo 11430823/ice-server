@@ -37,6 +37,8 @@ int main(int argc, char* argv[]){
 
 	if (g_dll.init_service(1) != 0) {
 		SHOW_LOG("FAILED TO INIT PARENT PROCESS");
+		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
+		return -1;
 	}
 
 	pid_t pid;

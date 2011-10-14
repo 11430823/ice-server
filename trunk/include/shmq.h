@@ -14,8 +14,8 @@ enum {
 	CLOSE_BLOCK	// parent informs child that a connection had been closed
 };
 struct shm_head_t {
-	volatile int head;
-	volatile int tail;
+	volatile int head;//todo ?
+	volatile int tail;//todo ?
 	atomic_t blk_cnt;
 } __attribute__ ((packed));
 

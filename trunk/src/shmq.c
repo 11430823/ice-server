@@ -91,12 +91,12 @@ int shmq_pop(struct shm_queue_t* q, struct shm_block_t** mb)
 	}
 
 	*mb = cur_mb;
-	//	atomic_dec (&q->addr->blk_cnt);
+
 	q->addr->tail += cur_mb->length;
 
-// 	TRACE_LOG("pop queue: q=%p length=%d tail=%d head=%d id=%u count=%u fd=%d",
-// 		q, cur_mb->length, q->addr->tail, q->addr->head, (*mb)->id,
-// 		(atomic_dec(&q->addr->blk_cnt), atomic_read(&q->addr->blk_cnt)), cur_mb->fd);
+ 	TRACE_LOG("pop queue: q=%p length=%d tail=%d head=%d id=%u count=%u fd=%d",
+ 		q, cur_mb->length, q->addr->tail, q->addr->head, (*mb)->id,
+ 		(atomic_dec(&q->addr->blk_cnt), atomic_read(&q->addr->blk_cnt)), cur_mb->fd);
 	return 0;
 }
 inline struct shm_block_t *
@@ -186,12 +186,11 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 		memcpy(next_mb + sizeof (shm_block_t), data, mb->length - sizeof (shm_block_t));
 
 	q->addr->head += mb->length;
-	//	atomic_inc(&q->addr->blk_cnt);
 
 	write(q->pipe_handles[1], q, 1);
-// 	TRACE_LOG("push queue: queue=%p,length=%d,tail=%d,head=%d,id=%u,count=%d,fd=%d",
-// 		q, mb->length, q->addr->tail, q->addr->head, mb->id,
-// 		(atomic_inc(&q->addr->blk_cnt), atomic_read(&q->addr->blk_cnt)), mb->fd);
+ 	TRACE_LOG("push queue: queue=%p,length=%d,tail=%d,head=%d,id=%u,count=%d,fd=%d",
+ 		q, mb->length, q->addr->tail, q->addr->head, mb->id,
+ 		(atomic_inc(&q->addr->blk_cnt), atomic_read(&q->addr->blk_cnt)), mb->fd);
 	return 0;
 }
 namespace {
@@ -210,12 +209,12 @@ namespace {
 		return 0;
 	}
 
-	int do_shmq_create (struct shm_queue_t *q)
+	int create_shmq(struct shm_queue_t *q)
 	{
 		q->addr = (shm_head_t *) mmap (NULL, q->length, PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANON, -1, 0);
 		if (q->addr == MAP_FAILED){
-			ERROR_LOG ("mmap failed, %s, err:%d", strerror (errno), -1);
+			ALERT_LOG("MMAP FAILED [err:%s]", strerror(errno));
 			return -1;
 		}
 
@@ -266,10 +265,10 @@ void epi2shm( int fd, struct shm_block_t *mb )
 
 int shmq_t::create( struct bind_config_elem_t* p )
 {
-	p->sendq.length = 1 << 26;
+	p->sendq.length = 1 << 26;//64MB
 	p->recvq.length = p->sendq.length;
 
-	int err = do_shmq_create(&(p->sendq)) | do_shmq_create(&(p->recvq));
+	int err = create_shmq(&(p->sendq)) | create_shmq(&(p->recvq));
 	SHOW_LOG ("Create shared memory queue: %dMB, err:%d\r\n", p->recvq.length / 1024 / 512, err);
 	return err;
 }
