@@ -10,9 +10,9 @@
 extern "C" int init_service(int isparent)
 {
 	if(isparent){
-		printf("int init_service(1)\r\n");
+		printf("int init_service(1)");
 	}else{
-		printf("int init_service(0)\r\n");
+		printf("int init_service(0)");
 	}
 	return 0;
 }

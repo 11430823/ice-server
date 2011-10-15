@@ -22,24 +22,28 @@ inline struct shm_block_t* tail_mb (const struct shm_queue_t *q)
 
 void restart_child_process(bind_config_elem_t* bc_elem)
 {
+	if (is_parent && g_daemon.stop && !g_daemon.restart){
+		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
+		return;
+	}
+	
 	close(bc_elem->recvq.pipe_handles[1]);
 	do_del_conn(bc_elem->sendq.pipe_handles[0], 2);
 	do_destroy_shmq(bc_elem);
 
 	g_shmq.create(bc_elem);
 
-	bind_config_t* bc = &g_bind_conf;
 	int i = g_bind_conf.get_bind_conf_idx(bc_elem);
 	pid_t pid;
 
 	if ( (pid = fork ()) < 0 ) {
 //		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) { //parent process
-		g_shmq.close_pipe(bc, i, 0);
+		g_shmq.close_pipe(&g_bind_conf, i, 0);
 		do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, 0, bc_elem);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
-		g_service.worker_process(bc, i, bc->get_elem_num());
+		g_service.worker_process(&g_bind_conf, i, g_bind_conf.get_elem_num());
 	}
 }
 
@@ -86,7 +90,7 @@ int shmq_pop(struct shm_queue_t* q, struct shm_block_t** mb)
 		exit(-1);
 	}
 #endif
-	if (cur_mb->length > page_size){
+	if (cur_mb->length > PAGE_SIZE){
 //		ERROR_RETURN(("too large packet, len=%d", cur_mb->length), -1);
 	}
 
@@ -153,8 +157,8 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 
 	assert(mb->length >= sizeof(shm_block_t));
 
-	if (mb->length > page_size) {
-//		ERROR_LOG("too large packet, len=%d", mb->length);
+	if (mb->length > PAGE_SIZE) {
+		ERROR_LOG("too large packet, len=%d", mb->length);
 		return -1;
 	}
 
@@ -166,8 +170,8 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 	for (cnt = 0; cnt != 10; ++cnt) {
 		//queue is full, (page_size): prevent overwriting the buffer which shmq_pop refers to
 		if ( unlikely((q->addr->tail > q->addr->head)
-			&& (q->addr->tail < q->addr->head + (int)mb->length + (int)page_size)) ) {
-//				ALERT_LOG("queue [%p] is full, wait 5 microsecs: [cnt=%d]", q, cnt);
+			&& (q->addr->tail < q->addr->head + (int)mb->length + (int)PAGE_SIZE)) ) {
+				ALERT_LOG("queue [%p] is full, wait 5 microsecs: [cnt=%d]", q, cnt);
 				usleep(5);
 		} else {
 			break;
@@ -175,7 +179,7 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 	}
 
 	if (unlikely(cnt == 10)) {
-//		ALERT_LOG("queue [%p] is full.", q);
+		ALERT_LOG("queue [%p] is full.", q);
 		return -1;
 	}
 
@@ -232,13 +236,13 @@ void do_destroy_shmq(bind_config_elem_t* bc_elem)
 	// close send queue
 	if ( q->addr ) {
 		munmap(q->addr, q->length);
-		q->addr = 0;
+		q->addr = NULL;
 	}
 	// close receive queue
 	q = &(bc_elem->recvq);
 	if ( q->addr ) {
 		munmap(q->addr, q->length);
-		q->addr = 0;
+		q->addr = NULL;
 	}
 }
 
@@ -276,9 +280,8 @@ int shmq_t::create( struct bind_config_elem_t* p )
 void shmq_t::close_pipe( struct bind_config_t* bc, int idx, int is_child )
 {
 	if (is_child) {
-		int i = 0;
 		// close fds inherited from parent process
-		for ( ; i != idx; ++i ) {
+		for (int i = 0; i != idx; ++i ) {
 			close(bc->get_elem(i)->recvq.pipe_handles[1]);
 			close(bc->get_elem(i)->sendq.pipe_handles[0]);
 		}

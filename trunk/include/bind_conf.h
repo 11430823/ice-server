@@ -37,7 +37,9 @@ public:
 	// Brief:     获取服务器元素个数
 	// Returns:   uint32_t
 	//************************************
-	uint32_t get_elem_num() const;
+	inline uint32_t get_elem_num() const{
+		return elems.size();
+	}
 	bind_config_elem_t* get_elem(uint32_t index);
 	int get_bind_conf_idx(const bind_config_elem_t* bc_elem) const;
 	void add_elem(const bind_config_elem_t& elem);

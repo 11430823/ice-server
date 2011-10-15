@@ -19,9 +19,8 @@ LOCAL_SRCS =$(wildcard ./*.c)
 OTHER_SRCS =
 
 $(EXE):
-	rm -f $(EXE)
 	$(CC) $(LOCAL_SRCS) $(OTHER_SRCS) $(INCLUDES) $(GLIB_INCLUDES) $(LINK) $(LIBS) $(FLAG) $@
-	rm ../bin/$(EXE)
+#	rm ../bin/$(EXE)
 	cp $(EXE) ../bin/
 	rm -f $(EXE)
 clean:

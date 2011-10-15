@@ -23,10 +23,8 @@
 net_t g_net;
 epinfo epi;
 time_t socket_timeout = 30;
-uint32_t page_size      = 8192;
+const uint32_t PAGE_SIZE      = 8192;
 uint32_t g_send_buf_limit_size = 8192;
-int g_listen_port;
-std::string g_listen_ip;
 
 enum {
 	trash_size		= 4096,
@@ -41,7 +39,7 @@ static inline int add_events (int epfd, int fd, uint32_t flag)
 	ev.events = flag;
 	ev.data.fd = fd;
 epoll_add_again:
-	if (unlikely (epoll_ctl (epfd, EPOLL_CTL_ADD, fd, &ev) != 0)) {
+	if (unlikely (0 != epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev))) {
 		if (errno == EINTR){
 			goto epoll_add_again;
 		}else{
@@ -72,15 +70,16 @@ int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, bind_config_elem
 	break;
 	}
 
-	if (add_events(epi.epfd, fd, flag) == -1) {
+	if (0 != add_events(epi.epfd, fd, flag)) {
 		return -1;
 	}
 
-	memset(&epi.fds[fd], 0x0, sizeof(struct fdinfo_t));
+	memset(&epi.fds[fd], 0, sizeof(struct fdinfo_t));
 	epi.fds[fd].sockfd = fd;
 	epi.fds[fd].type = type;
+	
 	epi.fds[fd].id = ++seq;
-	if ( seq == 0 ) {
+	if (0 == seq) {
 		epi.fds[fd].id = ++seq;
 	}
 	if (peer) {
@@ -89,20 +88,18 @@ int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, bind_config_elem
 	}
 	epi.fds[fd].bc_elem = bc_elem;
 	epi.maxfd = epi.maxfd > fd ? epi.maxfd : fd;
-	epi.count ++;
+	epi.count++;
 
-	TRACE_LOG("add fd=%d, type=%d, id=%u\r\n", fd, type, epi.fds[fd].id);
+	TRACE_LOG("add fd:%d, type:%d, id:%u", fd, type, epi.fds[fd].id);
 	return 0;
 }
 
 int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* bc_elem)
 {
-	DEBUG_LOG("net_start\r\n");
 	int ret_code = -1;
-	g_listen_port = listen_port;
 
 	int listenfd = safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
-	if (listenfd != -1) {
+	if (-1 != listenfd) {
 		//set nonblock
 		set_io_blockability(listenfd, 1);
 
@@ -121,12 +118,14 @@ inline void free_cb(struct conn_buf_t *p)
 		p->sendptr = NULL;
 	}
 	if (p->recvptr) {
-		munmap (p->recvptr, page_size);
+		munmap (p->recvptr, PAGE_SIZE);
 		p->recvptr = NULL;
 	}
 
 	p->recvlen = 0;
 	p->sendlen = 0;
+	p->rcvprotlen = 0;
+	p->sndbufsz = 0;
 } 
 
 void net_exit ()
@@ -181,7 +180,7 @@ void do_del_conn(int fd, int is_conn)
 		g_dll.on_fd_closed(fd);
 	} else if (is_conn == 1){
 		shm_block_t mb;
-		mb.id = epi.fds[fd].id;;
+		mb.id = epi.fds[fd].id;
 		mb.fd = fd;
 		mb.type = CLOSE_BLOCK;
 		mb.length = sizeof (mb);
@@ -262,17 +261,18 @@ static int do_read_conn(int fd, uint32_t max)
 {
 	int recv_bytes;
 
-	if (!epi.fds[fd].cb.recvptr) {
+	if (NULL == epi.fds[fd].cb.recvptr) {
 		epi.fds[fd].cb.rcvprotlen = 0;
 		epi.fds[fd].cb.recvlen = 0;
-		epi.fds[fd].cb.recvptr = (uint8_t*)mmap (0, page_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-		if (epi.fds[fd].cb.recvptr == MAP_FAILED) 
-//			ERROR_RETURN (("mmap failed"), -1);
-		return -1;
+		epi.fds[fd].cb.recvptr = (uint8_t*)mmap (0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+		if (MAP_FAILED == epi.fds[fd].cb.recvptr){ 
+			ERROR_LOG("MMAP FAILED");
+			return -1;
+		}
 	}
 
-	if (page_size == epi.fds[fd].cb.recvlen) {
-//		TRACE_LOG ("recv buffer is full, fd=%d", fd);
+	if (PAGE_SIZE == epi.fds[fd].cb.recvlen) {
+		TRACE_LOG ("recv buffer is full, fd=%d", fd);
 		return 0;
 	}
 
@@ -301,7 +301,7 @@ static int do_read_conn(int fd, uint32_t max)
 static int net_recv(int fd, uint32_t max, int is_conn)
 {
 	int cnt = 0;
-	assert (max <= page_size);
+	assert (max <= PAGE_SIZE);
 	if (epi.fds[fd].type == fd_type_pipe) {
 		read (fd, epi.fds[fd].cb.recvptr, max);
 		return 0;
@@ -395,13 +395,13 @@ static int schedule_output(shm_block_t *mb)
 	int fd = mb->fd;
 
 	if (unlikely((fd > epi.maxfd) || (fd < 0))) {
-// 		DEBUG_LOG("discard the message: mb->type=%d, fd=%d, maxfd=%d, id=%u", 
-// 			mb->type, fd, epi.maxfd, mb->id);
+ 		DEBUG_LOG("discard the message: mb->type=%d, fd=%d, maxfd=%d, id=%u", 
+ 			mb->type, fd, epi.maxfd, mb->id);
 		return -1;
 	}
 
 	if (epi.fds[fd].type != fd_type_remote || mb->id != epi.fds[fd].id) { 
-//		TRACE_LOG ("connection %d closed, discard %u, %u block", fd, mb->id, epi.fds[fd].id);
+		TRACE_LOG ("connection %d closed, discard %u, %u block", fd, mb->id, epi.fds[fd].id);
 		return -1;
 	}
 
@@ -414,19 +414,22 @@ static int schedule_output(shm_block_t *mb)
 	data_len = mb->length - sizeof (shm_block_t);
 	return net_send(fd, mb->data, data_len);
 }
-static inline void
-handle_send_queue()
-{
-	shm_block_t *mb;
-	shm_queue_t *q;
 
-	for ( uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
-		q = &(g_bind_conf.get_elem(i)->sendq);
-		while ( shmq_pop(q, &mb) == 0 ) {
-			schedule_output(mb);	
+namespace {
+	inline void handle_send_queue()
+	{
+		shm_block_t *mb;
+		shm_queue_t *q;
+
+		for ( uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
+			q = &(g_bind_conf.get_elem(i)->sendq);
+			while (0 == shmq_pop(q, &mb)) {
+				schedule_output(mb);	
+			}
 		}
 	}
 }
+
 
 static int handle_pipe_event(int fd, int pos, int is_conn)
 {
@@ -511,20 +514,25 @@ static void handle_asyn_connect(int fd)
 
 	fdinfo->callback(fd, fdinfo->arg);
 }
-
+#include "timer.h"
 int net_loop(int timeout, int max_len, int is_conn)
 {
 	int pos, nr;
 
+	//todo 检查
 	iterate_close_queue();
 	iterate_etin_queue(max_len, is_conn);
+	//todo end
 
 	nr = epoll_wait(epi.epfd, epi.evs, epi.max_ev_num, timeout);
-	if (unlikely(nr < 0 && errno != EINTR))
-//		ERROR_RETURN(("epoll_wait failed, maxfd=%d, epfd=%d: %m", epi.maxfd, epi.epfd), -1);
+	if (unlikely(nr < 0 && errno != EINTR)){
+		ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d]", epi.maxfd, epi.epfd);
+		return -1;
+	}
 
-	//renew_now();
+	renew_now();
 
+	//todo 下面没有检查
 	if (is_conn) {
 		handle_send_queue();
 	}
@@ -533,8 +541,8 @@ int net_loop(int timeout, int max_len, int is_conn)
 		int fd = epi.evs[pos].data.fd;
 
 		if (fd > epi.maxfd || epi.fds[fd].sockfd != fd || epi.fds[fd].type == fd_type_unused) {
-// 			ERROR_LOG("delayed epoll events: event fd=%d, cache fd=%d, maxfd=%d, type=%d", 
-// 				fd, epi.fds[fd].sockfd, epi.maxfd, epi.fds[fd].type);
+ 			ERROR_LOG("delayed epoll events: event fd=%d, cache fd=%d, maxfd=%d, type=%d", 
+ 				fd, epi.fds[fd].sockfd, epi.maxfd, epi.fds[fd].type);
 			continue;
 		}
 

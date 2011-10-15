@@ -17,7 +17,23 @@ service_t g_service;
 int					is_parent = 1;
 config_cache_t		config_cache;
 fd_array_session_t	fds;
+namespace {
+	int handle_fini()
+	{
+		for (int i = 0; i <= epi.maxfd; ++i) {
+			if ( (epi.fds[i].type == fd_type_remote) && (epi.fds[i].cb.sendlen > 0) ) {
+				return -1;
+			}
+		}
 
+		if (0 != g_dll.fini_service(0)) {
+			return -1;
+		}
+
+		g_hash_table_destroy(fds.cn);
+		return 0;
+	}
+}
 static inline void
 free_fdsess(void* fdsess)
 {
@@ -32,10 +48,13 @@ handle_init(bind_config_elem_t* bc_elem)
 	fds.cn = g_hash_table_new_full(g_int_hash, g_int_equal, 0, free_fdsess);
 
 	// create multicast socket if function `proc_mcast_pkg` is defined
+	// kevinmeng  [2011/10/15 16:42]
+#if 0
 	if (g_dll.proc_mcast_pkg && (create_mcast_socket() == -1)) {
 		// return -1 if fail to create mcast socket
 		return -1;
 	}
+#endif
 
 	//  [9/12/2011 meng]
 #if 0
@@ -48,25 +67,7 @@ handle_init(bind_config_elem_t* bc_elem)
 		}
 	}
 #endif
-	return (g_dll.init_service ? g_dll.init_service(0) : 0);	
-}
-
-static inline int
-handle_fini()
-{
-	int i;
-	for (i = 0; i <= epi.maxfd; ++i) {
-		if ( (epi.fds[i].type == fd_type_remote) && (epi.fds[i].cb.sendlen > 0) ) {
-			return 0;
-		}
-	}
-
-	if ( g_dll.fini_service && (g_dll.fini_service(0) != 0) ) {
-		return 0;
-	}
-
-	g_hash_table_destroy(fds.cn);
-	return 1;
+	return g_dll.init_service(0);	
 }
 
 static inline void
@@ -163,27 +164,28 @@ int handle_close(int fd)
 
 void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc )
 {
-	bind_config_elem_t* bc_elem = bc->get_elem(bc_elem_idx);
-
 	is_parent = 0;
 
-	// release resources inherited from parent process
+	bind_config_elem_t* bc_elem = bc->get_elem(bc_elem_idx);
+
+	//释放资源(从父进程继承来的资源)
 	g_shmq.close_pipe(bc, n_inited_bc, 1);
 	shmq_destroy(bc_elem, n_inited_bc);
 	net_exit();
 
-	g_net.init(g_bench_conf.get_max_fd_num(), 2000);
-	do_add_conn(bc_elem->recvq.pipe_handles[0], fd_type_pipe, 0, 0);
+	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//todo 2000 个数量是否合适?
+	do_add_conn(bc_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
-	if ( handle_init(bc_elem) != 0 ) {
-		ERROR_LOG("fail to init worker process. olid=%u olname=%s", bc_elem->id, bc_elem->name.c_str());
+	if ( 0 != handle_init(bc_elem)) {
+		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", bc_elem->id, bc_elem->name.c_str());
 		goto fail;
 	}
 
-	while ( !g_daemon.stop || !handle_fini() ) {
-		net_loop(100, page_size, 0);
+	while ( !g_daemon.stop || 0 != handle_fini() ) {
+		net_loop(100, PAGE_SIZE, 0);
 	}
 fail:
+	//下面没看
 	do_destroy_shmq(bc_elem);
 	net_exit();
 	g_dll.unregister_data_plugin();

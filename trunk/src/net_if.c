@@ -253,8 +253,8 @@ int send_pkg_to_client(fdsession_t* fdsess, const void* pkg, const int pkglen)
 
 	int send_bytes, cur_len;
 	for (send_bytes = 0; send_bytes < pkglen; send_bytes += cur_len) {
-		if ((pkglen - send_bytes) > (int32_t)(page_size - sizeof(shm_block_t))) {
-			cur_len = page_size - sizeof(shm_block_t);
+		if ((pkglen - send_bytes) > (int32_t)(PAGE_SIZE - sizeof(shm_block_t))) {
+			cur_len = PAGE_SIZE - sizeof(shm_block_t);
 		} else {
 			cur_len = pkglen - send_bytes;
 		}

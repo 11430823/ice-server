@@ -13,7 +13,7 @@
 #include "bench_conf.h"
 #include "shmq.h"
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]){	
 	if (0 != g_bench_conf.load()){
 		return -1;
 	}
@@ -23,14 +23,17 @@ int main(int argc, char* argv[]){
 	if (0 != g_bind_conf.load()){
 		return -1;
 	}
-
-	//g_dll.register_data_plugin("");
+// kevinmeng  [2011/10/15 16:58]
+#if 0
+	g_dll.register_data_plugin("");
+#endif
 	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path(),e_plugin_flag_load)){
 		return -1;
 	}
-
-	//asynsvr_init_warning_system();
-
+// kevinmeng  [2011/10/15 16:59]
+#if 0
+	asynsvr_init_warning_system();
+#endif
 	if (0 != g_net.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num())){
 		return -1;
 	}
@@ -47,35 +50,35 @@ int main(int argc, char* argv[]){
 		g_shmq.create(bc_elem);
 
 		if ( (pid = fork ()) < 0 ) {
-			SHOW_LOG("fork child process err:-1\r\n");
+			SHOW_LOG("fork child process err [id:%u]", bc_elem->id);
+			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			return -1;
 		} else if (pid > 0) {
-			DEBUG_LOG("parent process\r\n");
 			g_shmq.close_pipe(&g_bind_conf, i, 0);
-			do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, 0, bc_elem);			
+			do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, NULL, bc_elem);			
 			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
-			sleep(2);
-			DEBUG_LOG("child process\r\n");
-			g_listen_port = bc_elem->port;
-			g_listen_ip = bc_elem->ip;
 			g_service.worker_process(&g_bind_conf, i, i + 1);
 		}
 	}
+	//parent process
+
 //  [9/13/2011 meng]
-// 	if (config_get_strval("addr_mcast_ip")) {
-// 		if (create_addr_mcast_socket() != 0) {
-// 			// return -1 if fail to create mcast socket
-// 			BOOT_LOG(-1, "PARENT: FAILED TO CREATE MCAST FOR RELOADING SO");
-// 		}
-// 	} 
+#if 0
+	if (config_get_strval("addr_mcast_ip")) {
+		if (create_addr_mcast_socket() != 0) {
+			// return -1 if fail to create mcast socket
+			BOOT_LOG(-1, "PARENT: FAILED TO CREATE MCAST FOR RELOADING SO");
+		}
+	} 
+#endif
 
 	while (!g_daemon.stop || g_dll.fini_service(1) != 0) {
-		net_loop(-1, page_size, 1);
+		net_loop(-1, PAGE_SIZE, 1);
 	}
 	g_daemon.killall_children();
-
+	//TODO 下面没有检查
 	net_exit();
 	g_dll.unregister_data_plugin();
 	g_dll.unregister_plugin();
