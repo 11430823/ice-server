@@ -115,14 +115,14 @@ int safe_socket_listen(const char* ipaddr, in_port_t port, int type, int backlog
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family  = AF_INET;
 	servaddr.sin_port    = htons(port);
-	if (ipaddr) {
+	if (NULL != ipaddr) {
 		inet_pton(AF_INET, ipaddr, &servaddr.sin_addr);
 	} else {	
 		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	}
 
 	int listenfd;
-	if ((listenfd = socket(AF_INET, type, 0)) == -1) {
+	if (-1 == (listenfd = socket(AF_INET, type, 0))) {
 		return -1;
 	}
 

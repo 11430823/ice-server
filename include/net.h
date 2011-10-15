@@ -53,10 +53,8 @@ struct epinfo {
 	int			max_ev_num;
 	int			count;
 };
-extern int g_listen_port;
-extern std::string  g_listen_ip;
 extern epinfo epi;
-extern uint32_t page_size;
+extern const uint32_t PAGE_SIZE;
 extern uint32_t g_send_buf_limit_size;
 int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, struct bind_config_elem_t* bc_elem);
 int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* bc_elem);

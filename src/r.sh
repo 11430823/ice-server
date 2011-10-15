@@ -1,4 +1,4 @@
 ./kill.sh
 cd ../bin/
-./ice-server.exe kevinmeng
+./ice-server.exe
 cd -

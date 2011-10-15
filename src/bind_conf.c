@@ -86,11 +86,6 @@ int bind_config_t::get_bind_conf_idx( const bind_config_elem_t* bc_elem ) const
 	return -1;
 }
 
-uint32_t bind_config_t::get_elem_num() const
-{
-	return elems.size();
-}
-
 bind_config_elem_t* bind_config_t::get_elem( uint32_t index )
 {
 	return &elems[index];

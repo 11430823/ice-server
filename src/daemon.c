@@ -38,7 +38,7 @@ namespace {
 
 	void sigchld_handler(int signo, siginfo_t *si, void * p) 
 	{
-		ALERT_LOG("SIGCHLD FROM [pid=%d]", getpid());
+		ALERT_LOG("SIGCHLD FROM [pid=%d, is_parent:%d]", getpid(), is_parent);
 		pid_t pid;
 		static int	status;
 		while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {
@@ -157,14 +157,14 @@ void daemon_info_t::killall_children()
 	}
 
 	/* wait for all child exit*/
-	bool done = false;
-	while (!done) {
+WAIT_AGAIN:
+	while (1) {
 		for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
 			if (0 != atomic_read(&child_pids[i])) {
 				usleep(100);
-				break;
+				goto WAIT_AGAIN;
 			}
 		}
-		done = true;
+		return;
 	}
 }
