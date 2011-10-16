@@ -32,6 +32,99 @@ enum {
 	udp_pkg_size	= 8192
 };
 
+namespace {
+	inline void handle_send_queue()
+	{
+		shm_block_t *mb;
+		shm_queue_t *q;
+
+		for ( uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
+			q = &(g_bind_conf.get_elem(i)->sendq);
+			while (0 == shmq_pop(q, &mb)) {
+				schedule_output(mb);	
+			}
+		}
+	}
+	//************************************
+	// Brief:     处理管道事件(父/子进程crashed)
+	// Returns:   int
+	// Parameter: int fd
+	// Parameter: int pos
+	// Parameter: int is_conn 1:父进程. 0:子进程
+	//************************************
+	int handle_pipe_event(int fd, int pos, int is_conn)
+	{
+		char trash[trash_size];
+
+		if (epi.evs[pos].events & EPOLLHUP) {
+			if (is_conn) { // Child Crashed
+				int pfd = epi.evs[pos].data.fd;
+				bind_config_elem_t* bc = epi.fds[pfd].bc_elem;
+				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->online_id, bc->online_name);
+				char buf[100];
+				snprintf(buf, sizeof(buf), "%s.%s", bc->name.c_str(), "child.core");
+				//  [9/12/2011 meng]
+#if 0
+				asynsvr_send_warning(buf, bc->online_id, bc->bind_ip);
+#endif
+				// close all connections that are related to the crashed child process
+				for (int i = 0; i <= epi.maxfd; ++i) {
+					if ((epi.fds[i].bc_elem == bc) && (epi.fds[i].type != fd_type_listen)) {
+						//todo 
+						do_del_conn(i, is_conn);
+						//todo end
+					}
+				}
+				// prevent child process from being restarted again and again forever
+				if (bc->restart_cnt++ < 20) {
+					restart_child_process(bc);
+				}
+			} else { // Parent Crashed
+				CRIT_LOG("PARENT PROCESS CRASHED!");
+
+				char buf[100];
+				snprintf(buf, sizeof(buf), "%s.%s", get_server_name(), "parent.core");
+				//  [9/12/2011 meng]	
+#if 0
+				asynsvr_send_warning(buf, 0, get_server_ip());
+#endif
+				g_daemon.stop = true;
+				return -1;
+			}
+		} else {
+			while (trash_size == read(fd, trash, trash_size)) ;
+		}
+
+		return 0;
+	}
+	void handle_asyn_connect(int fd)
+	{
+		fdinfo_t* fdinfo = &(epi.fds[fd]);
+
+		int error;
+		socklen_t len = sizeof(error);
+		if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+			error = errno;
+			ERROR_LOG("should be impossible: fd=%d id=%u err=%d (%s)",
+				fd, fdinfo->id, error, strerror(error));
+		}
+
+		if (!error) {
+			fdinfo->type = fd_type_remote;
+			mod_events(epi.epfd, fd, EPOLLIN);
+			DEBUG_LOG("ASYNC CONNECTED TO[fd=%d id=%u]", fd, fdinfo->id);
+		} else {
+			ERROR_LOG("failed to connect to fd=%d id=%u err=%d (%s)",
+				fd, fdinfo->id, error, strerror(error));
+			do_del_conn(fd, 2);
+			fd = -1;
+		}
+
+		fdinfo->callback(fd, fdinfo->arg);
+	}
+}//end of namespace
+
+
 static inline int add_events (int epfd, int fd, uint32_t flag)
 {
 	struct epoll_event ev;
@@ -204,7 +297,7 @@ void do_del_conn(int fd, int is_conn)
 				break;
 		epi.maxfd = i;
 	}
-//	TRACE_LOG ("close fd=%d", fd);
+	TRACE_LOG ("close fd=%d", fd);
 }
 
 inline void iterate_close_queue()
@@ -415,63 +508,6 @@ static int schedule_output(shm_block_t *mb)
 	return net_send(fd, mb->data, data_len);
 }
 
-namespace {
-	inline void handle_send_queue()
-	{
-		shm_block_t *mb;
-		shm_queue_t *q;
-
-		for ( uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
-			q = &(g_bind_conf.get_elem(i)->sendq);
-			while (0 == shmq_pop(q, &mb)) {
-				schedule_output(mb);	
-			}
-		}
-	}
-}
-
-
-static int handle_pipe_event(int fd, int pos, int is_conn)
-{
-	char trash[trash_size];
-
-	if (epi.evs[pos].events & EPOLLHUP) {
-		if (is_conn) { // Child Crashed
-			int pfd = epi.evs[pos].data.fd;
-			bind_config_elem_t* bc = epi.fds[pfd].bc_elem;
-
-//			CRIT_LOG("CHILD PROCESS CRASHED!\t[olid=%u olname=%s]", bc->online_id, bc->online_name);
-
-			char buf[100];
-			snprintf(buf, sizeof(buf), "%s.%s", bc->name.c_str(), "child.core");
-//  [9/12/2011 meng]asynsvr_send_warning(buf, bc->online_id, bc->bind_ip);
-
-			// close all connections that are related to the crashed child process
-			int i;
-			for (i = 0; i <= epi.maxfd; ++i) {
-				if ((epi.fds[i].bc_elem == bc) && (epi.fds[i].type != fd_type_listen)) {
-					do_del_conn(i, is_conn);
-				}
-			}
-			// prevent child process from being restarted again and again forever
-			if (bc->restart_cnt++ < 20) {
-				restart_child_process(bc);
-			}
-		} else { // Parent Crashed
-//			CRIT_LOG("PARENT PROCESS CRASHED!");
-
-			char buf[100];
-			snprintf(buf, sizeof(buf), "%s.%s", get_server_name(), "parent.core");
-//  [9/12/2011 meng]			asynsvr_send_warning(buf, 0, get_server_ip());
-			g_daemon.stop = true;
-			return -1;
-		}
-	} else {
-		while ( read(fd, trash, trash_size) == trash_size ) ;
-	}
-
-	return 0;
-}
 int mod_events(int epfd, int fd, uint32_t flag)
 {
 	struct epoll_event ev;
@@ -489,72 +525,44 @@ epoll_mod_again:
 
 	return 0;
 }
-static void handle_asyn_connect(int fd)
-{
-	fdinfo_t* fdinfo = &(epi.fds[fd]);
-
-	int error;
-	socklen_t len = sizeof(error);
-	if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
-		error = errno;
-// 		ERROR_LOG("should be impossible: fd=%d id=%u err=%d (%s)",
-// 			fd, fdinfo->id, error, strerror(error));
-	}
-
-	if (!error) {
-		fdinfo->type = fd_type_remote;
-		mod_events(epi.epfd, fd, EPOLLIN);
-//		DEBUG_LOG("ASYNC CONNECTED TO[fd=%d id=%u]", fd, fdinfo->id);
-	} else {
-// 		ERROR_LOG("failed to connect to fd=%d id=%u err=%d (%s)",
-// 			fd, fdinfo->id, error, strerror(error));
-		do_del_conn(fd, 2);
-		fd = -1;
-	}
-
-	fdinfo->callback(fd, fdinfo->arg);
-}
 #include "timer.h"
 int net_loop(int timeout, int max_len, int is_conn)
 {
-	int pos, nr;
-
 	//todo 检查
 	iterate_close_queue();
 	iterate_etin_queue(max_len, is_conn);
 	//todo end
 
-	nr = epoll_wait(epi.epfd, epi.evs, epi.max_ev_num, timeout);
+	int nr = epoll_wait(epi.epfd, epi.evs, epi.max_ev_num, timeout);
 	if (unlikely(nr < 0 && errno != EINTR)){
 		ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d]", epi.maxfd, epi.epfd);
 		return -1;
 	}
 
 	renew_now();
-
-	//todo 下面没有检查
+	//todo 检查
 	if (is_conn) {
 		handle_send_queue();
-	}
+	}	//todo end
 
-	for (pos = 0; pos < nr; pos++) {
+	for (int pos = 0; pos < nr; pos++) {
 		int fd = epi.evs[pos].data.fd;
 
 		if (fd > epi.maxfd || epi.fds[fd].sockfd != fd || epi.fds[fd].type == fd_type_unused) {
- 			ERROR_LOG("delayed epoll events: event fd=%d, cache fd=%d, maxfd=%d, type=%d", 
+ 			ERROR_LOG("DELAYED EPOLL EVENTS [event fd=%d, cache fd=%d, maxfd=%d, type=%d]", 
  				fd, epi.fds[fd].sockfd, epi.maxfd, epi.fds[fd].type);
 			continue;
 		}
 
-		if ( unlikely(epi.fds[fd].type == fd_type_pipe) ) {
-			if (handle_pipe_event(fd, pos, is_conn) == 0) {
+		if ( unlikely(fd_type_pipe == epi.fds[fd].type ) ) {
+			if (0 == handle_pipe_event(fd, pos, is_conn)) {
 				continue;
 			} else {
 				return -1;
 			}
 		}
 
-		if ( unlikely(epi.fds[fd].type == fd_type_asyn_connect) ) {
+		if ( unlikely(fd_type_asyn_connect == epi.fds[fd].type) ) {
 			handle_asyn_connect(fd);
 			continue;
 		}
