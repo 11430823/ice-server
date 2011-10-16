@@ -165,8 +165,18 @@ int handle_close(int fd)
 void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc )
 {
 	is_parent = 0;
-
 	bind_config_elem_t* bc_elem = bc->get_elem(bc_elem_idx);
+
+	char prefix[10] = { 0 };
+	int  len       = snprintf(prefix, 8, "%u", bc_elem->id);
+	prefix[len] = '_';
+	log_init_ex( config_get_strval("log_dir"), 
+		config_get_intval("log_level", log_lvl_trace),
+		config_get_intval("log_size", 1<<30), 
+		config_get_intval("max_log_files", 100), 
+		prefix ,
+		config_get_intval("log_save_next_file_interval_min", 0) );
+
 
 	//释放资源(从父进程继承来的资源)
 	g_shmq.close_pipe(bc, n_inited_bc, 1);

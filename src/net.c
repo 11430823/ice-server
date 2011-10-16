@@ -33,6 +33,42 @@ enum {
 };
 
 namespace {
+	inline void add_to_close_queue(int fd)
+	{
+		del_from_etin_queue (fd);
+		if (!(epi.fds[fd].flag & CN_NEED_CLOSE)) {
+			list_add_tail (&epi.fds[fd].list, &epi.close_head);
+			epi.fds[fd].flag |= CN_NEED_CLOSE;
+			// 		TRACE_LOG("add fd=%d to close queue, %x", fd, epi.fds[fd].flag);
+		}
+	}
+
+	static int schedule_output(shm_block_t *mb)
+	{
+		int data_len;
+		int fd = mb->fd;
+
+		if (unlikely((fd > epi.maxfd) || (fd < 0))) {
+			DEBUG_LOG("discard the message: mb->type=%d, fd=%d, maxfd=%d, id=%u", 
+				mb->type, fd, epi.maxfd, mb->id);
+			return -1;
+		}
+
+		if (epi.fds[fd].type != fd_type_remote || mb->id != epi.fds[fd].id) { 
+			TRACE_LOG ("connection %d closed, discard %u, %u block", fd, mb->id, epi.fds[fd].id);
+			return -1;
+		}
+
+		if (mb->type == FIN_BLOCK && epi.fds[fd].type != fd_type_listen) {
+			add_to_close_queue (fd);
+			return 0;
+		}
+
+		//shm block send
+		data_len = mb->length - sizeof (shm_block_t);
+		return net_send(fd, mb->data, data_len);
+	}
+
 	inline void handle_send_queue()
 	{
 		shm_block_t *mb;
@@ -60,7 +96,7 @@ namespace {
 			if (is_conn) { // Child Crashed
 				int pfd = epi.evs[pos].data.fd;
 				bind_config_elem_t* bc = epi.fds[pfd].bc_elem;
-				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->online_id, bc->online_name);
+				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->id, bc->name.c_str());
 				char buf[100];
 				snprintf(buf, sizeof(buf), "%s.%s", bc->name.c_str(), "child.core");
 				//  [9/12/2011 meng]
@@ -470,42 +506,6 @@ inline void iterate_etin_queue(int max_len, int is_conn)
 			do_del_conn(fi->sockfd, is_conn);
 		}
 	}
-}
-
-inline void add_to_close_queue(int fd)
-{
-	del_from_etin_queue (fd);
-	if (!(epi.fds[fd].flag & CN_NEED_CLOSE)) {
-		list_add_tail (&epi.fds[fd].list, &epi.close_head);
-		epi.fds[fd].flag |= CN_NEED_CLOSE;
-// 		TRACE_LOG("add fd=%d to close queue, %x", fd, epi.fds[fd].flag);
-	}
-}
-
-static int schedule_output(shm_block_t *mb)
-{
-	int data_len;
-	int fd = mb->fd;
-
-	if (unlikely((fd > epi.maxfd) || (fd < 0))) {
- 		DEBUG_LOG("discard the message: mb->type=%d, fd=%d, maxfd=%d, id=%u", 
- 			mb->type, fd, epi.maxfd, mb->id);
-		return -1;
-	}
-
-	if (epi.fds[fd].type != fd_type_remote || mb->id != epi.fds[fd].id) { 
-		TRACE_LOG ("connection %d closed, discard %u, %u block", fd, mb->id, epi.fds[fd].id);
-		return -1;
-	}
-
-	if (mb->type == FIN_BLOCK && epi.fds[fd].type != fd_type_listen) {
-		add_to_close_queue (fd);
-		return 0;
-	}
-
-	//shm block send
-	data_len = mb->length - sizeof (shm_block_t);
-	return net_send(fd, mb->data, data_len);
 }
 
 int mod_events(int epfd, int fd, uint32_t flag)
