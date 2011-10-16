@@ -1,26 +1,17 @@
-/**
- *============================================================
- *  @file      log.h
- *  @brief     用于记录日志，一共分9种日志等级。日志文件可以自动轮转。注意：如果使用自动轮转，\n
- *             必须保证每天写的日志文件个数不能超过log_init时设定的最大文件个数，否则日志会写乱掉。
- *             必须先调用log_init/log_init_t来初始化日志功能。注意，每条日志不能超过8000字节。\n
- *             如果编译程序时定义宏LOG_USE_SYSLOG，则会利用syslog来记录日志，使用的facility是LOG_USER。
- * 
- *  compiler   gcc4.1.2
- *  platform   Linux
- *
- *  copyright:  TaoMee, Inc. ShangHai CN. All rights reserved.
- *
- *============================================================
- */
+/********************************************************************
+	platform:	
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	
+	brief:		用于记录日志，一共分9种日志等级。日志文件可以自动轮转。注意：如果使用自动轮转,
+	必须保证每天写的日志文件个数不能超过log_init时设定的最大文件个数，否则日志会写乱掉。
+	必须先调用log_init/log_init_t来初始化日志功能。注意，每条日志不能超过8000字节。
+	如果编译程序时定义宏LOG_USE_SYSLOG，则会利用syslog来记录日志，使用的facility是LOG_USER。
+*********************************************************************/
 
 #pragma once
 
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * @typedef log_lvl_t
@@ -433,8 +424,4 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 			DEBUG_LOG(fmt, ##args); \
 			return; \
 		} while (0)
-
-#ifdef __cplusplus
-}
-#endif
 

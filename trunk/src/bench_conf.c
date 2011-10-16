@@ -74,7 +74,31 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
+/*
+	std::string s;
+	if (0 != get_val(s, key, "log", "dir")){
+		ret = -1;
+		goto ret;
+	}
+	s.clear();
+	if (0 != get_val(s, key, "log", "level")){
+		ret = -1;
+		goto ret;
+	}
+	s.clear();
 
+	if (0 != get_val(s, key, "log", "size")){
+		ret = -1;
+		goto ret;
+	}
+	s.clear();
+
+	if (0 != get_val(s, key, "log", "max_files")){
+		ret = -1;
+		goto ret;
+	}
+	s.clear();
+*/
 ret:
 	if (key){
 		g_key_file_free(key);
