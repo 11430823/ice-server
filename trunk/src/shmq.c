@@ -91,7 +91,8 @@ int shmq_pop(struct shm_queue_t* q, struct shm_block_t** mb)
 	}
 #endif
 	if (cur_mb->length > PAGE_SIZE){
-//		ERROR_RETURN(("too large packet, len=%d", cur_mb->length), -1);
+		ERROR_LOG("large packet, len=%d", cur_mb->length);
+		return -1;
 	}
 
 	*mb = cur_mb;
