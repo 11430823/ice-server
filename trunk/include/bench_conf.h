@@ -21,6 +21,11 @@ public:
 	const char* get_liblogic_path() const;
 	uint32_t get_max_fd_num()const;
 	bool is_daemon();
+	std::string log_dir;//日志目录
+	uint32_t log_level;//日志等级
+	uint32_t log_max_size;//日志每个文件的最大大小(字节)
+	uint32_t log_max_files;//日志文件的最大数量
+	uint32_t log_save_next_file_interval_min;//每多少时间(分钟)重新保存文件中(新文件)
 private:
 	std::string libdata_path;//数据段SO路径
 	std::string liblogic_path;//代码段SO路径

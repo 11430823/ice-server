@@ -69,36 +69,28 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
-
 	if (0 != get_val(daemon, key, "common", "is_daemon")){
 		ret = -1;
 		goto ret;
 	}
-/*
-	std::string s;
-	if (0 != get_val(s, key, "log", "dir")){
-		ret = -1;
-		goto ret;
-	}
-	s.clear();
-	if (0 != get_val(s, key, "log", "level")){
-		ret = -1;
-		goto ret;
-	}
-	s.clear();
 
-	if (0 != get_val(s, key, "log", "size")){
+	if (0 != get_val(log_dir, key, "log", "dir")){
 		ret = -1;
 		goto ret;
 	}
-	s.clear();
+	if (0 != get_val(log_level, key, "log", "level")){
+		ret = -1;
+		goto ret;
+	}
+	if (0 != get_val(log_max_size, key, "log", "size")){
+		ret = -1;
+		goto ret;
+	}
+	if (0 != get_val(log_max_files, key, "log", "max_files")){
+		ret = -1;
+		goto ret;
+	}
 
-	if (0 != get_val(s, key, "log", "max_files")){
-		ret = -1;
-		goto ret;
-	}
-	s.clear();
-*/
 ret:
 	if (key){
 		g_key_file_free(key);
