@@ -3,16 +3,17 @@
 
 
 #include <stdio.h>
+
+#include "util.h"
 /**
   * @brief Initialize service
   *
   */
 extern "C" int init_service(int isparent)
 {
+	DEBUG_LOG("dfdfdffdfdfdfd:%d", isparent);
 	if(isparent){
-		printf("int init_service(1)");
 	}else{
-		printf("int init_service(0)");
 	}
 	return 0;
 }

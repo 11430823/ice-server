@@ -65,11 +65,13 @@ int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
 	char* error; 
 	int   ret_code = -1;
 
+	DEBUG_LOG("DLOPEN1");
 	g_dll.handle = dlopen(file_name, RTLD_NOW);
 	if ((error = dlerror()) != NULL) {
 		ALERT_LOG("DLOPEN ERROR [error:%s]", error);
 		goto out;
 	}
+	DEBUG_LOG("DLOPEN2");
  	DLFUNC(g_dll.handle, g_dll.get_pkg_len, "get_pkg_len", int(*)(int, const void*, int, int));
  	DLFUNC(g_dll.handle, g_dll.proc_pkg_from_client, "proc_pkg_from_client", int(*)(void*, int, fdsession_t*));
  	DLFUNC(g_dll.handle, g_dll.proc_pkg_from_serv, "proc_pkg_from_serv", void(*)(int, void*, int));

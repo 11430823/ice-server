@@ -4,10 +4,10 @@
 
 #include <stdio.h>
 
-#define DEBUG_LOG printf
-#define ERROR_LOG printf
-
-#define SHOW_LOG printf
+// #define DEBUG_LOG printf
+// #define ERROR_LOG printf
+// 
+// #define SHOW_LOG printf
 
 
 #define DLFUNC(h, v, name, type) \
