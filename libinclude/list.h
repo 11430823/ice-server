@@ -1,12 +1,19 @@
-/********************************************************************
-	platform:	
-	author:		kevin
-	copyright:	All rights reserved.
-	purpose:	从内核代码里抽取出来的侵入式链表操作函数/宏
-	brief:		
-*********************************************************************/
+/**
+ *============================================================
+ *  @file      list.h
+ *  @brief     从内核代码里抽取出来的侵入式链表操作函数/宏。\n
+ *             Simple doubly linked list implementation.\n
+ * 
+ *  compiler   gcc4.1.2
+ *  platform   Linux
+ *
+ *  copyright:  TaoMee, Inc. ShangHai CN. All rights reserved.
+ *
+ *============================================================
+ */
 
-#pragma once
+#ifndef TAOMEE_H_LIST_H_
+#define TAOMEE_H_LIST_H_
 
 #define __builtin_prefetch(x,y,z) 1
 
@@ -261,3 +268,5 @@ list_splice_init (struct list_head *list, struct list_head *head)
 		     pos = list_entry(pos->member.next, typeof(*pos), member),	\
 		     __builtin_prefetch(pos->member.next,0,1))
 #endif
+
+#endif // TAOMEE_H_LIST_H_
