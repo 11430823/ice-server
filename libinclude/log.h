@@ -425,3 +425,5 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 			return; \
 		} while (0)
 
+
+int log_init_ex(const char* dir, log_lvl_t lvl, uint32_t size, int maxfiles, const char* pre_name, uint32_t logtime);
