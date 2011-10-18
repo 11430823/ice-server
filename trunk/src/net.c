@@ -19,6 +19,7 @@
 #include "daemon.h"
 #include "mcast.h"
 #include "log.h"
+#include "timer.h"
 
 net_t g_net;
 epinfo epi;
