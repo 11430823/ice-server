@@ -24,7 +24,7 @@
 // Glib
 #include <glib.h>
 // User-defined
-#include <libtaomee/list.h>
+#include "list.h"
 
 // export now and tm_cur
 extern struct timeval now;
