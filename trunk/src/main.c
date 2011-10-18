@@ -19,10 +19,9 @@ int main(int argc, char* argv[]){
 	if (0 != g_bench_conf.load()){
 		return -1;
 	}
-DEBUG_LOG("DLOPEN33333");
+
 	g_daemon.prase_args(argc, argv);
 
-	DEBUG_LOG("DLOPEN344444");
 	if (0 != g_bind_conf.load()){
 		return -1;
 	}
@@ -30,7 +29,7 @@ DEBUG_LOG("DLOPEN33333");
 	log_init_ex(g_bench_conf.log_dir.c_str(), (log_lvl_t)g_bench_conf.log_level,
 		g_bench_conf.log_max_size, g_bench_conf.log_max_files, NULL,
 		g_bench_conf.log_save_next_file_interval_min);
-	DEBUG_LOG("DLOPEN3");
+
 // kevinmeng  [2011/10/15 16:58]
 #if 0
 	g_dll.register_data_plugin("");

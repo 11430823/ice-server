@@ -654,9 +654,8 @@ int net_loop(int timeout, int max_len, int is_conn)
 		}
 	}
 	if(!is_conn) {
-		if (g_dll.on_events) {
-			g_dll.on_events();
-		}
+		g_dll.on_events();
+
 		handle_recv_queue();
 
 		time_t now_sec = time(0);
