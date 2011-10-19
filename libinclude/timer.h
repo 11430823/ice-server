@@ -11,8 +11,7 @@
  *============================================================
  */
 
-#ifndef TAOMEE_TIMER_H_
-#define TAOMEE_TIMER_H_
+#pragma once
 
 // Since C89
 #include <stdlib.h>
@@ -31,21 +30,14 @@ extern struct timeval now;
 extern struct tm      tm_cur;
 
 /**
- * @typedef timer_cb_func_t
  * @brief   回调函数的类型。如果回调函数返回0，则表示定时器到期时要删除该定时器，反之，则不删除。
  */
 typedef int (*timer_cb_func_t)(void*, void*);
 
 /**
- * @typedef timer_struct_t
- * @brief   timer_struct的typedef。
- */
-
-/**
- * @struct  timer_struct
  * @brief   秒级定时器。
  */
-typedef struct timer_struct {
+struct timer_struct_t {
 	struct list_head	entry;
 	struct list_head	sprite_list;
 	/*! 定时器的触发时刻，亦即调用回调函数的时间。*/
@@ -54,18 +46,12 @@ typedef struct timer_struct {
 	void*				data;
 	timer_cb_func_t		function;
 	int					func_indx;
-} timer_struct_t ;
+};
 
 /**
- * @typedef micro_timer_struct_t
- * @brief   micro_timer_struct的typedef。
- */
-
-/**
- * @struct  micro_timer_struct
  * @brief   微秒级定时器。
  */
-typedef struct micro_timer_struct {
+struct micro_timer_struct_t {
 	struct list_head	entry;
 	/*! 定时器的触发时刻，亦即调用回调函数的时间。*/
 	struct timeval		tv;
@@ -73,27 +59,18 @@ typedef struct micro_timer_struct {
 	void*				data;
 	timer_cb_func_t		function;
 	int					func_indx;
-} micro_timer_struct_t ;
+};
 
 /**
- * @typedef timer_add_mode_t
- * @brief   timer_add_mode的typedef。
- */
-
-/**
- * @enum   timer_add_mode
  * @brief  定时器添加模式。用于add_event函数。
  * @see    add_event
  */
-typedef enum timer_add_mode {
+enum E_TIMER_CHG_MODE {
 	/*! 添加一个新的定时器。*/
 	timer_add_new_timer,
 	/*! 替换一个定时器。如果找不到符合条件的定时器，则创建一个新的定时器。*/
 	timer_replace_timer,
-	// for backward compatibility only
-	ADD_EVENT = timer_add_new_timer,
-	ADD_EVENT_REPLACE_UNCONDITIONALLY = timer_replace_timer
-} timer_add_mode_t;
+} ;
 
 /**
  * @brief  初始化定时器功能。必须调用了这个函数，才能使用定时器功能。
@@ -144,7 +121,7 @@ handle_timer()
  * @see    ADD_TIMER_EVENT, REMOVE_TIMER, remove_timers, REMOVE_TIMERS
  */
 timer_struct_t*
-add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time_t expire, timer_add_mode_t flag);
+add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
 
 /**
  * @brief  添加/替换一个秒级定时器，该定时器的到期时间是expire，回调函数是register_timer函数根据定时器类型登记。
@@ -162,7 +139,7 @@ add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time
  * @see    ADD_TIMER_EVENT, REMOVE_TIMER, remove_timers, REMOVE_TIMERS
  */
 timer_struct_t*
-add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, timer_add_mode_t flag);
+add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
 
 /**
  * @def    ADD_TIMER_EVENT
@@ -360,5 +337,3 @@ void unregister_timers_callback();
  * @brief 程序在线加载text.so时，由于定时器回调函数的地址会发生变化，需要更新定时器类型id与回调函数的关系对应表
  */ 
 void refresh_timers_callback();
-
-#endif // TAOMEE_TIMER_H_

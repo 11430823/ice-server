@@ -28,8 +28,8 @@
 
 #define MAX_LOG_CNT 10000000
 
-static log_lvl_t  log_level	 = log_lvl_debug;	  // default log level
-static log_dest_t g_log_dest = log_dest_terminal; // write log to terminal by default
+static E_LOG_LEVEL  log_level	 = log_lvl_debug;	  // default log level
+static E_LOG_DEST g_log_dest = log_dest_terminal; // write log to terminal by default
 static int g_multi_thread;
 static int has_init;
 static int max_log_files;
@@ -71,14 +71,12 @@ static pthread_mutex_t g_shift_fd_mutex = PTHREAD_MUTEX_INITIALIZER;
 		if (g_multi_thread) \
 			pthread_mutex_unlock(&g_shift_fd_mutex)
 
-static inline int
-get_logfile_seqno(const char* filename, int loglvl)
+static inline int get_logfile_seqno(const char* filename, int loglvl)
 {
 	return atoi(&filename[fds_info[loglvl].base_filename_len + 8]);
 }
 
-static inline void
-log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
+static inline void log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
 {
 	assert((lvl >= log_lvl_emerg) && (lvl <= log_lvl_trace));
 
@@ -86,8 +84,7 @@ log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
 }
 
-static inline void
-log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
+static inline void log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
 {
 	assert((lvl >= log_lvl_emerg) && (lvl <= log_lvl_trace));
 
@@ -104,8 +101,7 @@ log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
 	}
 }
 
-static void
-rm_files_by_seqno(int loglvl, int seqno, const struct tm* tm)
+static void rm_files_by_seqno(int loglvl, int seqno, const struct tm* tm)
 {
 	char filename[128];
 
@@ -132,8 +128,7 @@ rm_files_by_seqno(int loglvl, int seqno, const struct tm* tm)
 	closedir(dir);
 }
 
-static int
-get_log_seq_nonrecycle(int lvl)
+static int get_log_seq_nonrecycle(int lvl)
 {
 	char file_name[FILENAME_MAX];
 
@@ -152,8 +147,7 @@ get_log_seq_nonrecycle(int lvl)
 	return (seq ? (seq - 1) : 0);
 }
 
-static int
-get_log_seq_recycle(int lvl)
+static int get_log_seq_recycle(int lvl)
 {
 	char file_name[FILENAME_MAX] = { 0 };
 
@@ -164,7 +158,8 @@ get_log_seq_recycle(int lvl)
 
 	struct dirent* dentry;
 	while ((dentry = readdir(dir))) {
-		if ( (strncmp(dentry->d_name, fds_info[lvl].base_filename, fds_info[lvl].base_filename_len) == 0)
+		if ( (strncmp(dentry->d_name, fds_info[lvl].base_filename,
+			fds_info[lvl].base_filename_len) == 0)
 				&& (strcmp(dentry->d_name, file_name) > 0) ) {
 			snprintf(file_name, sizeof(file_name), "%s", dentry->d_name);
 		}
@@ -184,7 +179,8 @@ get_log_seq_recycle(int lvl)
 	char  today[9];
 	int   seqno = get_logfile_seqno(file_name, lvl);
 
-	snprintf(today, sizeof(today), "%4d%02d%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+	snprintf(today, sizeof(today), "%4d%02d%02d",
+		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 	if (strncmp(today, date, 8)) {
 		++seqno;
 	}
@@ -192,8 +188,7 @@ get_log_seq_recycle(int lvl)
 	return seqno % max_log_files;
 }
 
-static inline int
-request_log_seq(int lvl)
+static inline int request_log_seq(int lvl)
 {
 	return (max_log_files ? get_log_seq_recycle(lvl) : get_log_seq_nonrecycle(lvl));
 }
@@ -203,8 +198,7 @@ inline int get_log_time()
 	return time(0) / g_logtime_interval;
 }
 
-static int
-open_fd(int lvl, const struct tm* tm)
+static int open_fd(int lvl, const struct tm* tm)
 {
 	int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
 
@@ -298,15 +292,17 @@ void boot_log(int ok, int dummy, const char *fmt, ...)
 	va_end(ap);
 
 	pos = SCREEN_COLS - 10 - (end - dummy) % SCREEN_COLS;
-	for (i = 0; i < pos; i++)
+	for (i = 0; i < pos; i++){
 		log_buffer[end + i] = ' ';
+	}
 	log_buffer[end + i] = '\0';
 
 	strcat(log_buffer, ok == 0 ? BOOT_OK : BOOT_FAIL);
 	printf("\r%s\n", log_buffer);
 
-	if (ok != 0)
+	if (ok != 0){
 		exit(ok);
+	}
 }
 
 void write_log(int lvl,uint32_t key, const char *fmt, ...)
@@ -329,12 +325,14 @@ void write_log(int lvl,uint32_t key, const char *fmt, ...)
 		case log_lvl_alert:
 		case log_lvl_crit:		
 		case log_lvl_error:
-			fprintf(stderr, "%s%02d:%02d:%02d ", log_color[lvl], tm.tm_hour, tm.tm_min, tm.tm_sec);
+			fprintf(stderr, "%s%02d:%02d:%02d ", log_color[lvl],
+				tm.tm_hour, tm.tm_min, tm.tm_sec);
 			vfprintf(stderr, fmt, aq);
 			fprintf(stderr, "%s", color_end);
 			break;
 		default:
-			fprintf(stdout, "%s%02d:%02d:%02d ", log_color[lvl], tm.tm_hour, tm.tm_min, tm.tm_sec);
+			fprintf(stdout, "%s%02d:%02d:%02d ", log_color[lvl],
+				tm.tm_hour, tm.tm_min, tm.tm_sec);
 			vfprintf(stdout, fmt, aq);
 			fprintf(stdout, "%s", color_end);
 			break;
@@ -348,7 +346,8 @@ void write_log(int lvl,uint32_t key, const char *fmt, ...)
 	}
 
 	char log_buffer[log_buf_sz];
-	int pos = snprintf(log_buffer, log_buf_sz, "[%02d:%02d:%02d] %u [%05d]", tm.tm_hour, tm.tm_min, tm.tm_sec, key, getpid());
+	int pos = snprintf(log_buffer, log_buf_sz, "[%02d:%02d:%02d] %u [%05d]",
+		tm.tm_hour, tm.tm_min, tm.tm_sec, key, getpid());
 	int end = vsnprintf(log_buffer + pos, log_buf_sz - pos, fmt, ap);
 	va_end(ap);
 
@@ -373,12 +372,14 @@ void write_syslog(int lvl, const char* fmt, ...)
 		case log_lvl_alert:
 		case log_lvl_crit:		
 		case log_lvl_error:
-			fprintf(stderr, "%s%02d:%02d:%02d ", log_color[lvl], tm.tm_hour, tm.tm_min, tm.tm_sec);
+			fprintf(stderr, "%s%02d:%02d:%02d ", log_color[lvl],
+				tm.tm_hour, tm.tm_min, tm.tm_sec);
 			vfprintf(stderr, fmt, ap);
 			fprintf(stderr, "%s", color_end);
 			break;
 		default:
-			fprintf(stdout, "%s%02d:%02d:%02d ", log_color[lvl], tm.tm_hour, tm.tm_min, tm.tm_sec);
+			fprintf(stdout, "%s%02d:%02d:%02d ", log_color[lvl],
+				tm.tm_hour, tm.tm_min, tm.tm_sec);
 			vfprintf(stdout, fmt, ap);
 			fprintf(stdout, "%s", color_end);
 			break;
@@ -387,7 +388,8 @@ void write_syslog(int lvl, const char* fmt, ...)
 
 	if (g_log_dest & log_dest_file) {		
 		char log_buffer[log_buf_sz];
-		int pos = snprintf(log_buffer, log_buf_sz, "[%02d:%02d:%02d][%05d]", tm.tm_hour, tm.tm_min, tm.tm_sec, getpid());
+		int pos = snprintf(log_buffer, log_buf_sz, "[%02d:%02d:%02d][%05d]",
+			tm.tm_hour, tm.tm_min, tm.tm_sec, getpid());
 		vsnprintf(log_buffer + pos, log_buf_sz - pos, fmt, ap);
 		syslog(lvl, "%s", log_buffer);
 	}
@@ -395,7 +397,7 @@ void write_syslog(int lvl, const char* fmt, ...)
 	va_end(ap);
 }
 
-int log_init_t(const char* dir, log_lvl_t lvl, const char* pre_name, int logtime)
+int log_init_t(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, int logtime)
 {
 	assert((logtime > 0) && (logtime <= 30000000));
 
@@ -404,7 +406,8 @@ int log_init_t(const char* dir, log_lvl_t lvl, const char* pre_name, int logtime
 	return log_init(dir, lvl, 0, 0, pre_name);
 }
 
-int log_init(const char* dir, log_lvl_t lvl, uint32_t size, int maxfiles, const char* pre_name)
+int log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
+			 int maxfiles, const char* pre_name)
 {
 	assert((maxfiles >= 0) && (maxfiles <= MAX_LOG_CNT));
 
@@ -445,7 +448,9 @@ int log_init(const char* dir, log_lvl_t lvl, uint32_t size, int maxfiles, const 
 
 	for (i = log_lvl_emerg; i <= log_lvl_trace; i++) {
 		fds_info[i].base_filename_len
-						 = snprintf(fds_info[i].base_filename, sizeof(fds_info[i].base_filename), "%s%s", log_pre, lognames[i]);
+						 = snprintf(fds_info[i].base_filename, 
+						 sizeof(fds_info[i].base_filename), "%s%s",
+						 log_pre, lognames[i]);
 		fds_info[i].opfd = -1;
 		fds_info[i].seq  = g_logtime_interval ? get_log_time() : request_log_seq(i);
 		if (fds_info[i].seq < 0) {
@@ -485,7 +490,7 @@ void log_fini()
 	memset(fds_info, 0, sizeof(fds_info));
 }
 
-void set_log_dest(log_dest_t dest)
+void set_log_dest(E_LOG_DEST dest)
 {
 	assert(has_init);
 
@@ -497,7 +502,8 @@ void enable_multi_thread()
 	g_multi_thread = 1;
 }
 
-int log_init_ex(const char* dir, log_lvl_t lvl, uint32_t size, int maxfiles, const char* pre_name, uint32_t logtime)
+int log_init_ex(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
+				int maxfiles, const char* pre_name, uint32_t logtime)
 {
 	int ret;
 

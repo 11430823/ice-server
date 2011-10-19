@@ -65,7 +65,7 @@ void destroy_timer()
 }
 
 timer_struct_t*
-add_event(list_head_t* head, timer_cb_func_t function, void* owner, void* data, time_t expire, timer_add_mode_t flag)
+add_event(list_head_t* head, timer_cb_func_t function, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag)
 {
 	timer_struct_t* timer;
 
@@ -96,7 +96,7 @@ new_timer:
 }
 
 timer_struct_t*
-add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, timer_add_mode_t flag)
+add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag)
 {
 if (!tcfs[fidx]) {
 return 0;
