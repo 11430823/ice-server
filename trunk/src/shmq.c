@@ -274,7 +274,7 @@ int shmq_t::create( struct bind_config_elem_t* p )
 	p->recvq.length = p->sendq.length;
 
 	int err = create_shmq(&(p->sendq)) | create_shmq(&(p->recvq));
-	SHOW_LOG ("Create shared memory queue: %dMB, err:%d\r\n", p->recvq.length / 1024 / 512, err);
+	ALERT_LOG ("Create shared memory queue: %dMB, err:%d\r\n", p->recvq.length / 1024 / 512, err);
 	return err;
 }
 

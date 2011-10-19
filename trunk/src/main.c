@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	log_init_ex(g_bench_conf.log_dir.c_str(), (log_lvl_t)g_bench_conf.log_level,
+	log_init_ex(g_bench_conf.log_dir.c_str(), (E_LOG_LEVEL)g_bench_conf.log_level,
 		g_bench_conf.log_max_size, g_bench_conf.log_max_files, NULL,
 		g_bench_conf.log_save_next_file_interval_min);
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
 	}
 
 	if (g_dll.init_service(1) != 0) {
-		SHOW_LOG("FAILED TO INIT PARENT PROCESS");
+		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
 		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
 		return -1;
 	}
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
 		g_shmq.create(bc_elem);
 
 		if ( (pid = fork ()) < 0 ) {
-			SHOW_LOG("fork child process err [id:%u]", bc_elem->id);
+			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			return -1;
 		} else if (pid > 0) {
@@ -90,5 +90,6 @@ int main(int argc, char* argv[]){
 	g_dll.unregister_data_plugin();
 	g_dll.unregister_plugin();
 	shmq_destroy(0, g_bind_conf.get_elem_num());
+	log_fini();
 	return 0;
 }

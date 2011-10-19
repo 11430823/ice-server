@@ -13,17 +13,68 @@
 
 #include <stdint.h>
 
+/* @brief 初始化日志功能,调用log_init/log_init_t
+*/
+int log_init_ex(const char* dir, E_LOG_LEVEL lvl, uint32_t size, int maxfiles, const char* pre_name, uint32_t logtime);
+
 /**
- * @typedef log_lvl_t
- * @brief   typedef of log_lvl
+  * @brief 初始化日志记录功能。如果使用自动轮转，必须保证每天写的日志文件个数不能超过最大文件个数（maxfiles），
+  *        否则日志会写乱掉。
+  *
+  * @param dir 日志保存目录。如果填0，则在屏幕中输出日志。
+  * @param lvl 日志输出等级。如果设置为log_lvl_notice，则log_lvl_notice以上等级的日志都不输出。
+  * @param size 每个日志文件的大小限制（byte），超过这个大小则自动创建一个新的日志文件。
+  * @param maxfiles 每种等级的日志的最大文件个数，用于控制日志轮转。个数越少，日志轮转时效率越高。
+  *                 如果填0，则表示不使用日志轮转功能。
+  * @param pre_name 日志文件名前缀。
+  *
+  * @see set_log_dest, log_init_t, enable_multi_thread
+  *
+  * @return 成功返回0，失败返回-1。
+  */
+int  log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size, int maxfiles, const char* pre_name);
+
+/**
+  * @brief 初始化日志记录功能。按时间周期创建新的日志文件。
+  *
+  * @param dir 日志保存目录。如果填0，则在屏幕中输出日志。
+  * @param lvl 日志输出等级。如果设置为log_lvl_notice，则log_lvl_notice以上等级的日志都不输出。
+  * @param pre_name 日志文件名前缀。
+  * @param logtime 每个日志文件保存logtime分钟的日志，最大不能超过30000000分钟。假设logtime为15，则每小时产生4个日志文件，每个文件保存15分钟日志。
+  *
+  * @see set_log_dest, log_init, enable_multi_thread
+  *
+  * @return 成功返回0，失败返回-1。
+  */
+int log_init_t(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, int logtime);
+
+/**
+  * @brief 销毁日志记录功能，所有打开的日志文件fd都会被关闭。不再需要日志功能时，可以调用这个函数。
+  *        或者当你想重新设置日志目录、日志等级等参数数，可以先调用该函数，然后调用log_init或log_init_t。
+  */
+void log_fini();
+
+/**
+ * @brief 调用log_init初始化日志功能后，可以调用该函数动态调整日志的输出方式。如果不调用set_log_dest的话，
+ *        则输出方式为log_init时确定的方式。注意：必须在log_init时指定了日志保存目录，才可以调用该函数。
+ *
+ * @param dest 日志输出方式
+ *
+ * @see log_init
  */
-#include <stdio.h>
-#define SHOW_LOG printf
+void set_log_dest(E_LOG_DEST dest);
+
 /**
- * @enum  log_lvl
+ * @brief 这个写日志的库默认不支持多线程！多线程程序写日志的话，需要调用先一下这个函数，否则会有问题。
+ *
+ */
+void enable_multi_thread();
+
+/**
+ * @enum  E_LOG_LEVEL
  * @brief 日志等级
  */
-typedef enum log_lvl {
+enum E_LOG_LEVEL {
 	/*! system is unusable -- 0 */
 	log_lvl_emerg,
 	/*! action must be taken immediately -- 1 */
@@ -48,77 +99,20 @@ typedef enum log_lvl {
 #endif
 
 	log_lvl_max
-} log_lvl_t;
-
-/**
- * @typedef log_dest_t
- * @brief   typedef of log_dest
- */
+};
 
 /**
  * @enum  log_dest
  * @brief 日志输出方式
  */
-typedef enum log_dest {
+enum E_LOG_DEST {
 	/*! 仅输出到屏幕  */
 	log_dest_terminal	= 1,
 	/*! 仅输出到文件 */
 	log_dest_file		= 2,
 	/*! 既输出到屏幕，也输出到文件 */
 	log_dest_both		= 3
-} log_dest_t;
-
-/**
-  * @brief 初始化日志记录功能。如果使用自动轮转，必须保证每天写的日志文件个数不能超过最大文件个数（maxfiles），
-  *        否则日志会写乱掉。
-  *
-  * @param dir 日志保存目录。如果填0，则在屏幕中输出日志。
-  * @param lvl 日志输出等级。如果设置为log_lvl_notice，则log_lvl_notice以上等级的日志都不输出。
-  * @param size 每个日志文件的大小限制（byte），超过这个大小则自动创建一个新的日志文件。
-  * @param maxfiles 每种等级的日志的最大文件个数，用于控制日志轮转。个数越少，日志轮转时效率越高。
-  *                 如果填0，则表示不使用日志轮转功能。
-  * @param pre_name 日志文件名前缀。
-  *
-  * @see set_log_dest, log_init_t, enable_multi_thread
-  *
-  * @return 成功返回0，失败返回-1。
-  */
-int  log_init(const char* dir, log_lvl_t lvl, uint32_t size, int maxfiles, const char* pre_name);
-
-/**
-  * @brief 初始化日志记录功能。按时间周期创建新的日志文件。
-  *
-  * @param dir 日志保存目录。如果填0，则在屏幕中输出日志。
-  * @param lvl 日志输出等级。如果设置为log_lvl_notice，则log_lvl_notice以上等级的日志都不输出。
-  * @param pre_name 日志文件名前缀。
-  * @param logtime 每个日志文件保存logtime分钟的日志，最大不能超过30000000分钟。假设logtime为15，则每小时产生4个日志文件，每个文件保存15分钟日志。
-  *
-  * @see set_log_dest, log_init, enable_multi_thread
-  *
-  * @return 成功返回0，失败返回-1。
-  */
-int log_init_t(const char* dir, log_lvl_t lvl, const char* pre_name, int logtime);
-
-/**
-  * @brief 销毁日志记录功能，所有打开的日志文件fd都会被关闭。不再需要日志功能时，可以调用这个函数。
-  *        或者当你想重新设置日志目录、日志等级等参数数，可以先调用该函数，然后调用log_init或log_init_t。
-  */
-void log_fini();
-
-/**
- * @brief 调用log_init初始化日志功能后，可以调用该函数动态调整日志的输出方式。如果不调用set_log_dest的话，
- *        则输出方式为log_init时确定的方式。注意：必须在log_init时指定了日志保存目录，才可以调用该函数。
- *
- * @param dest 日志输出方式
- *
- * @see log_init
- */
-void set_log_dest(log_dest_t dest);
-/**
- * @brief 这个写日志的库默认不支持多线程！多线程程序写日志的话，需要调用先一下这个函数，否则会有问题。
- *
- */
-void enable_multi_thread();
+} ;
 
 #ifdef __GNUC__
 #define LOG_CHECK_FMT(a,b) __attribute__((format(printf, a, b)))
@@ -364,10 +358,10 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
  * @brief 输出log_lvl_error等级的日志，并且返回Y到上一级函数。\n
  *        用法示例：ERROR_RETURN(("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)), -1);
  */
-#define ERROR_RETURN(X, Y) \
+#define ERROR_RETURN(msg_, ret_) \
 		do { \
-			ERROR_LOG X; \
-			return Y; \
+			ERROR_LOG msg_; \
+			return ret_; \
 		} while (0)
 
 /**
@@ -424,6 +418,3 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 			DEBUG_LOG(fmt, ##args); \
 			return; \
 		} while (0)
-
-
-int log_init_ex(const char* dir, log_lvl_t lvl, uint32_t size, int maxfiles, const char* pre_name, uint32_t logtime);

@@ -1,19 +1,13 @@
-/**
- *============================================================
- *  @file      list.h
- *  @brief     从内核代码里抽取出来的侵入式链表操作函数/宏。\n
- *             Simple doubly linked list implementation.\n
- * 
- *  compiler   gcc4.1.2
- *  platform   Linux
- *
- *  copyright:  TaoMee, Inc. ShangHai CN. All rights reserved.
- *
- *============================================================
- */
+/********************************************************************
+	platform:	
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	读取bench.ini配置文件
+	brief:		从内核代码里抽取出来
+				Simple doubly linked list implementation.
+*********************************************************************/
 
-#ifndef TAOMEE_H_LIST_H_
-#define TAOMEE_H_LIST_H_
+#pragma once
 
 #define __builtin_prefetch(x,y,z) 1
 
@@ -24,6 +18,7 @@ struct list_head
 {
   struct list_head *next, *prev;
 };
+
 /**
  * @brief a typedef
  */
@@ -48,8 +43,7 @@ typedef struct list_head list_head_t;
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static inline void
-__list_add (struct list_head *new_entry,
+static inline void __list_add (struct list_head *new_entry,
 	    struct list_head *prev, struct list_head *next)
 {
   next->prev = new_entry;
@@ -65,8 +59,7 @@ __list_add (struct list_head *new_entry,
  * @param new_entry new entry to be added
  * @param head list head to add it after
  */
-static inline void
-list_add (struct list_head *new_entry, struct list_head *head)
+static inline void list_add (struct list_head *new_entry, struct list_head *head)
 {
   __list_add (new_entry, head, head->next);
 }
@@ -78,8 +71,7 @@ list_add (struct list_head *new_entry, struct list_head *head)
  * @param new_entry new entry to be added
  * @param head list head to add it before
  */
-static inline void
-list_add_tail (struct list_head *new_entry, struct list_head *head)
+static inline void list_add_tail (struct list_head *new_entry, struct list_head *head)
 {
   __list_add (new_entry, head->prev, head);
 }
@@ -91,8 +83,7 @@ list_add_tail (struct list_head *new_entry, struct list_head *head)
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static inline void
-__list_del (struct list_head *prev, struct list_head *next)
+static inline void __list_del (struct list_head *prev, struct list_head *next)
 {
   next->prev = prev;
   prev->next = next;
@@ -103,8 +94,7 @@ __list_del (struct list_head *prev, struct list_head *next)
  * @param entry the element to delete from the list.
  * @note  list_empty on entry does not return true after this, the entry is in an undefined state.
  */
-static inline void
-list_del (struct list_head *entry)
+static inline void list_del (struct list_head *entry)
 {
   __list_del (entry->prev, entry->next);
   entry->next = 0;
@@ -115,8 +105,7 @@ list_del (struct list_head *entry)
  * @brief deletes entry from list and reinitialize it.
  * @param entry the element to delete from the list.
  */
-static inline void
-list_del_init (struct list_head *entry)
+static inline void list_del_init (struct list_head *entry)
 {
   __list_del (entry->prev, entry->next);
   INIT_LIST_HEAD (entry);
@@ -127,8 +116,7 @@ list_del_init (struct list_head *entry)
  * @param list the entry to move
  * @param head the head that will precede our entry
  */
-static inline void
-list_move (struct list_head *list, struct list_head *head)
+static inline void list_move (struct list_head *list, struct list_head *head)
 {
   __list_del (list->prev, list->next);
   list_add (list, head);
@@ -139,8 +127,7 @@ list_move (struct list_head *list, struct list_head *head)
  * @param list the entry to move
  * @param head the head that will follow our entry
  */
-static inline void
-list_move_tail (struct list_head *list, struct list_head *head)
+static inline void list_move_tail (struct list_head *list, struct list_head *head)
 {
   __list_del (list->prev, list->next);
   list_add_tail (list, head);
@@ -150,14 +137,12 @@ list_move_tail (struct list_head *list, struct list_head *head)
  * @brief tests whether a list is empty
  * @param head the list to test.
  */
-static inline int
-list_empty (struct list_head *head)
+static inline int list_empty (struct list_head *head)
 {
   return head->next == head;
 }
 
-static inline void
-__list_splice (struct list_head *list, struct list_head *head)
+static inline void __list_splice (struct list_head *list, struct list_head *head)
 {
   struct list_head *first = list->next;
   struct list_head *last = list->prev;
@@ -175,8 +160,7 @@ __list_splice (struct list_head *list, struct list_head *head)
  * @param list the new list to add.
  * @param head the place to add it in the first list.
  */
-static inline void
-list_splice (struct list_head *list, struct list_head *head)
+static inline void list_splice (struct list_head *list, struct list_head *head)
 {
   if (!list_empty (list))
     __list_splice (list, head);
@@ -189,8 +173,7 @@ list_splice (struct list_head *list, struct list_head *head)
  *
  * @note 'list' is reinitialised
  */
-static inline void
-list_splice_init (struct list_head *list, struct list_head *head)
+static inline void list_splice_init (struct list_head *list, struct list_head *head)
 {
   if (!list_empty (list))
     {
@@ -232,12 +215,11 @@ list_splice_init (struct list_head *list, struct list_head *head)
  */
 #define list_for_each_prev(pos, head) \
     for (pos = (head)->prev, __builtin_prefetch(pos->prev,0,1); \
-	 pos != (head); \
-	 pos = pos->prev, __builtin_prefetch(pos->prev,0,1))
+		pos != (head); \
+		pos = pos->prev, __builtin_prefetch(pos->prev,0,1))
 
 #define __list_for_each_prev(pos, head) \
-	for (pos = (head)->prev; pos != (head); \
-        	pos = pos->prev)
+	for (pos = (head)->prev; pos != (head); pos = pos->prev)
 
 /**
  * @brief iterate over a list safe against removal of list entry
@@ -246,8 +228,7 @@ list_splice_init (struct list_head *list, struct list_head *head)
  * @param head the head for your list.
  */
 #define list_for_each_safe(pos, n, head) \
-	for (pos = (head)->next, n = pos->next; pos != (head); \
-		pos = n, n = pos->next)
+	for (pos = (head)->next, n = pos->next; pos != (head); pos = n, n = pos->next)
 
 /**
  * @brief iterate over list of given type
@@ -268,5 +249,3 @@ list_splice_init (struct list_head *list, struct list_head *head)
 		     pos = list_entry(pos->member.next, typeof(*pos), member),	\
 		     __builtin_prefetch(pos->member.next,0,1))
 #endif
-
-#endif // TAOMEE_H_LIST_H_

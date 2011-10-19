@@ -237,7 +237,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 		ret_code = 0;
 	}
 
-	SHOW_LOG("Listen on %s:%u,ret_code:%d\r\n", listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code);
+	ALERT_LOG("Listen on %s:%u,ret_code:%d\r\n", listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code);
 	return ret_code;
 }
 

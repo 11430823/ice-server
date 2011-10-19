@@ -6,8 +6,7 @@
 	brief:		
 *********************************************************************/
 
-#ifndef __ALSA_IATOMIC_H
-#define __ALSA_IATOMIC_H
+#pragma once
 
 #if defined(__i386__) || defined(__x86_64__)
 
@@ -1110,5 +1109,3 @@ static inline int snd_atomic_read_ok(snd_atomic_read_t *r)
 	rmb();
 	return r->end == r->write->begin;
 }
-
-#endif /* __ALSA_IATOMIC_H */

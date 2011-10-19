@@ -89,7 +89,7 @@ int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
 
 out:
 	if (e_plugin_flag_load == flag) {
-		SHOW_LOG("dlopen [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
+		ALERT_LOG("dlopen [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
 	} else if (e_plugin_flag_reload == flag){
 		INFO_LOG("RELOAD [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
 	}
@@ -109,7 +109,7 @@ int dll_t::register_data_plugin( const char* file_name )
 		ERROR_LOG("dlopen error, %s", error);
 		ret_code = -1;
 	}
-	SHOW_LOG("dlopen %s %d\r\n", file_name, ret_code);
+	ALERT_LOG("dlopen %s %d\r\n", file_name, ret_code);
 	return ret_code;
 }
 

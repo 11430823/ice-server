@@ -171,7 +171,7 @@ void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n
 	char prefix[10] = { 0 };
 	int  len       = snprintf(prefix, 8, "%u", bc_elem->id);
 	prefix[len] = '_';
-	log_init_ex(g_bench_conf.log_dir.c_str(), (log_lvl_t)g_bench_conf.log_level,
+	log_init_ex(g_bench_conf.log_dir.c_str(), (E_LOG_LEVEL)g_bench_conf.log_level,
 		g_bench_conf.log_max_size, g_bench_conf.log_max_files, prefix,
 		g_bench_conf.log_save_next_file_interval_min);
 
@@ -197,5 +197,6 @@ fail:
 	net_exit();
 	g_dll.unregister_data_plugin();
 	g_dll.unregister_plugin();
+	log_fini();
 	exit(0);
 }
