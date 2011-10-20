@@ -13,6 +13,50 @@
 
 #include <stdint.h>
 
+/**
+ * @enum  E_LOG_LEVEL
+ * @brief 日志等级
+ */
+enum E_LOG_LEVEL {
+	/*! system is unusable -- 0 */
+	log_lvl_emerg,
+	/*! action must be taken immediately -- 1 */
+	log_lvl_alert,//黄色
+	/*! critical conditions -- 2 */
+	log_lvl_crit,//深蓝
+	/*! error conditions -- 3 */
+	log_lvl_error,
+	/*! warning conditions  -- 4 */
+	log_lvl_warning,
+	/*! normal but significant condition -- 5 */
+	log_lvl_notice,
+	/*! informational -- 6 */
+	log_lvl_info,
+	/*! debug-level messages -- 7 */
+	log_lvl_debug,
+	/*! trace-level messages -- 8。如果定义了宏LOG_USE_SYSLOG，则log_lvl_trace==log_lvl_debug */
+#ifndef LOG_USE_SYSLOG
+	log_lvl_trace,
+#else
+	log_lvl_trace = log_lvl_debug,
+#endif
+
+	log_lvl_max
+};
+
+/**
+ * @enum  log_dest
+ * @brief 日志输出方式
+ */
+enum E_LOG_DEST {
+	/*! 仅输出到屏幕  */
+	log_dest_terminal	= 1,
+	/*! 仅输出到文件 */
+	log_dest_file		= 2,
+	/*! 既输出到屏幕，也输出到文件 */
+	log_dest_both		= 3
+} ;
+
 /* @brief 初始化日志功能,调用log_init/log_init_t
 */
 int log_init_ex(const char* dir, E_LOG_LEVEL lvl, uint32_t size, int maxfiles, const char* pre_name, uint32_t logtime);
@@ -69,50 +113,6 @@ void set_log_dest(E_LOG_DEST dest);
  *
  */
 void enable_multi_thread();
-
-/**
- * @enum  E_LOG_LEVEL
- * @brief 日志等级
- */
-enum E_LOG_LEVEL {
-	/*! system is unusable -- 0 */
-	log_lvl_emerg,
-	/*! action must be taken immediately -- 1 */
-	log_lvl_alert,//黄色
-	/*! critical conditions -- 2 */
-	log_lvl_crit,//深蓝
-	/*! error conditions -- 3 */
-	log_lvl_error,
-	/*! warning conditions  -- 4 */
-	log_lvl_warning,
-	/*! normal but significant condition -- 5 */
-	log_lvl_notice,
-	/*! informational -- 6 */
-	log_lvl_info,
-	/*! debug-level messages -- 7 */
-	log_lvl_debug,
-	/*! trace-level messages -- 8。如果定义了宏LOG_USE_SYSLOG，则log_lvl_trace==log_lvl_debug */
-#ifndef LOG_USE_SYSLOG
-	log_lvl_trace,
-#else
-	log_lvl_trace = log_lvl_debug,
-#endif
-
-	log_lvl_max
-};
-
-/**
- * @enum  log_dest
- * @brief 日志输出方式
- */
-enum E_LOG_DEST {
-	/*! 仅输出到屏幕  */
-	log_dest_terminal	= 1,
-	/*! 仅输出到文件 */
-	log_dest_file		= 2,
-	/*! 既输出到屏幕，也输出到文件 */
-	log_dest_both		= 3
-} ;
 
 #ifdef __GNUC__
 #define LOG_CHECK_FMT(a,b) __attribute__((format(printf, a, b)))

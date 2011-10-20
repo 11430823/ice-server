@@ -17,7 +17,7 @@ public:
 			get_now_tv()->tv_sec + 1);
 		timeval next_time;
 		next_time.tv_sec = get_now_tv()->tv_sec;
-		next_time.tv_usec = get_now_tv()->tv_usec + 200000;
+		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
 		add_micro_event(&test_timer::m_timer, &next_time, this, NULL);
 	}
 	virtual ~test_timer(){
@@ -39,7 +39,7 @@ private:
 		test_timer* pPlantManager = (test_timer*)data;
 		timeval next_time;
 		next_time.tv_sec = get_now_tv()->tv_sec;
-		next_time.tv_usec = get_now_tv()->tv_usec + 200000;
+		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
 		add_micro_event(&test_timer::m_timer, &next_time, pPlantManager, NULL);
 		DEBUG_LOG("m_timer[%ld, %ld]", next_time.tv_sec, next_time.tv_usec);
 		return 0;
