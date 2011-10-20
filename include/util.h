@@ -8,7 +8,6 @@
 
 #pragma once
 #include <stdint.h>
-#include "log.h"
 
 #ifdef  likely
 #undef  likely
