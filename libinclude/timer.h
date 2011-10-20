@@ -13,16 +13,12 @@
 
 #pragma once
 
-// Since C89
 #include <stdlib.h>
 #include <time.h>
-// Since C99
 #include <stdint.h>
-// Posix
 #include <sys/time.h>
-// Glib
 #include <glib.h>
-// User-defined
+
 #include "list.h"
 
 // export now and tm_cur
@@ -33,6 +29,25 @@ extern struct tm      tm_cur;
  * @brief   回调函数的类型。如果回调函数返回0，则表示定时器到期时要删除该定时器，反之，则不删除。
  */
 typedef int (*timer_cb_func_t)(void*, void*);
+
+static inline void renew_now();
+
+/**
+ * @brief  初始化定时器功能。必须调用了这个函数，才能使用定时器功能。
+ * @see    destroy_timer
+ */
+void setup_timer();
+/**
+ * @brief  销毁所有定时器（包括秒级和微秒级的定时器），并释放内存。
+ * @see    setup_timer
+ */
+void destroy_timer();
+
+/**
+ * @brief  扫描定时器列表，调用到期了的定时器的回调函数，并根据回调函数的返回值决定是否需要把该定时器删除掉。
+ *         如果回调函数返回0，则表示要删除该定时器，反之，则不删除。必须定期调用该函数才能调用到期了的定时器的回调函数。
+ */
+void handle_timer();
 
 /**
  * @brief   秒级定时器。
@@ -73,39 +88,6 @@ enum E_TIMER_CHG_MODE {
 } ;
 
 /**
- * @brief  初始化定时器功能。必须调用了这个函数，才能使用定时器功能。
- * @see    destroy_timer
- */
-void setup_timer();
-/**
- * @brief  销毁所有定时器（包括秒级和微秒级的定时器），并释放内存。
- * @see    setup_timer
- */
-void destroy_timer();
-
-void scan_seconds_timer();
-void scan_microseconds_timer();
-static inline void renew_now();
-
-/**
- * @brief  扫描定时器列表，调用到期了的定时器的回调函数，并根据回调函数的返回值决定是否需要把该定时器删除掉。
- *         如果回调函数返回0，则表示要删除该定时器，反之，则不删除。必须定期调用该函数才能调用到期了的定时器的回调函数。
- */
-static inline void
-handle_timer()
-{
-	static time_t last = 0;
-	renew_now();
-	//second timer
-	if (last != now.tv_sec) {
-		last = now.tv_sec;
-		scan_seconds_timer();
-	}
-	//microseconds timer
-	scan_microseconds_timer();
-}
-
-/**
  * @brief  添加/替换一个秒级定时器，该定时器的到期时间是expire，到期时回调的函数是func。
  * @param  head 链头，新创建的定时器会被插入到该链表中。
  * @param  func 定时器到期时调用的回调函数。
@@ -120,8 +102,7 @@ handle_timer()
  * @return 指向新添加/替换的秒级定时器的指针。
  * @see    ADD_TIMER_EVENT, REMOVE_TIMER, remove_timers, REMOVE_TIMERS
  */
-timer_struct_t*
-add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
+timer_struct_t* add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
 
 /**
  * @brief  添加/替换一个秒级定时器，该定时器的到期时间是expire，回调函数是register_timer函数根据定时器类型登记。
@@ -138,8 +119,7 @@ add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time
  * @return 指向新添加/替换的秒级定时器的指针。
  * @see    ADD_TIMER_EVENT, REMOVE_TIMER, remove_timers, REMOVE_TIMERS
  */
-timer_struct_t*
-add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
+timer_struct_t* add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
 
 /**
  * @def    ADD_TIMER_EVENT
@@ -181,28 +161,14 @@ add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire
  */
 void mod_expire_time(timer_struct_t* tmr, time_t exptm);
 
-static inline void
-do_remove_timer(timer_struct_t* t, int freed)
-{
-	if (t->sprite_list.next != 0) {
-		list_del(&t->sprite_list);
-	}
-	if (freed) {
-		list_del(&t->entry);
-		g_slice_free1(sizeof *t, t);
-	} else {
-		t->function = 0;
-		t->func_indx = 0;
-	}
-}
+static void do_remove_timer(timer_struct_t* t, int freed);
 
 /**
  * @brief  删除链表head中所有的定时器，并释放内存。用于删除秒级定时器。
  * @param  head 定时器链表的链头。
  * @see    add_event, ADD_TIMER_EVENT
  */
-static inline void
-remove_timers(list_head_t* head)
+static inline void remove_timers(list_head_t* head)
 {
 	timer_struct_t *t;
 	list_head_t *l, *m;
@@ -337,3 +303,6 @@ void unregister_timers_callback();
  * @brief 程序在线加载text.so时，由于定时器回调函数的地址会发生变化，需要更新定时器类型id与回调函数的关系对应表
  */ 
 void refresh_timers_callback();
+
+void scan_seconds_timer();
+void scan_microseconds_timer();

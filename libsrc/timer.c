@@ -330,3 +330,30 @@ void refresh_timers_callback()
 	}
 }
 
+void handle_timer()
+{
+	static time_t last = 0;
+	renew_now();
+	//second timer
+	if (last != now.tv_sec) {
+		last = now.tv_sec;
+		scan_seconds_timer();
+	}
+	//microseconds timer
+	scan_microseconds_timer();
+}
+
+void do_remove_timer(timer_struct_t* t, int freed)
+{
+	if (t->sprite_list.next != 0) {
+		list_del(&t->sprite_list);
+	}
+	if (freed) {
+		list_del(&t->entry);
+		g_slice_free1(sizeof *t, t);
+	} else {
+		t->function = 0;
+		t->func_indx = 0;
+	}
+}
+
