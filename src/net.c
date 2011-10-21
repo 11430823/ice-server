@@ -529,10 +529,8 @@ epoll_mod_again:
 #include "timer.h"
 int net_loop(int timeout, int max_len, int is_conn)
 {
-	//todo ¼ì²é
 	iterate_close_queue();
 	iterate_etin_queue(max_len, is_conn);
-	//todo end
 
 	int nr = epoll_wait(epi.epfd, epi.evs, epi.max_ev_num, timeout);
 	if (unlikely(nr < 0 && errno != EINTR)){
