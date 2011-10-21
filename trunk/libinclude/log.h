@@ -140,19 +140,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 		write_syslog(level, fmt "\n", ##args)
 #endif
 
+#ifndef DISABLE_EMERG_LOG
 /**
  * @def EMERG_LOG
  * @brief 输出log_lvl_emerg等级日志。如果定义宏DISABLE_EMERG_LOG，则可以在编译期把EMERG_LOG去除。\n
  *        用法示例：EMERG_LOG("dlopen error, %s", error);
  */
+#define EMERG_LOG(fmt, args...) \
+		DETAIL(log_lvl_emerg, 0, fmt, ##args)
 /**
  * @def KEMERG_LOG
  * @brief 输出log_lvl_emerg等级日志。比EMERG_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_EMERG_LOG，则可以在编译期把KEMERG_LOG去除。\n
  *        用法示例：KEMERG_LOG(userid, "dlopen error, %s", error);
  */
-#ifndef DISABLE_EMERG_LOG
-#define EMERG_LOG(fmt, args...) \
-		DETAIL(log_lvl_emerg, 0, fmt, ##args)
 #define KEMERG_LOG(key, fmt, args...) \
 		DETAIL(log_lvl_emerg, key, fmt, ##args)
 #else
@@ -160,20 +160,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KEMERG_LOG(key, fmt, args...) 
 #endif
 
+#ifndef DISABLE_ALERT_LOG
 /**
  * @def ALERT_LOG
  * @brief 输出log_lvl_alert等级日志。如果定义宏DISABLE_ALERT_LOG，则可以在编译期把ALERT_LOG去除。\n
  *        用法示例：ALERT_LOG("dlopen error, %s", error);
  */
+#define ALERT_LOG(fmt, args...) \
+		DETAIL(log_lvl_alert, 0, fmt, ##args)
 /**
  * @def KALERT_LOG
  * @brief 输出log_lvl_alert等级日志。比ALERT_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_ALERT_LOG，则可以在编译期把KALERT_LOG去除。\n
  *        用法示例：KALERT_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_ALERT_LOG
-#define ALERT_LOG(fmt, args...) \
-		DETAIL(log_lvl_alert, 0, fmt, ##args)
 #define KALERT_LOG(key, fmt, args...) \
 		DETAIL(log_lvl_alert, key, fmt, ##args)
 #else
@@ -181,21 +180,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KALERT_LOG(key, fmt, args...) 
 #endif
 
+#ifndef DISABLE_CRIT_LOG
 /**
  * @def CRIT_LOG
  * @brief 输出log_lvl_crit等级日志。如果定义宏DISABLE_CRIT_LOG，则可以在编译期把CRIT_LOG去除。\n
  *        用法示例：CRIT_LOG("dlopen error, %s", error);
  */
-
+#define CRIT_LOG(fmt, args...) \
+		DETAIL(log_lvl_crit, 0, fmt, ##args)
 /**
  * @def KCRIT_LOG
  * @brief 输出log_lvl_crit等级日志。比CRIT_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_CRIT_LOG，则可以在编译期把KCRIT_LOG去除。\n
  *        用法示例：KCRIT_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_CRIT_LOG
-#define CRIT_LOG(fmt, args...) \
-		DETAIL(log_lvl_crit, 0, fmt, ##args)
 #define KCRIT_LOG(key, fmt, args...) \
 		DETAIL(log_lvl_crit, key, fmt, ##args)
 #else
@@ -203,20 +200,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KCRIT_LOG(key, fmt, args...) 
 #endif
 
+#ifndef DISABLE_ERROR_LOG
 /**
  * @def ERROR_LOG
  * @brief 输出log_lvl_error等级日志。如果定义宏DISABLE_ERROR_LOG，则可以在编译期把ERROR_LOG去除。\n
  *        用法示例：ERROR_LOG("dlopen error, %s", error);
  */
+#define ERROR_LOG(fmt, args...) \
+		DETAIL(log_lvl_error, 0, fmt, ##args)
 /**
  * @def KERROR_LOG
  * @brief 输出log_lvl_error等级日志。比ERROR_LOG多一个参数 key,一般写入userid。 如果定义宏DISABLE_ERROR_LOG，则可以在编译期把ERROR_LOG去除。\n
  *        用法示例：KERROR_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_ERROR_LOG
-#define ERROR_LOG(fmt, args...) \
-		DETAIL(log_lvl_error, 0, fmt, ##args)
 #define KERROR_LOG(key, fmt, args...) \
 		DETAIL(log_lvl_error, key, fmt, ##args)
 #else
@@ -224,21 +220,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KERROR_LOG(key, fmt, args...) 
 #endif
 
+#ifndef DISABLE_WARN_LOG
 /**
  * @def WARN_LOG
  * @brief 输出log_lvl_warning等级日志。如果定义宏DISABLE_WARN_LOG，则可以在编译期把WARN_LOG去除。\n
  *        用法示例：WARN_LOG("dlopen error, %s", error);
  */
-
+#define WARN_LOG(fmt, args...) \
+		SIMPLY(log_lvl_warning, 0, fmt, ##args)
 /**
  * @def KWARN_LOG
  * @brief 输出log_lvl_warning等级日志。比WARN_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_WARN_LOG，则可以在编译期把KWARN_LOG去除。\n
  *        用法示例：KWARN_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_WARN_LOG
-#define WARN_LOG(fmt, args...) \
-		SIMPLY(log_lvl_warning, 0, fmt, ##args)
 #define KWARN_LOG(key, fmt, args...) \
 		SIMPLY(log_lvl_warning, key, fmt, ##args)
 #else
@@ -246,20 +240,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KWARN_LOG(key, fmt, args...) 
 #endif
 
+#ifndef DISABLE_NOTI_LOG
 /**
  * @def NOTI_LOG
  * @brief 输出log_lvl_notice等级日志。如果定义宏DISABLE_NOTI_LOG，则可以在编译期把NOTI_LOG去除。\n
  *        用法示例：NOTI_LOG("dlopen error, %s", error);
  */
+#define NOTI_LOG(fmt, args...) \
+		SIMPLY(log_lvl_notice, 0, fmt, ##args)
 /**
  * @def KNOTI_LOG
  * @brief 输出log_lvl_notice等级日志。比NOTI_LOG多一个参数 key,一般写入userid。 如果定义宏DISABLE_NOTI_LOG，则可以在编译期把KNOTI_LOG去除。\n
  *        用法示例：KNOTI_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_NOTI_LOG
-#define NOTI_LOG(fmt, args...) \
-		SIMPLY(log_lvl_notice, 0, fmt, ##args)
 #define KNOTI_LOG(key, fmt, args...) \
 		SIMPLY(log_lvl_notice, key, fmt, ##args)
 #else
@@ -267,20 +260,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KNOTI_LOG(key, fmt, args...) 
 #endif
 
-/**
+#ifndef DISABLE_INFO_LOG
+#/**
  * @def INFO_LOG
  * @brief 输出log_lvl_info等级日志。如果定义宏DISABLE_INFO_LOG，则可以在编译期把INFO_LOG去除。\n
  *        用法示例：INFO_LOG("dlopen error, %s", error);
  */
+#define INFO_LOG(fmt, args...) \
+		SIMPLY(log_lvl_info, 0, fmt, ##args)
 /**
  * @def KINFO_LOG
  * @brief 输出log_lvl_info等级日志。比ERROR_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_INFO_LOG，则可以在编译期把KINFO_LOG去除。\n
  *        用法示例：KINFO_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_INFO_LOG
-#define INFO_LOG(fmt, args...) \
-		SIMPLY(log_lvl_info, 0, fmt, ##args)
 #define KINFO_LOG(key, fmt, args...) \
 		SIMPLY(log_lvl_info, key, fmt, ##args)
 #else
@@ -288,20 +280,19 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KINFO_LOG(key, fmt, args...) 
 #endif
 
+#ifndef DISABLE_DEBUG_LOG
 /**
  * @def DEBUG_LOG
  * @brief 输出log_lvl_debug等级日志。如果定义宏DISABLE_DEBUG_LOG，则可以在编译期把DEBUG_LOG去除。\n
  *        用法示例：DEBUG_LOG("dlopen error, %s", error);
  */
+#define DEBUG_LOG(fmt, args...) \
+		SIMPLY(log_lvl_debug, 0, fmt, ##args)
 /**
  * @def KDEBUG_LOG
  * @brief 输出log_lvl_debug等级日志。比DEBUG_LOG 多一个参数 key,一般写入userid。 如果定义宏DISABLE_DEBUG_LOG，则可以在编译期把KDEBUG_LOG去除。\n
  *        用法示例：KDEBUG_LOG(userid, "dlopen error, %s", error);
  */
-
-#ifndef DISABLE_DEBUG_LOG
-#define DEBUG_LOG(fmt, args...) \
-		SIMPLY(log_lvl_debug, 0, fmt, ##args)
 #define KDEBUG_LOG(key, fmt, args...) \
 		SIMPLY(log_lvl_debug, key, fmt, ##args)
 #else
@@ -309,21 +300,21 @@ void boot_log(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 #define KDEBUG_LOG(key, fmt, args...) 
 #endif
 
+#ifdef ENABLE_TRACE_LOG
 /**
  * @def TRACE_LOG
  * @brief 输出log_lvl_trace等级日志。如果不定义宏ENABLE_TRACE_LOG，则可以在编译期把TRACE_LOG去除。\n
  *        如果编译时定义了宏LOG_USE_SYSLOG，则TRACE_LOG日志会写到DEBUG_LOG日志文件里。\n
  *        用法示例：TRACE_LOG("dlopen error, %s", error);
  */
+#define TRACE_LOG(fmt, args...) \
+		DETAIL(log_lvl_trace, 0, fmt, ##args)
 /**
  * @def KTRACE_LOG
  * @brief 输出log_lvl_trace等级日志。比KTRACE_LOG多一个参数 key,一般写入userid。如果不定义宏ENABLE_TRACE_LOG，则可以在编译期把KTRACE_LOG去除。\n
  *        如果编译时定义了宏LOG_USE_SYSLOG，则KTRACE_LOG日志会写到KDEBUG_LOG日志文件里。\n
  *        用法示例：KTRACE_LOG(userid, "dlopen error, %s", error);
  */
-#ifdef ENABLE_TRACE_LOG
-#define TRACE_LOG(fmt, args...) \
-		DETAIL(log_lvl_trace, 0, fmt, ##args)
 #define KTRACE_LOG(key, fmt, args...) \
 		DETAIL(log_lvl_trace, key, fmt, ##args)
 #else
