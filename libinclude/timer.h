@@ -1,15 +1,10 @@
-/**
- *============================================================
- *  @file      timer.h
- *  @brief     定时器函数，有秒级和毫秒级两种精度的接口。用于设定某一时刻调用某个函数。需要glib支持。
- * 
- *  compiler   gcc4.1.2
- *  platform   Linux
- *
- *  copyright:  TaoMee, Inc. ShangHai CN. All rights reserved.
- *
- *============================================================
- */
+/********************************************************************
+	platform:	此文件由内核中提取
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	
+	brief:		定时器函数，有秒级和微妙级两种精度的接口。用于设定某一时刻调用某个函数。需要glib支持。
+*********************************************************************/
 
 #pragma once
 
@@ -168,16 +163,7 @@ static void do_remove_timer(timer_struct_t* t, int freed);
  * @param  head 定时器链表的链头。
  * @see    add_event, ADD_TIMER_EVENT
  */
-static inline void remove_timers(list_head_t* head)
-{
-	timer_struct_t *t;
-	list_head_t *l, *m;
-
-	list_for_each_safe (l, m, head) {
-		t = list_entry (l, timer_struct_t, sprite_list);
-		do_remove_timer(t, 0);
-	}
-}
+static void remove_timers(list_head_t* head);
 
 /**
  * @def    REMOVE_TIMER
@@ -197,8 +183,7 @@ static inline void remove_timers(list_head_t* head)
  * @return 指向新添加的微秒级定时器的指针。
  * @see    REMOVE_MICRO_TIMER, remove_micro_timers, REMOVE_TIMERS
  */
-micro_timer_struct_t*
-add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data);
+micro_timer_struct_t* add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data);
 
 /**
  * @brief  添加一个微秒级定时器，该定时器的到期时间是tv，回调函数是register_timer函数根据定时器类型登记的。
@@ -209,20 +194,9 @@ add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, voi
  * @return 指向新添加的微秒级定时器的指针。
  * @see    REMOVE_MICRO_TIMER, remove_micro_timers, REMOVE_TIMERS
  */
-micro_timer_struct_t*
-add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data);
+micro_timer_struct_t* add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data);
 
-static inline void
-remove_micro_timer(micro_timer_struct_t *t, int freed)
-{
-	if (freed) {
-		list_del_init(&t->entry);
-		g_slice_free1(sizeof *t, t);
-	} else {
-		t->function = 0;
-		t->func_indx = 0;
-	}
-}
+static void remove_micro_timer(micro_timer_struct_t *t, int freed);
 
 /**
  * @brief  删除传递给回调函数的第一个参数==owner的所有微秒级定时器，并释放内存。
@@ -253,35 +227,30 @@ void remove_micro_timers(void* owner);
  * @brief 更新当前时间。
  * @see get_now_tv, get_now_tm
  */
-static inline void
-renew_now()
+static inline void renew_now()
 {
 	gettimeofday(&now, 0);
 	localtime_r(&now.tv_sec, &tm_cur);
 }
 
 /**
- * @brief 对于对实时性要求不会太高的程序，比如摩尔庄园的Online Server这种循环处理客户端发过来的数据包的程序，
- *        可以先调用一次renew_now，然后处理N个数据包，然后再调用一次renew_now，接着再处理N个数据包，如此反复。
- *        这样在处理数据包的函数里就可以直接使用get_now_tv来获取不太精确的当前时间，从而能稍微提升程序的效率。
+ * @brief 对于对实时性要求不会太高的程序.这样在处理数据包的函数里就可以直接使用get_now_tv来获取不太精确的当前时间，
+ *		从而能稍微提升程序的效率。
  * @return 不太精确的当前时间。
  * @see renew_now, get_now_tm
  */
-static inline const struct timeval*
-get_now_tv()
+static inline const struct timeval* get_now_tv()
 {
 	return &now;
 }
 
 /**
- * @brief 对于对实时性要求不会太高的程序，比如摩尔庄园的Online Server这种循环处理客户端发过来的数据包的程序，
- *        可以先调用一次renew_now，然后处理N个数据包，然后再调用一次renew_now，接着再处理N个数据包，如此反复。
- *        这样在处理数据包的函数里就可以直接使用get_now_tm来获取不太精确的当前时间，从而能稍微提升程序的效率。
+ * @brief 对于对实时性要求不会太高的程序，这样在处理数据包的函数里就可以直接使用get_now_tm来获取不太精确的当前时间，
+ *		从而能稍微提升程序的效率。
  * @return 不太精确的当前时间。
  * @see renew_now, get_now_tv
  */
-static inline const struct tm*
-get_now_tm()
+static inline const struct tm* get_now_tm()
 {
 	return &tm_cur;
 }

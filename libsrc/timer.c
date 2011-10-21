@@ -357,3 +357,25 @@ void do_remove_timer(timer_struct_t* t, int freed)
 	}
 }
 
+void remove_timers(list_head_t* head)
+{
+	timer_struct_t *t;
+	list_head_t *l, *m;
+
+	list_for_each_safe (l, m, head) {
+		t = list_entry (l, timer_struct_t, sprite_list);
+		do_remove_timer(t, 0);
+	}
+}
+
+void remove_micro_timer(micro_timer_struct_t *t, int freed)
+{
+	if (freed) {
+		list_del_init(&t->entry);
+		g_slice_free1(sizeof *t, t);
+	} else {
+		t->function = 0;
+		t->func_indx = 0;
+	}
+}
+
