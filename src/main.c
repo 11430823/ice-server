@@ -15,7 +15,6 @@
 #include "util.h"
 
 int main(int argc, char* argv[]){
-	DEBUG_LOG("DLOPEN322");
 	if (0 != g_bench_conf.load()){
 		return -1;
 	}

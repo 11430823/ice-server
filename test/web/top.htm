@@ -9,6 +9,15 @@
 h1 {color: red}
 p {color: blue}
 </style>
+
+<script type="text/javascript">
+function connect_server()
+{
+	document.getElementById("recv_msg").innerHTML="connecting...";
+}
+</script>
+
+
 </head>
 
 <body>
@@ -40,5 +49,8 @@ document.write("如果显示了这段文字，那么您的浏览器支持 JavaScript！")
 <a href="./Untitled-b.htm" style="text-decoration:none">
 这是一个链接(无下划线)！
 </a>
+
+<h1 id="recv_msg">recv msg</h1>
+<button onclick="connect_server()">connect server</button>
 </body>
 </html>
