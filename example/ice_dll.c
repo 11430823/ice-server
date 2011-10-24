@@ -7,6 +7,18 @@
 #include "log.h"
 #include "timer.h"
 
+#pragma pack(1)
+/* SERVER和CLIENT的协议包头格式 */
+struct cli_proto_head_t {
+	uint32_t len; /* 协议的长度 */
+	uint16_t cmd; /* 协议的命令号 */
+	uint32_t id; /* 账号 */
+	uint32_t seq_num;/* 序列号 */
+	uint32_t ret; /* S->C, 错误码 */
+	uint8_t body[]; /* 包体信息 */
+};
+#pragma pack()
+
 class test_timer
 {
 public:
@@ -32,7 +44,7 @@ private:
 		const uint32_t uNowTimeS = get_now_tv()->tv_sec;
 		ADD_TIMER_EVENT(pPlantManager,&test_timer::s_timer, NULL,
 			uNowTimeS+1);
-		DEBUG_LOG("s_timer[%u]",uNowTimeS);
+//		DEBUG_LOG("s_timer[%u]",uNowTimeS);
 		return 0;
 	}
 	static int m_timer(void* data, void* info){
@@ -41,7 +53,7 @@ private:
 		next_time.tv_sec = get_now_tv()->tv_sec;
 		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
 		add_micro_event(&test_timer::m_timer, &next_time, pPlantManager, NULL);
-		DEBUG_LOG("m_timer[%ld, %ld]", next_time.tv_sec, next_time.tv_usec);
+//		DEBUG_LOG("m_timer[%ld, %ld]", next_time.tv_sec, next_time.tv_usec);
 		return 0;
 	}
 	test_timer(const test_timer &cr);
@@ -98,11 +110,12 @@ extern "C" int get_pkg_len(int fd, const void* avail_data, int avail_len, int is
 	}
 
 	uint32_t len = *(uint32_t *)avail_data;
-// 	if (isparent) {
-// 		if (len > e_msg_len_max || len < (int)sizeof(btl_proto_head_t)) {
-// 			return -1;
-// 		}
-// 	}
+ 	if (isparent) {
+ 		if (len > 32*1024 || len < (int)sizeof(cli_proto_head_t)) {
+ 			return -1;
+ 		}
+ 	}
+	INFO_LOG("[fd:%d, avail_len:%d, isparent:%d, avail_data:%s]", fd, avail_len, isparent, (char*)avail_data);
 	return len;
 }
 
@@ -113,6 +126,9 @@ extern "C" int get_pkg_len(int fd, const void* avail_data, int avail_len, int is
 extern "C" int proc_pkg_from_client(void* data, int len, fdsession_t* fdsess)
 {
 	/* 返回非零，断开FD的连接 */ 
+	INFO_LOG("[fd:%d, len:%d, data:%s]", fdsess->fd, len, (char*)data);
+	cli_proto_head_t* p = (cli_proto_head_t*)data;
+	INFO_LOG("[cmd:%d, id:%d, len:%d, ret:%d, seq_num:%d]", p->cmd, p->id, p->len, p->ret, p->seq_num);
 	return 0;
 }
 

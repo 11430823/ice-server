@@ -25,8 +25,6 @@ extern struct tm      tm_cur;
  */
 typedef int (*timer_cb_func_t)(void*, void*);
 
-static inline void renew_now();
-
 /**
  * @brief  初始化定时器功能。必须调用了这个函数，才能使用定时器功能。
  * @see    destroy_timer
@@ -156,14 +154,14 @@ timer_struct_t* add_event_ex(list_head_t* head, int fidx, void* owner, void* dat
  */
 void mod_expire_time(timer_struct_t* tmr, time_t exptm);
 
-static void do_remove_timer(timer_struct_t* t, int freed);
+void do_remove_timer(timer_struct_t* t, int freed);
 
 /**
  * @brief  删除链表head中所有的定时器，并释放内存。用于删除秒级定时器。
  * @param  head 定时器链表的链头。
  * @see    add_event, ADD_TIMER_EVENT
  */
-static void remove_timers(list_head_t* head);
+void remove_timers(list_head_t* head);
 
 /**
  * @def    REMOVE_TIMER
@@ -196,7 +194,7 @@ micro_timer_struct_t* add_micro_event(timer_cb_func_t func, const struct timeval
  */
 micro_timer_struct_t* add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data);
 
-static void remove_micro_timer(micro_timer_struct_t *t, int freed);
+void remove_micro_timer(micro_timer_struct_t *t, int freed);
 
 /**
  * @brief  删除传递给回调函数的第一个参数==owner的所有微秒级定时器，并释放内存。
