@@ -1,15 +1,25 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <error.h>
-
 #include <stdio.h>
+#include <cstdlib>
+#include <algorithm>
+#include <fstream>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include "../libinclude/astar.h"
+using namespace std;
 
 // #define DEBUG_LOG printf
 // #define ERROR_LOG printf
 // 
 // #define SHOW_LOG printf
 
-
+/*
 #define DLFUNC(h, v, name, type) \
 	do { \
 	void* c = dlsym (h, name); \
@@ -37,5 +47,29 @@ int main(int argc, char* argv[])
 
 	DLFUNC(handle, cc, "on_events", void(*)());
 out:
+	return 0;
+}
+*/
+
+int main()
+{
+	AStar<> astar("./1000101.txt");
+	if (!astar) {
+		cout << "oops" << endl;
+		return 0;
+	}
+	cout << "fine" << endl;
+
+	//	const AStar<>::Points* pts = astar.findpath(AStar<>::Point(350, 210), AStar<>::Point(160, 0));
+	for (int i = 0; i<1; i++){
+		const AStar<>::Points* pts = astar.findpath(AStar<>::Point(450, 450), AStar<>::Point(0, 450));
+ 		for (AStar<>::Points::const_iterator it = pts->begin(); it != pts->end(); ++it) {
+ 			cout << '(' << it->x << ", " << it->y << ')' << ", ";
+ 		}
+ 		cout << endl;
+	}
+
+
+	//copy(pts->begin(), pts->end(), ostream_iterator<string>(outfile, "\n") );
 	return 0;
 }
