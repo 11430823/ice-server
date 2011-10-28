@@ -1,23 +1,12 @@
 #include "../include/dll.h"
 #include <stdint.h>
-
-
 #include <stdio.h>
 
 #include "log.h"
 #include "timer.h"
-
-#pragma pack(1)
-/* SERVER和CLIENT的协议包头格式 */
-struct cli_proto_head_t {
-	uint32_t len; /* 协议的长度 */
-	uint16_t cmd; /* 协议的命令号 */
-	uint32_t id; /* 账号 */
-	uint32_t seq_num;/* 序列号 */
-	uint32_t ret; /* S->C, 错误码 */
-	uint8_t body[]; /* 包体信息 */
-};
-#pragma pack()
+#include "proto.h"
+#include "dispatch.h"
+#include "data.h"
 
 /**
   * @brief Initialize service
@@ -29,6 +18,7 @@ extern "C" int init_service(int isparent)
 	}else{
 		DEBUG_LOG("======server start======");
 		setup_timer();
+		g_cmd.init_handle();
 	}
 	return 0;
 }
@@ -86,7 +76,7 @@ extern "C" int proc_pkg_from_client(void* data, int len, fdsession_t* fdsess)
 	INFO_LOG("[fd:%d, len:%d, data:%s]", fdsess->fd, len, (char*)data);
 	cli_proto_head_t* p = (cli_proto_head_t*)data;
 	INFO_LOG("[cmd:%d, id:%d, len:%d, ret:%d, seq_num:%d]", p->cmd, p->id, p->len, p->ret, p->seq_num);
-	return 0;
+	return dispatch_client(data, fdsess);
 }
 
 /**
