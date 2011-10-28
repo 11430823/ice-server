@@ -19,47 +19,6 @@ struct cli_proto_head_t {
 };
 #pragma pack()
 
-class test_timer
-{
-public:
-public:
-	test_timer(void){
-		INIT_LIST_HEAD(&timer_list);
-		ADD_TIMER_EVENT(this, &test_timer::s_timer,NULL,
-			get_now_tv()->tv_sec + 1);
-		timeval next_time;
-		next_time.tv_sec = get_now_tv()->tv_sec;
-		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
-		add_micro_event(&test_timer::m_timer, &next_time, this, NULL);
-	}
-	virtual ~test_timer(){
-		REMOVE_TIMERS(this);
-	}
-protected:
-	
-private:
-	list_head_t timer_list;
-	static int s_timer(void* data, void* info){
-		test_timer* pPlantManager = (test_timer*)data;
-		const uint32_t uNowTimeS = get_now_tv()->tv_sec;
-		ADD_TIMER_EVENT(pPlantManager,&test_timer::s_timer, NULL,
-			uNowTimeS+1);
-//		DEBUG_LOG("s_timer[%u]",uNowTimeS);
-		return 0;
-	}
-	static int m_timer(void* data, void* info){
-		test_timer* pPlantManager = (test_timer*)data;
-		timeval next_time;
-		next_time.tv_sec = get_now_tv()->tv_sec;
-		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
-		add_micro_event(&test_timer::m_timer, &next_time, pPlantManager, NULL);
-//		DEBUG_LOG("m_timer[%ld, %ld]", next_time.tv_sec, next_time.tv_usec);
-		return 0;
-	}
-	test_timer(const test_timer &cr);
-	test_timer & operator=( const test_timer &cr);
-};
-test_timer* p;
 /**
   * @brief Initialize service
   *
@@ -70,7 +29,6 @@ extern "C" int init_service(int isparent)
 	}else{
 		DEBUG_LOG("======server start======");
 		setup_timer();
-		p = new test_timer;
 	}
 	return 0;
 }
@@ -82,7 +40,6 @@ extern "C" int init_service(int isparent)
 extern "C" int fini_service(int isparent)
 {
 	if (!isparent) {
-		delete p;
 		destroy_timer();
 		DEBUG_LOG("======server done======");
 	}
