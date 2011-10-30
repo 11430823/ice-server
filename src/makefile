@@ -23,7 +23,7 @@ $(EXE):
 #	rm ../bin/$(EXE)
 	cp $(EXE) ../bin/
 	rm -f $(EXE)
-#	sudo cp ../include/* /usr/include/ice_server/
+	sudo cp ../include/* /usr/include/ice_server/
 clean:
 	rm -f $(EXE)
 
