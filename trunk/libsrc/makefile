@@ -10,5 +10,7 @@ $(EXE):
 	$(CC) $(LOCAL_SRCS) $(INCLUDES) $(GLIB_INCLUDES) $(FLAG) $@
 	cp -f $@ ../lib/
 	rm $@
+	sudo cp ../libinclude/* /usr/include/ice_lib/
+	sudo cp ../lib/$@ /usr/lib/
 clean:
 	rm $(EXE) *.o -f
