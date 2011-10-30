@@ -15,8 +15,10 @@
 #define ASYNC_SERVER_NET_INTERFACE_H_
 
 #include <stdint.h>
+#include <netinet/in.h>
 
 #include "service.h"
+#include "net.h"
 
 /**
   * @brief hold an ip and a port
