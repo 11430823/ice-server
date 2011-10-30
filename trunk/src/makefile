@@ -5,7 +5,7 @@ CC=g++
 FLAG=-Wall -DDEBUG -g -O0 -o
 
 #包含的头文件
-INCLUDES=-I/usr/include -I../include/ -I../libinclude/
+INCLUDES=-I/usr/include/ -I../include/ -I../libinclude/
 GLIB_INCLUDES=-I/usr/local/include/glib-2.0/ -I/usr/local/lib/glib-2.0/include/
 
 
@@ -23,7 +23,7 @@ $(EXE):
 #	rm ../bin/$(EXE)
 	cp $(EXE) ../bin/
 	rm -f $(EXE)
-	sudo cp ../include/* /usr/include/ice_server/
+#	sudo cp ../include/* /usr/include/ice_server/
 clean:
 	rm -f $(EXE)
 
