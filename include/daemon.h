@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "iatomic.h"
+#include <ice_lib/iatomic.h>
 
 class daemon_info_t{
 public:

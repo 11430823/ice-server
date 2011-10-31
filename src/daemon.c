@@ -7,12 +7,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <ice_lib/util.h>
+#include <ice_lib/log.h>
+
 #include "daemon.h"
 #include "bind_conf.h"
-#include "log.h"
 #include "bench_conf.h"
 #include "service.h"
-#include "util.h"
 
 daemon_info_t g_daemon;
 

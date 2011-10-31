@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ice_lib/log.h>
+
 #include "bind_conf.h"
-#include "log.h"
 #include "daemon.h"
 
 bind_config_t g_bind_conf;

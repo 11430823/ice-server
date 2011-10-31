@@ -1,6 +1,8 @@
 #pragma once
+
 #include <stdint.h>
 #include <glib/ghash.h>
+
 typedef struct fd_array_session {
 	int			count;
 	GHashTable*	cn;

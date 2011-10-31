@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <ice_lib/util.h>
+#include <ice_lib/log.h>
+
 #include "service.h"
 #include "bind_conf.h"
 #include "net.h"
@@ -10,9 +13,7 @@
 #include "mcast.h"
 #include "net.h"
 #include "net_if.h"
-#include "log.h"
 #include "bench_conf.h"
-#include "util.h"
 
 service_t g_service;
 int					is_parent = 1;

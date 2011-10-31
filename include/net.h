@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include "list.h"
+#include <ice_lib/list.h>
+
 #define CN_NEED_CLOSE	0x01
 #define CN_NEED_POLLIN	0x02
 enum {

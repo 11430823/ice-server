@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <netinet/in.h>

@@ -2,8 +2,9 @@
 #include <stdint.h>
 #include <sstream>
 
+#include <ice_lib/log.h>
+
 #include "bench_conf.h"
-#include "log.h"
 
 bench_conf_t g_bench_conf;
 

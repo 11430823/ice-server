@@ -2,17 +2,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
 #include <net/if.h>
 #include <arpa/inet.h>
 
 #include <glib.h>
+#include <ice_lib/util.h>
 
 #include "dll.h"
 #include "net.h"
-#include "util.h"
 #include "service.h"
-
 #include "mcast.h"
 
 #pragma pack(1)
