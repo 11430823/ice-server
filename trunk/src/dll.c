@@ -1,10 +1,11 @@
 #include <stddef.h>
 #include <dlfcn.h>
 
+#include <ice_lib/log.h>
+
 #include "dll.h"
 #include "service.h"
 #include "bind_conf.h"
-#include "log.h"
 
 dll_t g_dll;
 

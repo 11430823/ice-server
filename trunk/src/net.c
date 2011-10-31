@@ -10,16 +10,18 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include <ice_lib/log.h>
+#include <ice_lib/timer.h>
+#include <ice_lib/util.h>
+
 #include "net.h"
-#include "util.h"
 #include "tcp.h"
 #include "service.h"
 #include "dll.h"
 #include "net_if.h"
 #include "daemon.h"
 #include "mcast.h"
-#include "log.h"
-#include "timer.h"
+
 
 net_t g_net;
 epinfo epi;
@@ -526,7 +528,7 @@ epoll_mod_again:
 
 	return 0;
 }
-#include "timer.h"
+
 int net_loop(int timeout, int max_len, int is_conn)
 {
 	iterate_close_queue();

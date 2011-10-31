@@ -1,11 +1,10 @@
-#include "../include/dll.h"
 #include <stdint.h>
-
-
 #include <stdio.h>
 
-#include "log.h"
-#include "timer.h"
+#include <ice_server/net_if.h>
+#include <ice_server/dll.h>
+#include <ice_lib/log.h>
+#include <ice_lib/timer.h>
 
 #pragma pack(1)
 /* SERVER和CLIENT的协议包头格式 */
@@ -129,6 +128,9 @@ extern "C" int proc_pkg_from_client(void* data, int len, fdsession_t* fdsess)
 	INFO_LOG("[fd:%d, len:%d, data:%s]", fdsess->fd, len, (char*)data);
 	cli_proto_head_t* p = (cli_proto_head_t*)data;
 	INFO_LOG("[cmd:%d, id:%d, len:%d, ret:%d, seq_num:%d]", p->cmd, p->id, p->len, p->ret, p->seq_num);
+	
+	net_send(fdsess->fd, data, len);
+//	send_pkg_to_client(fdsess, data, len);
 	return 0;
 }
 

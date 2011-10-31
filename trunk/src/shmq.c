@@ -6,13 +6,14 @@
 #include <string.h>
 #include <errno.h>
 
+#include <ice_lib/log.h>
+#include <ice_lib/util.h>
+
 #include "shmq.h"
 #include "bind_conf.h"
-#include "util.h"
 #include "net.h"
 #include "daemon.h"
 #include "service.h"
-#include "log.h"
 
 shmq_t g_shmq;
 inline struct shm_block_t* tail_mb (const struct shm_queue_t *q)

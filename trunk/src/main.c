@@ -4,15 +4,16 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <ice_lib/util.h>
+#include <ice_lib/log.h>
+
 #include "daemon.h"
 #include "dll.h"
 #include "net.h"
 #include "bind_conf.h"
 #include "service.h"
-#include "log.h"
 #include "bench_conf.h"
 #include "shmq.h"
-#include "util.h"
 
 int main(int argc, char* argv[]){
 	if (0 != g_bench_conf.load()){
