@@ -119,3 +119,32 @@ bool bench_conf_t::is_daemon()
 {
 	return 1 == daemon;
 }
+
+std::string bench_conf_t::get_strval(std::string& key, std::string& name)
+{
+	GKeyFile *key = NULL;
+
+	if (!g_file_test (bench_config_path, G_FILE_TEST_EXISTS)){	
+		ALERT_LOG("READ BENCH CONFIG FILE EXISTS ERR");
+		ret = -1;
+		goto ret;
+	}
+
+	key = g_key_file_new();
+	if (!g_key_file_load_from_file (key, bench_config_path, G_KEY_FILE_NONE, NULL)){
+		ALERT_LOG("READ BENCH CONFIG FILE ERR");
+		ret = -1;
+		goto ret;
+	}
+	std::string str;
+	if (0 != get_val(str, key, key, name)){
+		str.clear();
+		goto ret;
+	}
+
+ret:
+	if (key){
+		g_key_file_free(key);
+	}
+	return str;
+}

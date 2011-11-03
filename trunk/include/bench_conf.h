@@ -21,6 +21,8 @@ public:
 	const char* get_liblogic_path() const;
 	uint32_t get_max_fd_num()const;
 	bool is_daemon();
+	//获取配置项数据
+	std::string get_strval(std::string& key, std::string& name);
 	std::string log_dir;//日志目录
 	uint32_t log_level;//日志等级
 	uint32_t log_max_size;//日志每个文件的最大大小(字节)
