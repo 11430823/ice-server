@@ -3,6 +3,7 @@
 
 #include <ice_server/net_if.h>
 #include <ice_server/dll.h>
+#include <ice_server/bench_conf.h>
 #include <ice_lib/log.h>
 #include <ice_lib/timer.h>
 
@@ -70,6 +71,9 @@ extern "C" int init_service(int isparent)
 		DEBUG_LOG("======server start======");
 		setup_timer();
 		p = new test_timer;
+		std::string str1;
+		std::string str2;
+		std::string strval = g_bench_conf.get_strval(str1, str2);
 	}
 	return 0;
 }
