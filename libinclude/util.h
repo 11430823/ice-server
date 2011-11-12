@@ -8,6 +8,9 @@
 
 #pragma once
 #include <stdint.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 #ifdef  likely
 #undef  likely
@@ -21,3 +24,9 @@
 
 #define FOREACH(container,it) \
 	for(typeof((container).begin()) it = (container).begin();(it)!=(container).end();++(it))
+
+template <class T> 
+void g_convert_from_string(T &value, const std::string &s) {
+	std::stringstream ss(s);
+	ss >> value;
+}
