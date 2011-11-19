@@ -415,10 +415,10 @@ static int do_read_conn(int fd, uint32_t max)
 		epi.fds[fd].sk.last_tm  = time(0);
 		//close
 	} else if (recv_bytes == 0) {
-//		ERROR_LOG("connection [fd=%d ip=0x%X] closed by peer", fd, epi.fds[fd].sk.remote_ip);
+		ERROR_LOG("connection [fd=%d ip=0x%X] closed by peer", fd, epi.fds[fd].sk.remote_ip);
 		return -1;
 	} else { //EAGAIN ...
-//		ERROR_LOG("recv error: fd=%d errmsg=%s", fd, strerror(errno));
+		ERROR_LOG("recv error: fd=%d errmsg=%s", fd, strerror(errno));
 		recv_bytes = 0;
 	}
 
