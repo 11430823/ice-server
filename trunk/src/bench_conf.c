@@ -61,33 +61,33 @@ int bench_conf_t::load()
 		goto ret;
 	}
 
-	if (0 != get_val(liblogic_path, key, "plugin", "liblogic")){
+	if (0 != get_val(m_liblogic_path, key, "plugin", "liblogic")){
 		ret = -1;
 		goto ret;
 	}
 
-	if (0 != get_val(max_fd_num, key, "common", "max_fd_num")){
+	if (0 != get_val(m_max_fd_num, key, "common", "max_fd_num")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(daemon, key, "common", "is_daemon")){
+	if (0 != get_val(m_daemon, key, "common", "is_daemon")){
 		ret = -1;
 		goto ret;
 	}
 
-	if (0 != get_val(log_dir, key, "log", "dir")){
+	if (0 != get_val(m_log_dir, key, "log", "dir")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(log_level, key, "log", "level")){
+	if (0 != get_val(m_log_level, key, "log", "level")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(log_max_size, key, "log", "size")){
+	if (0 != get_val(m_log_max_byte, key, "log", "size")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(log_max_files, key, "log", "max_files")){
+	if (0 != get_val(m_log_max_files, key, "log", "max_files")){
 		ret = -1;
 		goto ret;
 	}
@@ -99,25 +99,29 @@ ret:
 	return ret;
 }
 
-const char* bench_conf_t::get_liblogic_path() const
+std::string bench_conf_t::get_liblogic_path() const
 {
-	return liblogic_path.c_str();
+	return m_liblogic_path;
 }
 
 uint32_t bench_conf_t::get_max_fd_num() const
 {
-	return max_fd_num;
+	return m_max_fd_num;
 }
 
 bench_conf_t::bench_conf_t()
 {
-	max_fd_num = 0;
-	daemon = 0;
+	m_max_fd_num = 0;
+	m_daemon = false;
+	m_log_level = 0;
+	m_log_max_byte = 0;
+	m_log_max_files = 0;
+	m_log_save_next_file_interval_min = 0;
 }
 
-bool bench_conf_t::is_daemon()
+bool bench_conf_t::is_daemon()const
 {
-	return 1 == daemon;
+	return m_daemon;
 }
 
 std::string bench_conf_t::get_strval(std::string& key, std::string& name)
@@ -146,4 +150,29 @@ ret_return:
 		g_key_file_free(file_key);
 	}
 	return str;
+}
+
+std::string bench_conf_t::get_log_dir() const
+{
+	return m_log_dir;
+}
+
+uint32_t bench_conf_t::get_log_level() const
+{
+	return m_log_level;
+}
+
+uint32_t bench_conf_t::get_log_max_byte() const
+{	
+	return m_log_max_byte;
+}
+
+uint32_t bench_conf_t::get_log_max_files() const
+{
+	return m_log_max_files;
+}
+
+uint32_t bench_conf_t::get_log_save_next_file_interval_min() const
+{
+	return m_log_save_next_file_interval_min;
 }
