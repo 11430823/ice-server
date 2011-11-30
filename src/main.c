@@ -26,15 +26,15 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	log_init_ex(g_bench_conf.log_dir.c_str(), (E_LOG_LEVEL)g_bench_conf.log_level,
-		g_bench_conf.log_max_size, g_bench_conf.log_max_files, NULL,
-		g_bench_conf.log_save_next_file_interval_min);
+	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_log_level(),
+		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), NULL,
+		g_bench_conf.get_log_save_next_file_interval_min());
 
 // kevinmeng  [2011/10/15 16:58]
 #if 0
 	g_dll.register_data_plugin("");
 #endif
-	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path(),e_plugin_flag_load)){
+	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str(),e_plugin_flag_load)){
 		return -1;
 	}
 // kevinmeng  [2011/10/15 16:59]

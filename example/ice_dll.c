@@ -19,20 +19,26 @@ struct cli_proto_head_t {
 };
 #pragma pack()
 
+class test_timer;
+test_timer* p;
+
 class test_timer
 {
 public:
+		static const int mmm= 1;
 public:
 	test_timer(void){
+		DEBUG_LOG("new");
 		INIT_LIST_HEAD(&timer_list);
 		ADD_TIMER_EVENT(this, &test_timer::s_timer,NULL,
 			get_now_tv()->tv_sec + 1);
 		timeval next_time;
 		next_time.tv_sec = get_now_tv()->tv_sec;
 		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
-		add_micro_event(&test_timer::m_timer, &next_time, this, NULL);
+		//add_micro_event(&test_timer::m_timer, &next_time, this, NULL);
 	}
 	virtual ~test_timer(){
+		DEBUG_LOG("del");
 		REMOVE_TIMERS(this);
 	}
 protected:
@@ -44,7 +50,9 @@ private:
 		const uint32_t uNowTimeS = get_now_tv()->tv_sec;
 		ADD_TIMER_EVENT(pPlantManager,&test_timer::s_timer, NULL,
 			uNowTimeS+1);
-//		DEBUG_LOG("s_timer[%u]",uNowTimeS);
+		DEBUG_LOG("s_timer[%u]",uNowTimeS);
+		delete p;
+		p = new test_timer;
 		return 0;
 	}
 	static int m_timer(void* data, void* info){
@@ -59,7 +67,7 @@ private:
 	test_timer(const test_timer &cr);
 	test_timer & operator=( const test_timer &cr);
 };
-test_timer* p;
+
 /**
   * @brief Initialize service
   *

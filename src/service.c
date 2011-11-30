@@ -170,11 +170,11 @@ void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n
 	bind_config_elem_t* bc_elem = bc->get_elem(bc_elem_idx);
 
 	char prefix[10] = { 0 };
-	int  len       = snprintf(prefix, 8, "%u", bc_elem->id);
+	int  len = snprintf(prefix, 8, "%u", bc_elem->id);
 	prefix[len] = '_';
-	log_init_ex(g_bench_conf.log_dir.c_str(), (E_LOG_LEVEL)g_bench_conf.log_level,
-		g_bench_conf.log_max_size, g_bench_conf.log_max_files, prefix,
-		g_bench_conf.log_save_next_file_interval_min);
+	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_log_level(),
+		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), prefix,
+		g_bench_conf.get_log_save_next_file_interval_min());
 
 	//释放资源(从父进程继承来的资源)
 	g_shmq.close_pipe(bc, n_inited_bc, 1);
