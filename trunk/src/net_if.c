@@ -261,7 +261,7 @@ int send_pkg_to_client(fdsession_t* fdsess, const void* pkg, const int pkglen)
 
 		mb.length = cur_len + sizeof(shm_block_t);
 
-		if (shmq_push(&(config_cache.bc_elem->sendq), &mb, (char*)pkg + send_bytes) == -1) {
+		if (shmq_push(&(g_service.m_bind_elem->sendq), &mb, (char*)pkg + send_bytes) == -1) {
 			return -1;
 		}
 	}
@@ -284,6 +284,6 @@ void close_client_conn(int fd)
 	mb.fd     = fd;
 
 	handle_close(fd);
-	shmq_push(&(config_cache.bc_elem->sendq), &mb, 0);
+	shmq_push(&(g_service.m_bind_elem->sendq), &mb, 0);
 }
 

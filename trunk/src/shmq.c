@@ -23,7 +23,7 @@ inline struct shm_block_t* tail_mb (const struct shm_queue_t *q)
 
 void restart_child_process(bind_config_elem_t* bc_elem)
 {
-	if (is_parent && g_daemon.stop && !g_daemon.restart){
+	if (is_parent && g_daemon.m_stop && !g_daemon.m_restart){
 		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
 		return;
 	}

@@ -21,7 +21,6 @@ typedef struct fdsession {
 fdsession_t* get_fdsess(int fd);
 
 extern int					is_parent;
-extern config_cache_t		config_cache;
 extern fd_array_session_t	fds;
 void run_worker_process(struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc);
 void handle_recv_queue();
@@ -31,6 +30,8 @@ class service_t
 {
 public:
 	void worker_process(struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc);
+	struct bind_config_elem_t*	m_bind_elem;
+	static const uint32_t idle_timeout = 10;
 protected:
 private:
 };

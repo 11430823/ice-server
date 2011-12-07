@@ -17,7 +17,6 @@
 
 service_t g_service;
 int					is_parent = 1;
-config_cache_t		config_cache;
 fd_array_session_t	fds;
 namespace {
 	int handle_fini()
@@ -44,9 +43,6 @@ free_fdsess(void* fdsess)
 static inline int
 handle_init(bind_config_elem_t* bc_elem)
 {
-	config_cache.idle_timeout = 10;
-	config_cache.bc_elem      = bc_elem;
-
 	fds.cn = g_hash_table_new_full(g_int_hash, g_int_equal, 0, free_fdsess);
 
 	// create multicast socket if function `proc_mcast_pkg` is defined
@@ -111,8 +107,8 @@ handle_open(const shm_block_t* mb)
 }
 void handle_recv_queue()
 {
-	struct shm_queue_t* recvq = &(config_cache.bc_elem->recvq);
-	struct shm_queue_t* sendq = &(config_cache.bc_elem->sendq);
+	struct shm_queue_t* recvq = &(g_service.m_bind_elem->recvq);
+	struct shm_queue_t* sendq = &(g_service.m_bind_elem->sendq);
 
 	struct shm_block_t* mb;
 	while (shmq_pop((shm_queue_t*)recvq, &mb) == 0) {
@@ -167,10 +163,9 @@ int handle_close(int fd)
 void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc )
 {
 	is_parent = 0;
-	bind_config_elem_t* bc_elem = bc->get_elem(bc_elem_idx);
-
+	m_bind_elem = bc->get_elem(bc_elem_idx);
 	char prefix[10] = { 0 };
-	int  len = snprintf(prefix, 8, "%u", bc_elem->id);
+	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
 	prefix[len] = '_';
 	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_log_level(),
 		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), prefix,
@@ -178,23 +173,23 @@ void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n
 
 	//释放资源(从父进程继承来的资源)
 	g_shmq.close_pipe(bc, n_inited_bc, 1);
-	shmq_destroy(bc_elem, n_inited_bc);
+	shmq_destroy(m_bind_elem, n_inited_bc);
 	net_exit();
 
 	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//todo 2000 个数量是否合适?
-	do_add_conn(bc_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
+	do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
-	if ( 0 != handle_init(bc_elem)) {
-		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", bc_elem->id, bc_elem->name.c_str());
+	if ( 0 != handle_init(m_bind_elem)) {
+		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());
 		goto fail;
 	}
 
-	while ( !g_daemon.stop || 0 != handle_fini() ) {
+	while ( !g_daemon.m_stop || 0 != handle_fini() ) {
 		net_loop(100, PAGE_SIZE, 0);
 	}
 fail:
 	//下面没看
-	do_destroy_shmq(bc_elem);
+	do_destroy_shmq(m_bind_elem);
 	net_exit();
 	g_dll.unregister_data_plugin();
 	g_dll.unregister_plugin();

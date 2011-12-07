@@ -127,7 +127,7 @@ namespace {
 #if 0
 				asynsvr_send_warning(buf, 0, get_server_ip());
 #endif
-				g_daemon.stop = true;
+				g_daemon.m_stop = true;
 				return -1;
 			}
 		} else {

@@ -27,7 +27,7 @@ namespace {
 
 uint32_t get_server_id()
 {
-	return config_cache.bc_elem->id;
+	return g_service.m_bind_elem->id;
 }
 
 uint32_t get_cli_ip2( int fd )
@@ -48,17 +48,17 @@ uint32_t get_cli_ip( const fdsession_t* fdsess )
 
 in_port_t get_server_port()
 {
-	return config_cache.bc_elem->port;
+	return g_service.m_bind_elem->port;
 }
 
 const char* get_server_ip()
 {
-	return config_cache.bc_elem->ip.c_str();
+	return g_service.m_bind_elem->ip.c_str();
 }
 
 const char* get_server_name()
 {
-	return config_cache.bc_elem->name.c_str();
+	return g_service.m_bind_elem->name.c_str();
 }
 
 int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
@@ -66,25 +66,25 @@ int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
 	char* error; 
 	int   ret_code = -1;
 
-	g_dll.handle = dlopen(file_name, RTLD_NOW);
+	m_handle = dlopen(file_name, RTLD_NOW);
 	if ((error = dlerror()) != NULL) {
 		ALERT_LOG("DLOPEN ERROR [error:%s]", error);
 		goto out;
 	}
 
- 	DLFUNC(g_dll.handle, g_dll.get_pkg_len, "get_pkg_len", int(*)(int, const void*, int, int));
- 	DLFUNC(g_dll.handle, g_dll.proc_pkg_from_client, "proc_pkg_from_client", int(*)(void*, int, fdsession_t*));
- 	DLFUNC(g_dll.handle, g_dll.proc_pkg_from_serv, "proc_pkg_from_serv", void(*)(int, void*, int));
- 	DLFUNC(g_dll.handle, g_dll.on_client_conn_closed, "on_client_conn_closed", void(*)(int));
- 	DLFUNC(g_dll.handle, g_dll.on_fd_closed, "on_fd_closed", void(*)(int));
+ 	DLFUNC(m_handle, get_pkg_len, "get_pkg_len", int(*)(int, const void*, int, int));
+ 	DLFUNC(m_handle, proc_pkg_from_client, "proc_pkg_from_client", int(*)(void*, int, fdsession_t*));
+ 	DLFUNC(m_handle, proc_pkg_from_serv, "proc_pkg_from_serv", void(*)(int, void*, int));
+ 	DLFUNC(m_handle, on_client_conn_closed, "on_client_conn_closed", void(*)(int));
+ 	DLFUNC(m_handle, on_fd_closed, "on_fd_closed", void(*)(int));
  
-   	DLFUNC(g_dll.handle, g_dll.init_service, "init_service", int(*)(int));
-  	DLFUNC(g_dll.handle, g_dll.fini_service, "fini_service", int(*)(int));
-  	DLFUNC(g_dll.handle, g_dll.on_events, "on_events", void(*)());
-   	DLFUNC(g_dll.handle, g_dll.proc_mcast_pkg, "proc_mcast_pkg", void(*)(const void*,int));
-   	DLFUNC(g_dll.handle, g_dll.proc_udp_pkg, "proc_udp_pkg", int(*)(int, const void*, int, struct sockaddr_in*, socklen_t));
- 	DLFUNC(g_dll.handle, g_dll.reload_global_data, "reload_global_data", int(*)(void));
- 	DLFUNC(g_dll.handle, g_dll.sync_service_info, "sync_service_info", void(*)(uint32_t, const char*, const char*, in_port_t, int));
+   	DLFUNC(m_handle, init_service, "init_service", int(*)(int));
+  	DLFUNC(m_handle, fini_service, "fini_service", int(*)(int));
+  	DLFUNC(m_handle, on_events, "on_events", void(*)());
+   	DLFUNC(m_handle, proc_mcast_pkg, "proc_mcast_pkg", void(*)(const void*,int));
+   	DLFUNC(m_handle, proc_udp_pkg, "proc_udp_pkg", int(*)(int, const void*, int, struct sockaddr_in*, socklen_t));
+ 	DLFUNC(m_handle, reload_global_data, "reload_global_data", int(*)(void));
+ 	DLFUNC(m_handle, sync_service_info, "sync_service_info", void(*)(uint32_t, const char*, const char*, in_port_t, int));
 	ret_code = 0;
 
 out:
@@ -98,13 +98,13 @@ out:
 
 int dll_t::register_data_plugin( const char* file_name )
 {
-	return 0;
+	return 0;//mark
 	char* error; 
 	int   ret_code = 0;
 	if (file_name == NULL){
 		return -1;
 	}
-	data_handle = dlopen(file_name, RTLD_NOW | RTLD_GLOBAL);
+	m_data_handle = dlopen(file_name, RTLD_NOW | RTLD_GLOBAL);
 	if ((error = dlerror()) != NULL) {
 		ERROR_LOG("dlopen error, %s", error);
 		ret_code = -1;
@@ -115,16 +115,22 @@ int dll_t::register_data_plugin( const char* file_name )
 
 void dll_t::unregister_plugin()
 {
-	if (handle != NULL){
-		dlclose(handle);
-		handle = NULL;
+	if (m_handle != NULL){
+		dlclose(m_handle);
+		m_handle = NULL;
 	}
 }
 
 void dll_t::unregister_data_plugin()
 {
-	if (data_handle != NULL){
-		dlclose(data_handle);
-		data_handle = NULL;
+	if (m_data_handle != NULL){
+		dlclose(m_data_handle);
+		m_data_handle = NULL;
 	}
+}
+
+dll_t::dll_t()
+{
+	m_data_handle = NULL;
+	m_handle = NULL;
 }

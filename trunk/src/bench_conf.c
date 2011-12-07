@@ -23,7 +23,6 @@ namespace {
 	{
 		gchar **a = NULL;
 		gsize len = 0;
-
 		if (NULL == (a = g_key_file_get_string_list (keyfile, 
 			group_name, key_name, &len, NULL))){
 			ALERT_LOG("READ BENCH CONFIG FILE KEY ERR [GROUP_NAME:%s, KEY_NAME:%s]",
@@ -91,7 +90,6 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
-
 ret:
 	if (key){
 		g_key_file_free(key);

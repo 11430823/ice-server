@@ -26,15 +26,15 @@ namespace {
 	void sigterm_handler(int signo) 
 	{
 		ALERT_LOG("SIG_TERM FROM [pid=%d, is_parent:%d]", getpid(), is_parent);
-		g_daemon.stop     = true;
-		g_daemon.restart  = false;
+		g_daemon.m_stop     = true;
+		g_daemon.m_restart  = false;
 	}
 
 	void sighup_handler(int signo) 
 	{
 		ALERT_LOG("SIGHUP FROM [pid=%d]", getpid());
-		g_daemon.restart  = true;
-		g_daemon.stop     = true;
+		g_daemon.m_restart  = true;
+		g_daemon.m_stop     = true;
 	}
 
 	void sigchld_handler(int signo, siginfo_t *si, void * p) 
@@ -113,15 +113,15 @@ namespace {
 
 daemon_info_t::daemon_info_t()
 {
-	stop = false;
-	restart = false;
+	m_stop = false;
+	m_restart = false;
 }
 
 void daemon_info_t::prase_args( int argc, char** argv )
 {
-	prog_name = argv[0];
+	m_prog_name = argv[0];
 	char* dir = get_current_dir_name();
-	current_dir = dir;
+	m_current_dir = dir;
 	free(dir);
 
 	rlimit_reset();
@@ -134,9 +134,9 @@ void daemon_info_t::prase_args( int argc, char** argv )
 
 daemon_info_t::~daemon_info_t()
 {
-	if (g_daemon.restart && !g_daemon.prog_name.empty() && g_argvs.size() > 0) {
-		ALERT_LOG("%s", "SERVER RESTARTING...");
-		chdir(g_daemon.current_dir.c_str());
+	if (g_daemon.m_restart && !g_daemon.m_prog_name.empty()) {
+		ALERT_LOG("SERVER RESTARTING...");
+		chdir(g_daemon.m_current_dir.c_str());
 		char* argvs[200];
 		int i = 0;
 		FOREACH(g_argvs, it){
@@ -144,8 +144,8 @@ daemon_info_t::~daemon_info_t()
 			i++;
 		}
 
-		execv(g_daemon.prog_name.c_str(), argvs);
-		ALERT_LOG("%s", "RESTART FAILED...");
+		execv(g_daemon.m_prog_name.c_str(), argvs);
+		ALERT_LOG("RESTART FAILED...");
 	}
 }
 

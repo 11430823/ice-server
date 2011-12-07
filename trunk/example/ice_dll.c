@@ -28,6 +28,7 @@ public:
 		static const int mmm= 1;
 public:
 	test_timer(void){
+			/*
 		DEBUG_LOG("new");
 		INIT_LIST_HEAD(&timer_list);
 		ADD_TIMER_EVENT(this, &test_timer::s_timer,NULL,
@@ -36,16 +37,20 @@ public:
 		next_time.tv_sec = get_now_tv()->tv_sec;
 		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
 		//add_micro_event(&test_timer::m_timer, &next_time, this, NULL);
+		*/
 	}
 	virtual ~test_timer(){
+			/*
 		DEBUG_LOG("del");
 		REMOVE_TIMERS(this);
+		*/
 	}
 protected:
 	
 private:
 	list_head_t timer_list;
 	static int s_timer(void* data, void* info){
+			/*
 		test_timer* pPlantManager = (test_timer*)data;
 		const uint32_t uNowTimeS = get_now_tv()->tv_sec;
 		ADD_TIMER_EVENT(pPlantManager,&test_timer::s_timer, NULL,
@@ -53,15 +58,18 @@ private:
 		DEBUG_LOG("s_timer[%u]",uNowTimeS);
 		delete p;
 		p = new test_timer;
+		*/
 		return 0;
 	}
 	static int m_timer(void* data, void* info){
+			/*
 		test_timer* pPlantManager = (test_timer*)data;
 		timeval next_time;
 		next_time.tv_sec = get_now_tv()->tv_sec;
 		next_time.tv_usec = get_now_tv()->tv_usec + 300000;
 		add_micro_event(&test_timer::m_timer, &next_time, pPlantManager, NULL);
 //		DEBUG_LOG("m_timer[%ld, %ld]", next_time.tv_sec, next_time.tv_usec);
+*/
 		return 0;
 	}
 	test_timer(const test_timer &cr);
@@ -77,11 +85,13 @@ extern "C" int init_service(int isparent)
 	if(isparent){
 	}else{
 		DEBUG_LOG("======server start======");
+		/*
 		setup_timer();
 		p = new test_timer;
 		std::string str1;
 		std::string str2;
 		std::string strval = g_bench_conf.get_strval(str1, str2);
+		*/
 	}
 	return 0;
 }
@@ -93,8 +103,10 @@ extern "C" int init_service(int isparent)
 extern "C" int fini_service(int isparent)
 {
 	if (!isparent) {
+			/*
 		delete p;
 		destroy_timer();
+		*/
 		DEBUG_LOG("======server done======");
 	}
 
@@ -107,7 +119,7 @@ extern "C" int fini_service(int isparent)
   */
 extern "C" void on_events()
 {
-	handle_timer();
+//	handle_timer();
 }
 
 /**

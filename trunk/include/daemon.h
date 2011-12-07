@@ -12,12 +12,13 @@
 
 #include <ice_lib/iatomic.h>
 
-class daemon_info_t{
+class daemon_info_t
+{
 public:
 	daemon_info_t();
 	~daemon_info_t();
 	//************************************
-	// Brief:     解析程序传入参数
+	// Brief:     解析程序传入参数,设置环境,信号处理
 	// Parameter: int argc
 	// Parameter: char * * argv
 	//************************************
@@ -27,16 +28,17 @@ public:
 	// Returns:   void
 	//************************************
 	void killall_children();
-	//程序名称
-	std::string prog_name;
-	//当前目录
-	std::string current_dir;
 	//true:停止.false:继续(无改变)
-	volatile bool stop;
+	volatile bool m_stop;
 	//true:重启.false:继续(无改变)
-	volatile bool restart;
+	volatile bool m_restart;
 	//子进程ID
 	std::vector<atomic_t> child_pids;
+private:
+	//程序名称
+	std::string m_prog_name;
+	//当前目录
+	std::string m_current_dir;
 };
 
 extern daemon_info_t g_daemon;
