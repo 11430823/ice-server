@@ -12,6 +12,8 @@ bind_config_t g_bind_conf;
 
 namespace {
 
+	const char* bind_config_path =  "./bind.xml";
+
 	void start(GMarkupParseContext *context,
 		const gchar *element_name,
 		const gchar **attribute_names,
@@ -52,7 +54,7 @@ int bind_config_t::load()
 	gchar * buf = NULL; 
 	gsize length = 0; 
 
-	g_file_get_contents( "./bind.xml" , &buf, &length, NULL ); 
+	g_file_get_contents( bind_config_path , &buf, &length, NULL ); 
 
 	GMarkupParser parser;
 	parser.start_element = start;

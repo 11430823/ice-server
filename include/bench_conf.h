@@ -12,10 +12,10 @@
 class bench_conf_t 
 {
 public:
-//so调用获取配置项bench.ini中的数据
+//so调用获取配置项bench.ini中的数据(自行配置)
 	//获取配置项数据
 	std::string get_strval(std::string& key, std::string& name);
-public:	
+public:
 	bench_conf_t();
 	//************************************
 	// Brief:     加载配置文件bench.ini

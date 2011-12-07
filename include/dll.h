@@ -20,6 +20,7 @@ enum E_PLUGIN_FLAG{
 class dll_t
 {
 public:
+	dll_t();
 	//************************************
 	// Brief:     注册插件
 	// Returns:   int 0:success -1:error
@@ -32,8 +33,7 @@ public:
 	//************************************
 	int  register_data_plugin(const char* file_name);
 	void unregister_data_plugin();
-	void* data_handle;
-	void* handle;
+
 
 	/* The following 5 interfaces are called only by the child process */
 
@@ -113,13 +113,10 @@ public:
 	 * `return 0`表示销毁成功；`return -1`表示销毁失败，子进程退出运行。
 	 */
 	int		(*before_reload)(int isparent);
-
-	/*!
-	  * placeholder
-	  */
-	void	(*placeholder[9])(void);
 protected:
 private:
+	void* m_data_handle;
+	void* m_handle;
 };
 
 extern dll_t g_dll;
