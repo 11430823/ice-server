@@ -25,7 +25,7 @@ namespace {
 
 	void sigterm_handler(int signo) 
 	{
-		ALERT_LOG("SIG_TERM FROM [pid=%d, is_parent:%d]", getpid(), is_parent);
+		ALERT_LOG("SIG_TERM FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
 		g_daemon.m_stop     = true;
 		g_daemon.m_restart  = false;
 	}
@@ -39,7 +39,7 @@ namespace {
 
 	void sigchld_handler(int signo, siginfo_t *si, void * p) 
 	{
-		ALERT_LOG("SIGCHLD FROM [pid=%d, is_parent:%d]", getpid(), is_parent);
+		ALERT_LOG("SIGCHLD FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
 		pid_t pid;
 		static int	status;
 		while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {

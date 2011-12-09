@@ -62,7 +62,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 void net_exit ();
 int net_loop(int timeout, int max_len, int is_conn);
 inline void del_from_etin_queue (int fd);
-void do_del_conn(int fd, int is_conn);
+void do_del_conn(int fd, bool is_conn);
 int do_write_conn(int fd);
 int mod_events(int epfd, int fd, uint32_t flag);
 

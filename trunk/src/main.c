@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
 #if 0
 	g_dll.register_data_plugin("");
 #endif
-	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str(),e_plugin_flag_load)){
+	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str(), dll_t::e_plugin_flag_load)){
 		return -1;
 	}
 // kevinmeng  [2011/10/15 16:59]
@@ -47,26 +47,23 @@ int main(int argc, char* argv[]){
 
 	if (g_dll.init_service(1) != 0) {
 		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
-		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
 		return -1;
 	}
 
-	pid_t pid;
 	for (uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
 		bind_config_elem_t* bc_elem = g_bind_conf.get_elem(i);
 		g_shmq.create(bc_elem);
-
+		pid_t pid;
 		if ( (pid = fork ()) < 0 ) {
-			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			return -1;
 		} else if (pid > 0) {
-			g_shmq.close_pipe(&g_bind_conf, i, 0);
+			g_shmq.close_pipe(i, false);
 			do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, NULL, bc_elem);			
 			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
-			g_service.worker_process(&g_bind_conf, i, i + 1);
+			g_service.worker_process(i, i + 1);
 		}
 	}
 	//parent process

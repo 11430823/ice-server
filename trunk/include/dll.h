@@ -1,24 +1,15 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#include "service.h"
-#include "bind_conf.h"
-
-uint32_t get_server_id();
-const char* get_server_name();
-const char* get_server_ip();
-in_port_t get_server_port();
-uint32_t get_cli_ip(const fdsession_t* fdsess);
-uint32_t get_cli_port(const fdsession_t* fdsess);
-uint32_t get_cli_ip2(int fd);
-
-enum E_PLUGIN_FLAG{
-	e_plugin_flag_load = 0,//加载
-	e_plugin_flag_reload = 1,//重新加载
-};
+struct fdsession_t;
 
 class dll_t
 {
+public:
+	enum E_PLUGIN_FLAG{
+		e_plugin_flag_load = 0,//加载
+		e_plugin_flag_reload = 1,//重新加载
+	};
 public:
 	dll_t();
 	//************************************
@@ -112,7 +103,7 @@ public:
 	 * 建议父进程如果无需特殊处理的话，直接return 0。
 	 * `return 0`表示销毁成功；`return -1`表示销毁失败，子进程退出运行。
 	 */
-	int		(*before_reload)(int isparent);
+	int		(*before_reload)(bool isparent);
 protected:
 private:
 	void* m_data_handle;

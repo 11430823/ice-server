@@ -12,6 +12,7 @@
 #include "net.h"
 #include "service.h"
 #include "mcast.h"
+#include "bind_conf.h"
 
 #pragma pack(1)
 
@@ -168,15 +169,15 @@ int create_addr_mcast_socket()
 //		ERROR_RETURN(("Failed to Join Mcast Grp: err=%d %s", errno, strerror(errno)), -1);
 	}
 
-	if (! is_parent) {
+	if (! g_is_parent) {
 		mcast_pkg_header_t* hdr = (mcast_pkg_header_t*)addr_buf;
 		addr_mcast_pkg_t*   pkg = (addr_mcast_pkg_t*)(hdr->body);
 
 		hdr->proto_type = mcast_notify_addr;
-		pkg->svr_id     = get_server_id();
-		strcpy(pkg->name, get_server_name());
-		strcpy(pkg->ip, get_server_ip());
-		pkg->port       = get_server_port();
+		pkg->svr_id     = g_service.get_id();
+		strcpy(pkg->name, g_service.get_name());
+		strcpy(pkg->ip, g_service.get_ip());
+		pkg->port       = g_service.get_port();
 	}
 	return do_add_conn(addr_mcast_fd, fd_type_addr_mcast, &addr_mcast_addr, 0);
 }
@@ -215,8 +216,8 @@ void proc_addr_mcast_pkg(const mcast_pkg_header_t* hdr, int len)
 
 	const addr_mcast_pkg_t* pkg = (addr_mcast_pkg_t*)(hdr->body);
 	// the same service
-	if ( (strcmp(pkg->name, get_server_name()) == 0) 
-		&& (pkg->svr_id == get_server_id()) ) {
+	if ( (strcmp(pkg->name, g_service.get_name()) == 0) 
+		&& (pkg->svr_id == g_service.get_id()) ) {
 			return;
 	}
 
@@ -327,9 +328,9 @@ void proc_reload_plugin(reload_text_pkg_t* pkg, int len)
 		return;
 	}
 
-	if (!is_parent) {
-		if ( strcmp(pkg->svr_name, get_server_name()) 
-			|| (pkg->svr_id && (pkg->svr_id != get_server_id())) ) {
+	if (!g_is_parent) {
+		if ( strcmp(pkg->svr_name, g_service.get_name()) 
+			|| (pkg->svr_id && (pkg->svr_id != g_service.get_id())) ) {
 				return;
 		}
 	} else {
@@ -342,7 +343,7 @@ void proc_reload_plugin(reload_text_pkg_t* pkg, int len)
 	}
 
 	pkg->new_so_name[sizeof(pkg->new_so_name) - 1] = '\0';
-	if (g_dll.before_reload && (g_dll.before_reload(is_parent) == -1)) {
+	if (g_dll.before_reload && (g_dll.before_reload(g_is_parent) == -1)) {
 		exit(-1);
 	}
 
@@ -350,11 +351,11 @@ void proc_reload_plugin(reload_text_pkg_t* pkg, int len)
 
 //	DEBUG_LOG("RELOAD %s", pkg->new_so_name);
 
-	if (0 != g_dll.register_plugin(pkg->new_so_name, e_plugin_flag_reload)) {
+	if (0 != g_dll.register_plugin(pkg->new_so_name, dll_t::e_plugin_flag_reload)) {
 		exit(-1);
 	}
 
-	if (!is_parent && g_dll.reload_global_data && (g_dll.reload_global_data() == -1)) {
+	if (!g_is_parent && g_dll.reload_global_data && (g_dll.reload_global_data() == -1)) {
 		exit(-1);
 	}
 }
@@ -369,7 +370,7 @@ void asyncserv_proc_mcast_pkg(void* data, uint32_t len)
 	mcast_pkg_header_t* pkg = (mcast_pkg_header_t*)data;
 	switch (pkg->proto_type) {
 case mcast_notify_addr:
-	if (!is_parent){
+	if (!g_is_parent){
 		proc_addr_mcast_pkg((const mcast_pkg_header_t*)data, len);
 	}
 	break;

@@ -16,7 +16,7 @@
 #include "bench_conf.h"
 
 service_t g_service;
-int					is_parent = 1;
+bool g_is_parent = true;
 fd_array_session_t	fds;
 namespace {
 	int handle_fini()
@@ -160,10 +160,11 @@ int handle_close(int fd)
 	return 0;
 }
 
-void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc )
+void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 {
-	is_parent = 0;
-	m_bind_elem = bc->get_elem(bc_elem_idx);
+	g_is_parent = false;
+	m_bind_elem = g_bind_conf.get_elem(bc_elem_idx);
+
 	char prefix[10] = { 0 };
 	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
 	prefix[len] = '_';
@@ -172,27 +173,46 @@ void service_t::worker_process( struct bind_config_t* bc, int bc_elem_idx, int n
 		g_bench_conf.get_log_save_next_file_interval_min());
 
 	//释放资源(从父进程继承来的资源)
-	g_shmq.close_pipe(bc, n_inited_bc, 1);
+	g_shmq.close_pipe(n_inited_bc, true);
 	shmq_destroy(m_bind_elem, n_inited_bc);
 	net_exit();
 
-	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//todo 2000 个数量是否合适?
+	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//mark 2000 个数量是否合适? 不该创建那么多的空间.
 	do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
-	if ( 0 != handle_init(m_bind_elem)) {
+	if ( 0 != handle_init(m_bind_elem)) {// mark
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());
 		goto fail;
 	}
 
-	while ( !g_daemon.m_stop || 0 != handle_fini() ) {
-		net_loop(100, PAGE_SIZE, 0);
+	while ( !g_daemon.m_stop || 0 != handle_fini() ) {//mark
+		net_loop(100, PAGE_SIZE, 0);//mark
 	}
 fail:
-	//下面没看
 	do_destroy_shmq(m_bind_elem);
 	net_exit();
 	g_dll.unregister_data_plugin();
 	g_dll.unregister_plugin();
 	log_fini();
 	exit(0);
+}
+
+uint32_t service_t::get_id()
+{
+	return m_bind_elem->id;
+}
+
+const char* service_t::get_name()
+{
+	return m_bind_elem->name.c_str();
+}
+
+const char* service_t::get_ip()
+{
+	return m_bind_elem->ip.c_str();
+}
+
+in_port_t service_t::get_port()
+{
+	return m_bind_elem->port;
 }

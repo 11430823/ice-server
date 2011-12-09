@@ -23,7 +23,7 @@ inline struct shm_block_t* tail_mb (const struct shm_queue_t *q)
 
 void restart_child_process(bind_config_elem_t* bc_elem)
 {
-	if (is_parent && g_daemon.m_stop && !g_daemon.m_restart){
+	if (g_is_parent && g_daemon.m_stop && !g_daemon.m_restart){
 		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
 		return;
 	}
@@ -40,11 +40,11 @@ void restart_child_process(bind_config_elem_t* bc_elem)
 	if ( (pid = fork ()) < 0 ) {
 //		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) { //parent process
-		g_shmq.close_pipe(&g_bind_conf, i, 0);
+		g_shmq.close_pipe(i, false);
 		do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, 0, bc_elem);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
-		g_service.worker_process(&g_bind_conf, i, g_bind_conf.get_elem_num());
+		g_service.worker_process(i, g_bind_conf.get_elem_num());
 	}
 }
 
@@ -209,6 +209,7 @@ namespace {
 		fcntl (pipe_handles[0], F_SETFL, O_NONBLOCK | O_RDONLY);
 		fcntl (pipe_handles[1], F_SETFL, O_NONBLOCK | O_WRONLY);
 
+	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
 		fcntl (pipe_handles[0], F_SETFD, FD_CLOEXEC);
 		fcntl (pipe_handles[1], F_SETFD, FD_CLOEXEC);
 
@@ -218,7 +219,7 @@ namespace {
 	int create_shmq(struct shm_queue_t *q)
 	{
 		q->addr = (shm_head_t *) mmap (NULL, q->length, PROT_READ | PROT_WRITE,
-			MAP_SHARED | MAP_ANON, -1, 0);
+			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 		if (q->addr == MAP_FAILED){
 			ALERT_LOG("MMAP FAILED [err:%s]", strerror(errno));
 			return -1;
@@ -250,12 +251,10 @@ void do_destroy_shmq(bind_config_elem_t* bc_elem)
 
 void shmq_destroy(const bind_config_elem_t* exclu_bc_elem, int max_shmq_num)
 {
-	bind_config_t* bc = &g_bind_conf;
-
 	int i = 0;
 	for ( ; i != max_shmq_num; ++i ) {
-		if (bc->get_elem(i) != exclu_bc_elem) {
-			do_destroy_shmq(bc->get_elem(i));
+		if (g_bind_conf.get_elem(i) != exclu_bc_elem) {
+			do_destroy_shmq(g_bind_conf.get_elem(i));
 		}
 	}
 }
@@ -271,25 +270,25 @@ void epi2shm( int fd, struct shm_block_t *mb )
 
 int shmq_t::create( struct bind_config_elem_t* p )
 {
-	p->sendq.length = 1 << 26;//64MB
-	p->recvq.length = p->sendq.length;
+	p->sendq.length = m_shmq_max_len;
+	p->recvq.length = m_shmq_max_len;
 
 	int err = create_shmq(&(p->sendq)) | create_shmq(&(p->recvq));
 	BOOT_LOG(err, "Create shared memory queue: %dMB, err:%d", p->recvq.length / 1024 / 512, err);
 	return err;
 }
 
-void shmq_t::close_pipe( struct bind_config_t* bc, int idx, int is_child )
+void shmq_t::close_pipe(int idx, bool is_child )
 {
 	if (is_child) {
 		// close fds inherited from parent process
 		for (int i = 0; i != idx; ++i ) {
-			close(bc->get_elem(i)->recvq.pipe_handles[1]);
-			close(bc->get_elem(i)->sendq.pipe_handles[0]);
+			close(g_bind_conf.get_elem(i)->recvq.pipe_handles[1]);
+			close(g_bind_conf.get_elem(i)->sendq.pipe_handles[0]);
 		}
 	} else {
-		close(bc->get_elem(idx)->recvq.pipe_handles[0]);
-		close(bc->get_elem(idx)->sendq.pipe_handles[1]);
+		close(g_bind_conf.get_elem(idx)->recvq.pipe_handles[0]);
+		close(g_bind_conf.get_elem(idx)->sendq.pipe_handles[1]);
 	}
 }
 
