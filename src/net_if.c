@@ -192,7 +192,7 @@ int net_send(int fd, const void* data, uint32_t len)
 	//tcp linger send
 	if (epi.fds[fd].cb.sendlen > 0) {
 		if (do_write_conn(fd) == -1) {
-			do_del_conn(fd, is_parent);
+			do_del_conn(fd, g_is_parent);
 			return -1;
 		}
 		prev_stat = 1;
@@ -203,7 +203,7 @@ int net_send(int fd, const void* data, uint32_t len)
 		send_bytes = safe_tcp_send_n(fd, data, len);
 		if (send_bytes == -1) {
 //			ERROR_LOG("failed to write to fd=%d err=%d %s", fd, errno, strerror(errno));
-			do_del_conn(fd, is_parent);
+			do_del_conn(fd, g_is_parent);
 			return -1;
 		}
 	}
@@ -226,11 +226,11 @@ int net_send(int fd, const void* data, uint32_t len)
 			
 		memcpy(epi.fds[fd].cb.sendptr + epi.fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
 		epi.fds[fd].cb.sendlen += len - send_bytes;
-		if (is_parent && (g_send_buf_limit_size > 0)
+		if (g_is_parent && (g_send_buf_limit_size > 0)
 				&& (epi.fds[fd].cb.sendlen > g_send_buf_limit_size)) {
 // 			ERROR_LOG("send buf limit exceeded: fd=%d buflen=%u limit=%u",
 // 						fd, epi.fds[fd].cb.sendlen, g_send_buf_limit_size);
-			do_del_conn(fd, is_parent);
+			do_del_conn(fd, g_is_parent);
 			return -1;
 		}
 	}

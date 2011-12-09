@@ -24,13 +24,18 @@ int main()
 
 	sockaddr_in addr;
 	addr.sin_family=AF_INET;
-	addr.sin_port=htons(9000); //保证字节顺序
+	addr.sin_port=htons(7845); //保证字节顺序
 	inet_pton(AF_INET, "10.1.1.142", &addr.sin_addr);
 
 	int nResult=connect(fd,(sockaddr*)&addr,sizeof(sockaddr));
 	if(0 != nResult){
 		cout<<"connect failed"<<endl;
 	}
+	char sz_recv[1000];
+	int len = recv(fd, sz_recv, 1000, 0);
+	cout<<len<<endl;
+	cout<<sz_recv<<endl;
+	/*
 
 	cli_proto_head_t head;
 	head.cmd = 1;
@@ -44,5 +49,6 @@ int main()
 	}
 	close(fd);
 
+	*/
 	return 0;
 }

@@ -24,43 +24,6 @@ namespace {
 
 }//end of namespace
 
-
-uint32_t get_server_id()
-{
-	return g_service.m_bind_elem->id;
-}
-
-uint32_t get_cli_ip2( int fd )
-{
-	fdsession_t* fdsess = (fdsession_t*)g_hash_table_lookup(fds.cn, &fd);
-	return (fdsess ? fdsess->remote_ip : 0);
-}
-
-uint32_t get_cli_port( const fdsession_t* fdsess )
-{
-	return fdsess->remote_port;
-}
-
-uint32_t get_cli_ip( const fdsession_t* fdsess )
-{
-	return fdsess->remote_ip;
-}
-
-in_port_t get_server_port()
-{
-	return g_service.m_bind_elem->port;
-}
-
-const char* get_server_ip()
-{
-	return g_service.m_bind_elem->ip.c_str();
-}
-
-const char* get_server_name()
-{
-	return g_service.m_bind_elem->name.c_str();
-}
-
 int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
 {
 	char* error; 

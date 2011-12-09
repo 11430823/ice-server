@@ -14,6 +14,7 @@
 
 #include "shmq.h"
 
+#pragma pack(1)
 struct bind_config_elem_t {
 	uint32_t		id;
 	std::string		name;
@@ -24,6 +25,7 @@ struct bind_config_elem_t {
 	shm_queue_t		recvq;
 	bind_config_elem_t();
 };
+#pragma pack()
 
 class bind_config_t
 {

@@ -21,6 +21,8 @@
 #include "net_if.h"
 #include "daemon.h"
 #include "mcast.h"
+#include "shmq.h"
+#include "bind_conf.h"
 
 
 net_t g_net;
@@ -122,7 +124,7 @@ namespace {
 				CRIT_LOG("PARENT PROCESS CRASHED!");
 
 				char buf[100];
-				snprintf(buf, sizeof(buf), "%s.%s", get_server_name(), "parent.core");
+				snprintf(buf, sizeof(buf), "%s.%s", g_service.get_name(), "parent.core");
 				//  [9/12/2011 meng]	
 #if 0
 				asynsvr_send_warning(buf, 0, get_server_ip());
@@ -250,7 +252,7 @@ inline void free_cb(struct conn_buf_t *p)
 		p->sendptr = NULL;
 	}
 	if (p->recvptr) {
-		munmap (p->recvptr, PAGE_SIZE);
+		munmap (p->recvptr, PAGE_SIZE);//mark
 		p->recvptr = NULL;
 	}
 
@@ -303,14 +305,14 @@ inline void del_from_close_queue (int fd)
 		list_del_init (&epi.fds[fd].list);
 	}
 }
-void do_del_conn(int fd, int is_conn)
+void do_del_conn(int fd, bool is_conn)
 {
 	if (epi.fds[fd].type == fd_type_unused)
 		return ;
 
-	if (is_conn == 0) {
+	if (!is_conn) {
 		g_dll.on_fd_closed(fd);
-	} else if (is_conn == 1){
+	} else if (is_conn){
 		shm_block_t mb;
 		mb.id = epi.fds[fd].id;
 		mb.fd = fd;
@@ -349,7 +351,7 @@ inline void iterate_close_queue()
 		if (fi->cb.sendlen > 0) {
 			do_write_conn(fi->sockfd);
 		}
-		do_del_conn(fi->sockfd, is_parent ? 2 : 0);
+		do_del_conn(fi->sockfd, g_is_parent ? 2 : 0);
 	}
 }
 inline void add_to_etin_queue (int fd)
