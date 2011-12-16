@@ -3,7 +3,7 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	读取bench.ini配置文件
-	brief:		
+	brief:		ok
 *********************************************************************/
 #pragma once
 
@@ -14,7 +14,7 @@ class bench_conf_t
 public:
 //so调用获取配置项bench.ini中的数据(自行配置)
 	//获取配置项数据
-	std::string get_strval(std::string& key, std::string& name);
+	std::string get_strval(std::string& key, std::string& name) const;
 public:
 	bench_conf_t();
 	//************************************

@@ -34,7 +34,7 @@ void restart_child_process(bind_config_elem_t* bc_elem)
 
 	g_shmq.create(bc_elem);
 
-	int i = g_bind_conf.get_bind_conf_idx(bc_elem);
+	int i = g_bind_conf.get_elem_idx(bc_elem);
 	pid_t pid;
 
 	if ( (pid = fork ()) < 0 ) {

@@ -15,7 +15,7 @@
 #include "bench_conf.h"
 #include "service.h"
 
-daemon_info_t g_daemon;
+daemon_t g_daemon;
 
 namespace {
 
@@ -111,13 +111,13 @@ namespace {
 
 }//end of namespace
 
-daemon_info_t::daemon_info_t()
+daemon_t::daemon_t()
 {
 	m_stop = false;
 	m_restart = false;
 }
 
-void daemon_info_t::prase_args( int argc, char** argv )
+void daemon_t::prase_args( int argc, char** argv )
 {
 	m_prog_name = argv[0];
 	char* dir = get_current_dir_name();
@@ -132,9 +132,11 @@ void daemon_info_t::prase_args( int argc, char** argv )
 	}
 }
 
-daemon_info_t::~daemon_info_t()
+daemon_t::~daemon_t()
 {
 	if (g_daemon.m_restart && !g_daemon.m_prog_name.empty()) {
+		killall_children();
+
 		ALERT_LOG("SERVER RESTARTING...");
 		chdir(g_daemon.m_current_dir.c_str());
 		char* argvs[200];
@@ -149,7 +151,7 @@ daemon_info_t::~daemon_info_t()
 	}
 }
 
-void daemon_info_t::killall_children()
+void daemon_t::killall_children()
 {
 	for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
 		if (0 != atomic_read(&child_pids[i])) {
