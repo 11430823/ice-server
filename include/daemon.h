@@ -3,7 +3,7 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	守护进程配置
-	brief:		
+	brief:		ok
 *********************************************************************/
 #pragma once
 
@@ -12,11 +12,11 @@
 
 #include <ice_lib/iatomic.h>
 
-class daemon_info_t
+class daemon_t
 {
 public:
-	daemon_info_t();
-	~daemon_info_t();
+	daemon_t();
+	~daemon_t();
 	//************************************
 	// Brief:     解析程序传入参数,设置环境,信号处理
 	// Parameter: int argc
@@ -41,7 +41,7 @@ private:
 	std::string m_current_dir;
 };
 
-extern daemon_info_t g_daemon;
+extern daemon_t g_daemon;
 
 
 

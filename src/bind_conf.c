@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <ice_lib/log.h>
+#include <ice_lib/util.h>
 
 #include "bind_conf.h"
 #include "daemon.h"
@@ -75,28 +76,31 @@ int bind_config_t::load()
 
 	atomic_t t;
 	atomic_set(&t, 0);
-	g_daemon.child_pids.resize(g_bind_conf.get_elem_num(), t);
+	g_daemon.child_pids.resize(get_elem_num(), t);
 	return 0;
 }
 
-int bind_config_t::get_bind_conf_idx( const bind_config_elem_t* bc_elem ) const
+int bind_config_t::get_elem_idx( const bind_config_elem_t* bc_elem )
 {
-	for (uint32_t i = 0 ; i < elems.size(); i++){
-		if (elems[i].id == bc_elem->id){
+	uint32_t i = 0;
+	FOREACH(m_elems, it){
+		bind_config_elem_t& elem = *it;
+		if (bc_elem->id == elem.id){
 			return i;
 		}
+		i++;		
 	}
 	return -1;
 }
 
 bind_config_elem_t* bind_config_t::get_elem( uint32_t index )
 {
-	return &elems[index];
+	return &m_elems[index];
 }
 
 void bind_config_t::add_elem(const bind_config_elem_t& elem )
 {
-	elems.push_back(elem);
+	m_elems.push_back(elem);
 }
 
 bind_config_elem_t::bind_config_elem_t()

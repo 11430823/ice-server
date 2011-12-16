@@ -15,16 +15,26 @@
 #include "bench_conf.h"
 #include "shmq.h"
 
+namespace {
+	int load_config(){
+		if (0 != g_bench_conf.load()){
+			return -1;
+		}
+
+		if (0 != g_bind_conf.load()){
+			return -1;
+		}
+		return 0;
+	}
+}
+
+
 int main(int argc, char* argv[]){
-	if (0 != g_bench_conf.load()){
+	if(0 != load_config()){
 		return -1;
 	}
 
 	g_daemon.prase_args(argc, argv);
-
-	if (0 != g_bind_conf.load()){
-		return -1;
-	}
 
 	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_log_level(),
 		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), NULL,
@@ -34,7 +44,7 @@ int main(int argc, char* argv[]){
 #if 0
 	g_dll.register_data_plugin("");
 #endif
-	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str(), dll_t::e_plugin_flag_load)){
+	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str())){
 		return -1;
 	}
 // kevinmeng  [2011/10/15 16:59]

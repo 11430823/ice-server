@@ -8,7 +8,6 @@ extern "C" {
 
 enum {
 	mcast_notify_addr   = 0,
-	mcast_reload_text	= 1
 };
 
 enum {

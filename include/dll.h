@@ -6,17 +6,13 @@ struct fdsession_t;
 class dll_t
 {
 public:
-	enum E_PLUGIN_FLAG{
-		e_plugin_flag_load = 0,//加载
-		e_plugin_flag_reload = 1,//重新加载
-	};
 public:
 	dll_t();
 	//************************************
 	// Brief:     注册插件
 	// Returns:   int 0:success -1:error
 	//************************************
-	int  register_plugin(const char* file_name, E_PLUGIN_FLAG flag);
+	int  register_plugin(const char* file_name);
 	void unregister_plugin();
 	//************************************
 	// Brief:     注册数据段插件
@@ -80,12 +76,6 @@ public:
 	int		(*get_pkg_len)(int fd, const void* avail_data, int avail_len, int isparent);
 
 	int		(*proc_udp_pkg)(int fd, const void* avail_data, int avail_len ,struct sockaddr_in * from, socklen_t fromlen );
-	/*!
-	 * 为了实现不影响用户在线的更新程序，AsyncServ框架会加载两个so，一个用于保存代码（text.so），一个用于保存全局变量（data.so）。\n
-	 * 这个接口用于在子进程重读text.so后，对data.so进行一些必要的重新初始化（如重新调整定时器）。\n
-	 * `return 0`表示data.so重新初始化成功；`return -1`表示重新初始化失败，子进程退出运行。
-	 */
-	int		(*reload_global_data)();
     /*!
         * This interface is used to sync a server's name, ip, and port to business login.\n
         * arg 'svr_id': server id \n
@@ -95,15 +85,6 @@ public:
         * arg 'flag': 0 - delete, 1 - add
         */
     void	(*sync_service_info)(uint32_t svr_id, const char* svr_name, const char* svr_ip, in_port_t port, int flag);
-
-	/*!
-	 * 为了实现不影响用户在线的更新程序，AsyncServ框架会加载两个so，一个用于保存代码（text.so），一个用于保存全局变量（data.so）。\n
-	 * 这个接口用于在重读text.so之前，对全局变量进行一些必要的销毁。\n
-	 * 无论父进程还是子进程，都会调用这个函数，所以实现这个函数时，需要根据参数isparent（0表示子进程，1表示父进程）来执行不同的代码。
-	 * 建议父进程如果无需特殊处理的话，直接return 0。
-	 * `return 0`表示销毁成功；`return -1`表示销毁失败，子进程退出运行。
-	 */
-	int		(*before_reload)(bool isparent);
 protected:
 private:
 	void* m_data_handle;

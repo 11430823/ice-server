@@ -16,7 +16,7 @@ struct config_cache_t{
 struct fdsession_t {
 	int			fd;
 	uint32_t	id;
-	uint16_t	remote_port;
+	in_port_t	remote_port;
 	uint32_t	remote_ip;
 };
 

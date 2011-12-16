@@ -320,46 +320,6 @@ int send_mcast_pkg(const void* data, int len)
 	return sendto(mcast_fd, data, len, 0, (const struct sockaddr*)&mcast_addr, sizeof mcast_addr);
 }
 
-void proc_reload_plugin(reload_text_pkg_t* pkg, int len)
-{
-	if (len != sizeof(reload_text_pkg_t)) {
-// 		ERROR_LOG("invalid len: %d, expected len: %lu",
-// 			len, (unsigned long)sizeof(reload_text_pkg_t));
-		return;
-	}
-
-	if (!g_is_parent) {
-		if ( strcmp(pkg->svr_name, g_service.get_name()) 
-			|| (pkg->svr_id && (pkg->svr_id != g_service.get_id())) ) {
-				return;
-		}
-	} else {
-		bind_config_t* bc = &g_bind_conf;
-		if ( (bc->get_elem_num() == 0)
-			|| strcmp(pkg->svr_name, bc->get_elem(0)->name.c_str())
-			|| (pkg->svr_id != 0) ) {
-				return;
-		}
-	}
-
-	pkg->new_so_name[sizeof(pkg->new_so_name) - 1] = '\0';
-	if (g_dll.before_reload && (g_dll.before_reload(g_is_parent) == -1)) {
-		exit(-1);
-	}
-
-	g_dll.unregister_plugin();
-
-//	DEBUG_LOG("RELOAD %s", pkg->new_so_name);
-
-	if (0 != g_dll.register_plugin(pkg->new_so_name, dll_t::e_plugin_flag_reload)) {
-		exit(-1);
-	}
-
-	if (!g_is_parent && g_dll.reload_global_data && (g_dll.reload_global_data() == -1)) {
-		exit(-1);
-	}
-}
-
 void asyncserv_proc_mcast_pkg(void* data, uint32_t len)
 {
 	if (len < sizeof(mcast_pkg_header_t)) {
@@ -373,9 +333,6 @@ case mcast_notify_addr:
 	if (!g_is_parent){
 		proc_addr_mcast_pkg((const mcast_pkg_header_t*)data, len);
 	}
-	break;
-case mcast_reload_text:
-	proc_reload_plugin((reload_text_pkg_t*)pkg->body, len - sizeof(mcast_pkg_header_t));
 	break;
 default:
 	break;

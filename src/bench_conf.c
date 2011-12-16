@@ -122,7 +122,7 @@ bool bench_conf_t::is_daemon()const
 	return m_daemon;
 }
 
-std::string bench_conf_t::get_strval(std::string& key, std::string& name)
+std::string bench_conf_t::get_strval(std::string& key, std::string& name) const
 {
 	GKeyFile *file_key = NULL;
 

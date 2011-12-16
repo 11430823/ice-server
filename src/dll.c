@@ -24,7 +24,7 @@ namespace {
 
 }//end of namespace
 
-int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
+int dll_t::register_plugin( const char* file_name)
 {
 	char* error; 
 	int   ret_code = -1;
@@ -46,16 +46,11 @@ int dll_t::register_plugin( const char* file_name, E_PLUGIN_FLAG flag )
   	DLFUNC(m_handle, on_events, "on_events", void(*)());
    	DLFUNC(m_handle, proc_mcast_pkg, "proc_mcast_pkg", void(*)(const void*,int));
    	DLFUNC(m_handle, proc_udp_pkg, "proc_udp_pkg", int(*)(int, const void*, int, struct sockaddr_in*, socklen_t));
- 	DLFUNC(m_handle, reload_global_data, "reload_global_data", int(*)(void));
  	DLFUNC(m_handle, sync_service_info, "sync_service_info", void(*)(uint32_t, const char*, const char*, in_port_t, int));
 	ret_code = 0;
 
 out:
-	if (e_plugin_flag_load == flag) {
-		BOOT_LOG(ret_code, "dlopen [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
-	} else if (e_plugin_flag_reload == flag){
-		INFO_LOG("RELOAD [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
-	}
+	BOOT_LOG(ret_code, "dlopen [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
 	return ret_code;
 }
 
