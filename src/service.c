@@ -177,7 +177,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	shmq_destroy(m_bind_elem, n_inited_bc);
 	net_exit();
 
-	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//mark 2000 个数量是否合适? 不该创建那么多的空间.
+	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//mark 2000 个数量(与其他服务器相连的FD).
 	do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
 	if ( 0 != handle_init(m_bind_elem)) {// mark
