@@ -8,7 +8,7 @@
 #include <ice_lib/log.h>
 
 #include "daemon.h"
-#include "dll.h"
+#include "ice_dll.h"
 #include "net.h"
 #include "bind_conf.h"
 #include "service.h"
@@ -40,10 +40,6 @@ int main(int argc, char* argv[]){
 		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), NULL,
 		g_bench_conf.get_log_save_next_file_interval_min());
 
-// kevinmeng  [2011/10/15 16:58]
-#if 0
-	g_dll.register_data_plugin("");
-#endif
 	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str())){
 		return -1;
 	}
@@ -55,7 +51,7 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	if (g_dll.init_service(1) != 0) {
+	if (0 != g_dll.on_init(1)) {
 		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
 		return -1;
 	}
@@ -88,14 +84,12 @@ int main(int argc, char* argv[]){
 	} 
 #endif
 
-	while (!g_daemon.m_stop || g_dll.fini_service(1) != 0) {
+	while (!g_daemon.m_stop || g_dll.on_fini(1) != 0) {
 		net_loop(-1, PAGE_SIZE, 1);
 	}
 	g_daemon.killall_children();
 	//TODO 下面没有检查
 	net_exit();
-	g_dll.unregister_data_plugin();
-	g_dll.unregister_plugin();
 	shmq_destroy(0, g_bind_conf.get_elem_num());
 	log_fini();
 	return 0;

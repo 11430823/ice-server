@@ -15,16 +15,6 @@ extern "C" {
 #endif
 
 /**
-  * @brief Set the given fd to be blocking or noblocking
-  *
-  * @param fd file descriptor to be set.
-  * @param nonblock 0 to set the given fd blocking, 1 to set the fd nonblocking.
-  *
-  * @return 0 on success, -1 on error.
-  */
-int set_io_blockability(int fd, int nonblock);
-
-/**
   * @brief Set a timeout on sending data. If you want to disable timeout, just simply
   *           call this function again with millisec set to be 0.
   *
