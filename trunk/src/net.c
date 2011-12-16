@@ -17,7 +17,7 @@
 #include "net.h"
 #include "tcp.h"
 #include "service.h"
-#include "dll.h"
+#include "ice_dll.h"
 #include "net_if.h"
 #include "daemon.h"
 #include "mcast.h"
@@ -235,7 +235,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 	int listenfd = safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
 	if (-1 != listenfd) {
 		//set nonblock
-		set_io_blockability(listenfd, 1);
+		lib_tcp::set_io_block(listenfd, false);
 
 		do_add_conn(listenfd, fd_type_listen, 0, bc_elem);
 		ret_code = 0;
@@ -449,7 +449,7 @@ parse_again:
 	//unknow protocol length
 	if (epi.fds[fd].cb.rcvprotlen == 0) {
 		//parse
-		epi.fds[fd].cb.rcvprotlen = g_dll.get_pkg_len(fd, (void*)epi.fds[fd].cb.recvptr, epi.fds[fd].cb.recvlen, is_conn);
+		epi.fds[fd].cb.rcvprotlen = g_dll.on_get_pkg_len(fd, (void*)epi.fds[fd].cb.recvptr, epi.fds[fd].cb.recvlen, is_conn);
 // 		TRACE_LOG("handle_parse pid=%d return %d, buffer len=%d, fd=%d", getpid(),
 // 			epi.fds[fd].cb.rcvprotlen, epi.fds[fd].cb.recvlen, fd);
 	}
@@ -468,7 +468,7 @@ parse_again:
 		//integrity protocol	
 	} else if (epi.fds[fd].cb.recvlen >= epi.fds[fd].cb.rcvprotlen) {
 		if (!is_conn) {
-			g_dll.proc_pkg_from_serv(fd, epi.fds[fd].cb.recvptr, epi.fds[fd].cb.rcvprotlen);
+			g_dll.on_srv_pkg(fd, epi.fds[fd].cb.recvptr, epi.fds[fd].cb.rcvprotlen);
 		} else {
 			shm_block_t mb;
 			epi2shm(fd, &mb);
@@ -583,8 +583,8 @@ int net_loop(int timeout, int max_len, int is_conn)
 					for (i = 0; i != 100; ++i) {
 						int len = recv(fd, buf, mcast_pkg_size, MSG_DONTWAIT);
 						if (len > 0) {
-							if (g_dll.proc_mcast_pkg) {
-								g_dll.proc_mcast_pkg((void*)buf, len);
+							if (g_dll.on_mcast_pkg) {
+								g_dll.on_mcast_pkg((void*)buf, len);
 							}
 						} else {
 							break;
@@ -616,7 +616,7 @@ int net_loop(int timeout, int max_len, int is_conn)
 						int len = recvfrom(fd, buf, udp_pkg_size, MSG_DONTWAIT,
 							(struct sockaddr*)(&from), &fromlen);
 						if (len > 0) {
-							g_dll.proc_udp_pkg(fd, buf, len, &from, fromlen);
+							g_dll.on_udp_pkg(fd, buf, len, &from, fromlen);
 						} else {
 							break;
 						}

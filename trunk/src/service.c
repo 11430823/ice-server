@@ -9,7 +9,7 @@
 #include "bind_conf.h"
 #include "net.h"
 #include "daemon.h"
-#include "dll.h"
+#include "ice_dll.h"
 #include "mcast.h"
 #include "net.h"
 #include "net_if.h"
@@ -27,7 +27,7 @@ namespace {
 			}
 		}
 
-		if (0 != g_dll.fini_service(0)) {
+		if (0 != g_dll.on_fini(0)) {
 			return -1;
 		}
 
@@ -65,7 +65,7 @@ handle_init(bind_config_elem_t* bc_elem)
 		}
 	}
 #endif
-	return g_dll.init_service(0);	
+	return g_dll.on_init(0);	
 }
 
 static inline void
@@ -75,7 +75,7 @@ handle_process(uint8_t* recvbuf, int rcvlen, int fd)
 	fdsession_t* fdsess = get_fdsess(fd);
 	if (fdsess) {
 
-		if (g_dll.proc_pkg_from_client(recvbuf, rcvlen, fdsess)) {
+		if (g_dll.on_cli_pkg(recvbuf, rcvlen, fdsess)) {
 
 			close_client_conn(fd);
 		}
@@ -154,7 +154,7 @@ int handle_close(int fd)
 
 	assert(fds.count > 0);
 
-	g_dll.on_client_conn_closed(fd);
+	g_dll.on_cli_conn_closed(fd);
 
 	remove_fdsess(fd);
 	return 0;
@@ -191,8 +191,6 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 fail:
 	do_destroy_shmq(m_bind_elem);
 	net_exit();
-	g_dll.unregister_data_plugin();
-	g_dll.unregister_plugin();
 	log_fini();
 	exit(0);
 }

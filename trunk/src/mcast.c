@@ -8,7 +8,7 @@
 #include <glib.h>
 #include <ice_lib/util.h>
 
-#include "dll.h"
+#include "ice_dll.h"
 #include "net.h"
 #include "service.h"
 #include "mcast.h"
@@ -104,9 +104,7 @@ static gboolean del_an_expired_addr(gpointer key, gpointer value, gpointer user_
 	addr_node_t* n = (addr_node_t*)value;
 	time_t now = time(0);
 	if ( (now - n->last_syn_tm) > 100 ) {
-		if (g_dll.sync_service_info) {
-			g_dll.sync_service_info(n->svr_id, (const char*)user_data, n->ip, n->port, 0);
-		}
+		g_dll.on_sync_srv_info(n->svr_id, (const char*)user_data, n->ip, n->port, 0);
 
 // 		INFO_LOG("DEL AN ADDR\t[id=%u ip=%s port=%d last_tm=%ld]",
 // 			n->svr_id, n->ip, n->port, n->last_syn_tm);
@@ -221,9 +219,7 @@ void proc_addr_mcast_pkg(const mcast_pkg_header_t* hdr, int len)
 			return;
 	}
 
-	if (g_dll.sync_service_info) {
-		g_dll.sync_service_info(pkg->svr_id, pkg->name, pkg->ip, pkg->port, 1);
-	}
+	g_dll.on_sync_srv_info(pkg->svr_id, pkg->name, pkg->ip, pkg->port, 1);
 
 	int new_node = 0;
 	addr_cache_t* ac = (addr_cache_t*)g_hash_table_lookup(svr_tbl, pkg->name);

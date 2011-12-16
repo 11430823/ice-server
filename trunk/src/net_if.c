@@ -88,7 +88,7 @@ int asyn_connect_to_svr(const char* ipaddr, in_addr_t port, int bufsz, void (*ca
 // 					ipaddr, port, errno, strerror(errno));
 		return -1;
 	}
-	set_io_blockability(sockfd, 1);
+	lib_tcp::set_io_block(sockfd, false);
 
 	// connect to svr
 	int done = 1;

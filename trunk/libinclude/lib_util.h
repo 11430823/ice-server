@@ -3,7 +3,7 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	
-	brief:		
+	brief:		ok
 *********************************************************************/
 
 #pragma once

@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include <ice_server/net_if.h>
-#include <ice_server/dll.h>
+#include <ice_server/ice_dll.h>
 #include <ice_server/bench_conf.h>
 #include <ice_lib/log.h>
 #include <ice_lib/timer.h>

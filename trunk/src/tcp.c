@@ -11,17 +11,6 @@
 #include "tcp.h"
 #include "inet_utils.h"
 
-int set_io_blockability(int fd, int nonblock)
-{
-	int val;
-	if (nonblock) {
-		val = (O_NONBLOCK | fcntl(fd, F_GETFL));
-	} else {
-		val = (~O_NONBLOCK & fcntl(fd, F_GETFL));
-	}
-	return fcntl(fd, F_SETFL, val);
-}
-
 int set_sock_snd_timeo(int sockfd, int millisec)
 {
 	struct timeval tv;
@@ -242,7 +231,7 @@ int safe_tcp_accept(int sockfd, struct sockaddr_in* peer, int nonblock)
 		}
 	}
 
-	if (nonblock && (set_io_blockability(newfd, 1) == -1)) {
+	if (nonblock && (lib_tcp::set_io_block(newfd, false) == -1)) {
 		err   = errno;
 		close(newfd);
 		errno = err;
@@ -281,7 +270,8 @@ int safe_tcp_connect(const char* ipaddr, in_port_t port, int timeout, int nonblo
 	if (timeout > 0) {
 		set_sock_snd_timeo(sockfd, 0);
 	}
-	set_io_blockability(sockfd, nonblock);
+
+	lib_tcp::set_io_block(sockfd, !nonblock);
 
 	return sockfd;
 //------------------------
