@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 
 #include "log.h"
-#include "util.h"
+#include "lib_util.h"
 
 #define MAX_LOG_CNT 10000000
 

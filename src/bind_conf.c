@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <ice_lib/log.h>
-#include <ice_lib/util.h>
+#include <ice_lib/lib_util.h>
 
 #include "bind_conf.h"
 #include "daemon.h"

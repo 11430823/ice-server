@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 
+#include <ice_lib/lib_tcp.h>
+
 #include "tcp.h"
 #include "inet_utils.h"
 

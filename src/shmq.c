@@ -7,13 +7,14 @@
 #include <errno.h>
 
 #include <ice_lib/log.h>
-#include <ice_lib/util.h>
+#include <ice_lib/lib_util.h>
 
 #include "shmq.h"
 #include "bind_conf.h"
 #include "net.h"
 #include "daemon.h"
 #include "service.h"
+#include "ice_epoll.h"
 
 shmq_t g_shmq;
 inline struct shm_block_t* tail_mb (const struct shm_queue_t *q)
@@ -261,10 +262,10 @@ void shmq_destroy(const bind_config_elem_t* exclu_bc_elem, int max_shmq_num)
 
 void epi2shm( int fd, struct shm_block_t *mb )
 {
-	mb->id      = epi.fds[fd].id;
+	mb->id      = g_epi.fds[fd].id;
 	mb->fd      = fd;
 	mb->type    = DATA_BLOCK;
-	mb->length  = epi.fds[fd].cb.rcvprotlen + sizeof (struct shm_block_t);
+	mb->length  = g_epi.fds[fd].cb.rcvprotlen + sizeof (struct shm_block_t);
 }
 
 

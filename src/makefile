@@ -9,7 +9,7 @@ FLAG=-Wall -DDEBUG -g -O0 -o
 INCLUDES=-I/usr/include/ -I../include/ -I/usr/include/libice/
 GLIB_INCLUDES=-I/usr/local/include/glib-2.0/ -I/usr/local/lib/glib-2.0/include/
 
-LIBS=-L/usr/lib/
+LIBS=-L/usr/lib/ -L../lib/
 
 LINK=-ldl -rdynamic -lglib-2.0 -lice
 

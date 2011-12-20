@@ -16,45 +16,12 @@ enum {
 	fd_type_udp,
 	fd_type_asyn_connect
 };
-struct skinfo_t {
-	uint16_t	remote_port;
-	uint32_t	remote_ip;
-	time_t	last_tm;
-} __attribute__((packed));
 
-struct conn_buf_t {
-	uint32_t	rcvprotlen;
-	uint32_t	recvlen;
-	uint32_t	sendlen;
-	uint32_t	sndbufsz;
-	uint8_t*	recvptr;
-	uint8_t*	sendptr;
-};
-struct fdinfo_t {
-	uint32_t	id;
-	int			sockfd;
-	uint8_t		type;
-	uint8_t		flag;
-	conn_buf_t	cb;
-	skinfo_t	sk;
-	struct bind_config_elem_t*	bc_elem;
-	// callback for asynchronous connect
-	void		(*callback)(int fd, void* arg);
-	void*		arg;
 
-	list_head_t	list;
-};
-struct epinfo {
-	fdinfo_t*	fds;
-	struct epoll_event*	evs;
-	list_head_t	close_head;
-	list_head_t	etin_head;
-	int			epfd;
-	int			maxfd;
-	int			max_ev_num;
-	int			count;
-};
-extern epinfo epi;
+
+
+
+
 extern const uint32_t PAGE_SIZE;
 extern uint32_t g_send_buf_limit_size;
 int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, struct bind_config_elem_t* bc_elem);

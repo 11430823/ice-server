@@ -19,6 +19,7 @@
 
 #include "service.h"
 #include "net.h"
+#include "ice_epoll.h"
 
 /**
   * @brief hold an ip and a port
@@ -133,8 +134,8 @@ const ip_port_t* get_last_connecting_service();
 static inline
 uint32_t get_remote_ip(int fd)
 {
-	if ((fd >= 0) && (fd <= epi.maxfd) && (epi.fds[fd].type != fd_type_unused)) {
-		return epi.fds[fd].sk.remote_ip;
+	if ((fd >= 0) && (fd <= g_epi.maxfd) && (g_epi.fds[fd].type != fd_type_unused)) {
+		return g_epi.fds[fd].sk.remote_ip;
 	}
 
 	return 0;
