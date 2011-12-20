@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <ice_lib/util.h>
+#include <ice_lib/lib_util.h>
 #include <ice_lib/log.h>
 
 #include "service.h"
@@ -21,8 +21,8 @@ fd_array_session_t	fds;
 namespace {
 	int handle_fini()
 	{
-		for (int i = 0; i <= epi.maxfd; ++i) {
-			if ( (epi.fds[i].type == fd_type_remote) && (epi.fds[i].cb.sendlen > 0) ) {
+		for (int i = 0; i <= g_epi.maxfd; ++i) {
+			if ( (g_epi.fds[i].type == fd_type_remote) && (g_epi.fds[i].cb.sendlen > 0) ) {
 				return -1;
 			}
 		}

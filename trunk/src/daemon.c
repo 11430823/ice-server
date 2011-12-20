@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <ice_lib/util.h>
+#include <ice_lib/lib_util.h>
 #include <ice_lib/log.h>
 
 #include "daemon.h"

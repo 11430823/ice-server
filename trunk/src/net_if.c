@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <ice_lib/lib_tcp.h>
 
 #include "mcast.h"
 #include "net.h"
@@ -119,8 +120,8 @@ connect_again:
 //	}
 
 	do_add_conn(sockfd, fd_type_asyn_connect, &peer, 0);	
-	epi.fds[sockfd].callback = callback;
-	epi.fds[sockfd].arg 	 = arg;
+	g_epi.fds[sockfd].callback = callback;
+	g_epi.fds[sockfd].arg 	 = arg;
 //	DEBUG_LOG("ASYNC CONNECT TO[fd=%d id=%u]", sockfd, epi.fds[sockfd].id);
 
 	return 0;
@@ -190,7 +191,7 @@ int net_send(int fd, const void* data, uint32_t len)
 	int send_bytes;
 
 	//tcp linger send
-	if (epi.fds[fd].cb.sendlen > 0) {
+	if (g_epi.fds[fd].cb.sendlen > 0) {
 		if (do_write_conn(fd) == -1) {
 			do_del_conn(fd, g_is_parent);
 			return -1;
@@ -199,7 +200,7 @@ int net_send(int fd, const void* data, uint32_t len)
 	}
 
 	send_bytes = 0;
-	if (epi.fds[fd].cb.sendlen == 0) {
+	if (g_epi.fds[fd].cb.sendlen == 0) {
 		send_bytes = safe_tcp_send_n(fd, data, len);
 		if (send_bytes == -1) {
 //			ERROR_LOG("failed to write to fd=%d err=%d %s", fd, errno, strerror(errno));
@@ -210,24 +211,24 @@ int net_send(int fd, const void* data, uint32_t len)
 
 	//merge buffer
 	if ((int32_t)len > send_bytes){
-		if (!epi.fds[fd].cb.sendptr) {
-			epi.fds[fd].cb.sendptr = (uint8_t*) malloc (len - send_bytes);
-			if (!epi.fds[fd].cb.sendptr)
+		if (!g_epi.fds[fd].cb.sendptr) {
+			g_epi.fds[fd].cb.sendptr = (uint8_t*) malloc (len - send_bytes);
+			if (!g_epi.fds[fd].cb.sendptr)
 //				ERROR_RETURN (("malloc error, %s", strerror(errno)), -1);
-			epi.fds[fd].cb.sndbufsz = len - send_bytes;
+			g_epi.fds[fd].cb.sndbufsz = len - send_bytes;
 			
-		} else if (epi.fds[fd].cb.sndbufsz < epi.fds[fd].cb.sendlen + len - send_bytes) {
-			epi.fds[fd].cb.sendptr = (uint8_t*)realloc (epi.fds[fd].cb.sendptr,
-					epi.fds[fd].cb.sendlen + len - send_bytes);
-			if (!epi.fds[fd].cb.sendptr)
+		} else if (g_epi.fds[fd].cb.sndbufsz < g_epi.fds[fd].cb.sendlen + len - send_bytes) {
+			g_epi.fds[fd].cb.sendptr = (uint8_t*)realloc (g_epi.fds[fd].cb.sendptr,
+					g_epi.fds[fd].cb.sendlen + len - send_bytes);
+			if (!g_epi.fds[fd].cb.sendptr)
 //				ERROR_RETURN (("realloc error, %s", strerror(errno)), -1);
-			epi.fds[fd].cb.sndbufsz = epi.fds[fd].cb.sendlen + len - send_bytes;
+			g_epi.fds[fd].cb.sndbufsz = g_epi.fds[fd].cb.sendlen + len - send_bytes;
 		}
 			
-		memcpy(epi.fds[fd].cb.sendptr + epi.fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
-		epi.fds[fd].cb.sendlen += len - send_bytes;
+		memcpy(g_epi.fds[fd].cb.sendptr + g_epi.fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
+		g_epi.fds[fd].cb.sendlen += len - send_bytes;
 		if (g_is_parent && (g_send_buf_limit_size > 0)
-				&& (epi.fds[fd].cb.sendlen > g_send_buf_limit_size)) {
+				&& (g_epi.fds[fd].cb.sendlen > g_send_buf_limit_size)) {
 // 			ERROR_LOG("send buf limit exceeded: fd=%d buflen=%u limit=%u",
 // 						fd, epi.fds[fd].cb.sendlen, g_send_buf_limit_size);
 			do_del_conn(fd, g_is_parent);
@@ -235,10 +236,10 @@ int net_send(int fd, const void* data, uint32_t len)
 		}
 	}
 
-	if (epi.fds[fd].cb.sendlen > 0 && !prev_stat) 
-		mod_events (epi.epfd, fd, EPOLLOUT | EPOLLIN);
-	else if (prev_stat && epi.fds[fd].cb.sendlen == 0)
-		mod_events (epi.epfd, fd, EPOLLIN);
+	if (g_epi.fds[fd].cb.sendlen > 0 && !prev_stat) 
+		mod_events (g_epi.epfd, fd, EPOLLOUT | EPOLLIN);
+	else if (prev_stat && g_epi.fds[fd].cb.sendlen == 0)
+		mod_events (g_epi.epfd, fd, EPOLLIN);
 
 	return 0;
 }
