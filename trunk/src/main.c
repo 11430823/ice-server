@@ -28,7 +28,6 @@ namespace {
 	}
 }
 
-
 int main(int argc, char* argv[]){
 	if(0 != load_config()){
 		return -1;
@@ -43,10 +42,7 @@ int main(int argc, char* argv[]){
 	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str())){
 		return -1;
 	}
-// kevinmeng  [2011/10/15 16:59]
-#if 0
-	asynsvr_init_warning_system();
-#endif
+
 	if (0 != g_net.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num())){
 		return -1;
 	}

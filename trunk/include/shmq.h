@@ -57,7 +57,7 @@ public:
 	void close_pipe(int idx, bool is_child);
 protected:
 private:
-	static const u_int m_shmq_max_len = 1 << 26;//64MB
+	static const u_int m_shmq_max_len = 1 << 26;//64MB//todo ¼ÓÔØµ½ÅäÖÃÏî.
 };
 
 extern shmq_t g_shmq;

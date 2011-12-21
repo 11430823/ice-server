@@ -4,7 +4,6 @@
 	copyright:	All rights reserved.
 	purpose:	读取bench.ini配置文件
 	brief:		
-				Simple doubly linked list implementation.
 *********************************************************************/
 
 #pragma once
