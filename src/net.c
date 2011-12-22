@@ -173,15 +173,14 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 
 	int listenfd = safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
 	if (-1 != listenfd) {
-		//set nonblock
-		lib_tcp::set_io_block(listenfd, false);
 		lib_tcp::set_io_block(listenfd, false);
 
 		g_epi.do_add_conn(listenfd, fd_type_listen, 0, bc_elem);
 		ret_code = 0;
 	}
 
-	BOOT_LOG(ret_code, "Listen on %s:%u,ret_code:%d", listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code);
+	BOOT_LOG(ret_code, "Listen on %s:%u,ret_code:%d",
+		listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code);
 	return ret_code;
 }
 
@@ -192,7 +191,7 @@ inline void free_cb(struct conn_buf_t *p)
 		p->sendptr = NULL;
 	}
 	if (p->recvptr) {
-		munmap (p->recvptr, PAGE_SIZE);//mark
+		munmap (p->recvptr, PAGE_SIZE);
 		p->recvptr = NULL;
 	}
 

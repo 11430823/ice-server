@@ -28,7 +28,8 @@ epoll_add_again:
 	}
 }//end namespace
 
-int ep_info_t::do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, struct bind_config_elem_t* bc_elem)
+int ep_info_t::do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer,
+							struct bind_config_elem_t* bc_elem)
 {
 	static uint32_t seq = 0;
 	uint32_t flag;

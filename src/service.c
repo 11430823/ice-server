@@ -17,8 +17,34 @@
 
 service_t g_service;
 bool g_is_parent = true;
-fd_array_session_t	fds;
+fd_array_session_t	g_fds_session;
 namespace {
+	int handle_init(bind_config_elem_t* bc_elem)
+	{
+		g_fds_session.cn = g_hash_table_new_full(g_int_hash, g_int_equal, 0, free_fdsess);
+
+		// create multicast socket if function `proc_mcast_pkg` is defined
+		// kevinmeng  [2011/10/15 16:42]
+#if 0
+		if (g_dll.proc_mcast_pkg && (create_mcast_socket() == -1)) {
+			// return -1 if fail to create mcast socket
+			return -1;
+		}
+#endif
+
+		//  [9/12/2011 meng]
+#if 0
+		if (config_get_strval("addr_mcast_ip")) {
+			if (create_addr_mcast_socket() == 0) {
+				send_addr_mcast_pkg(addr_mcast_1st_pkg);
+			} else {
+				// return -1 if fail to create mcast socket
+				return -1;
+			}
+		}
+#endif
+		return g_dll.on_init(0);	
+	}
 	int handle_fini()
 	{
 		for (int i = 0; i <= g_epi.m_max_fd; ++i) {
@@ -31,43 +57,31 @@ namespace {
 			return -1;
 		}
 
-		g_hash_table_destroy(fds.cn);
+		g_hash_table_destroy(g_fds_session.cn);
 		return 0;
 	}
-}
-static inline void
-free_fdsess(void* fdsess)
-{
-	g_slice_free1(sizeof(fdsession_t), fdsess);
-}
-static inline int
-handle_init(bind_config_elem_t* bc_elem)
-{
-	fds.cn = g_hash_table_new_full(g_int_hash, g_int_equal, 0, free_fdsess);
 
-	// create multicast socket if function `proc_mcast_pkg` is defined
-	// kevinmeng  [2011/10/15 16:42]
-#if 0
-	if (g_dll.proc_mcast_pkg && (create_mcast_socket() == -1)) {
-		// return -1 if fail to create mcast socket
-		return -1;
+	void add_fdsess(fdsession_t* fdsess)
+	{
+		g_hash_table_insert(g_fds_session.cn, &(fdsess->fd), fdsess);
+		++(g_fds_session.count);
 	}
-#endif
-
-	//  [9/12/2011 meng]
-#if 0
-	if (config_get_strval("addr_mcast_ip")) {
-		if (create_addr_mcast_socket() == 0) {
-			send_addr_mcast_pkg(addr_mcast_1st_pkg);
-		} else {
-			// return -1 if fail to create mcast socket
-			return -1;
-		}
+	void remove_fdsess(int fd)
+	{
+		g_hash_table_remove(g_fds_session.cn, &fd);
+		--(g_fds_session.count);
 	}
-#endif
-	return g_dll.on_init(0);	
-}
+	fdsession_t* get_fdsess( int fd )
+	{
+		return (fdsession_t*)g_hash_table_lookup(g_fds_session.cn, &fd);
+	}
+	void free_fdsess(void* fdsess)
+	{
+		g_slice_free1(sizeof(fdsession_t), fdsess);
+	}
 
+
+}
 static inline void
 handle_process(uint8_t* recvbuf, int rcvlen, int fd)
 {
@@ -80,12 +94,6 @@ handle_process(uint8_t* recvbuf, int rcvlen, int fd)
 			close_client_conn(fd);
 		}
 	}
-}
-static inline void
-add_fdsess(fdsession_t* fdsess)
-{
-	g_hash_table_insert(fds.cn, &(fdsess->fd), fdsess);
-	++(fds.count);
 }
 static inline int
 handle_open(const shm_block_t* mb)
@@ -134,16 +142,6 @@ void handle_recv_queue()
 	}
 }
 
-fdsession_t* get_fdsess( int fd )
-{
-	return (fdsession_t*)g_hash_table_lookup(fds.cn, &fd);
-}
-static inline void
-remove_fdsess(int fd)
-{
-	g_hash_table_remove(fds.cn, &fd);
-	--(fds.count);
-}
 int handle_close(int fd)
 {
 	fdsession_t* fdsess = get_fdsess(fd);
@@ -152,7 +150,7 @@ int handle_close(int fd)
 		return -1;
 	}
 
-	assert(fds.count > 0);
+	assert(g_fds_session.count > 0);
 
 	g_dll.on_cli_conn_closed(fd);
 
@@ -180,7 +178,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//mark 2000 个数量(与其他服务器相连的FD).
 	g_epi.do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
-	if ( 0 != handle_init(m_bind_elem)) {// mark
+	if ( 0 != handle_init(m_bind_elem)) {
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());
 		goto fail;
 	}
