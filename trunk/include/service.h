@@ -5,10 +5,11 @@
 
 #include <glib/ghash.h>
 
-typedef struct fd_array_session {
+struct fd_array_session_t {
 	int			count;
 	GHashTable*	cn;
-} fd_array_session_t;
+};
+
 struct config_cache_t{
 	int					idle_timeout;
 	struct bind_config_elem_t*	bc_elem;
@@ -23,7 +24,7 @@ struct fdsession_t {
 fdsession_t* get_fdsess(int fd);
 
 extern bool	g_is_parent;
-extern fd_array_session_t	fds;
+extern fd_array_session_t	g_fds_session;
 void run_worker_process(struct bind_config_t* bc, int bc_elem_idx, int n_inited_bc);
 void handle_recv_queue();
 int handle_close(int fd);
