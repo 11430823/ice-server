@@ -43,9 +43,9 @@ namespace {
 	inline void add_to_close_queue(int fd)
 	{
 		del_from_etin_queue (fd);
-		if (!(g_epi.fds[fd].flag & CN_NEED_CLOSE)) {
-			list_add_tail (&g_epi.fds[fd].list, &g_epi.close_head);
-			g_epi.fds[fd].flag |= CN_NEED_CLOSE;
+		if (!(g_epi.m_fds[fd].flag & CN_NEED_CLOSE)) {
+			list_add_tail (&g_epi.m_fds[fd].list, &g_epi.m_close_head);
+			g_epi.m_fds[fd].flag |= CN_NEED_CLOSE;
 			// 		TRACE_LOG("add fd=%d to close queue, %x", fd, epi.fds[fd].flag);
 		}
 	}
@@ -55,18 +55,18 @@ namespace {
 		int data_len;
 		int fd = mb->fd;
 
-		if (unlikely((fd > g_epi.maxfd) || (fd < 0))) {
+		if (unlikely((fd > g_epi.m_max_fd) || (fd < 0))) {
 			DEBUG_LOG("discard the message: mb->type=%d, fd=%d, maxfd=%d, id=%u", 
-				mb->type, fd, g_epi.maxfd, mb->id);
+				mb->type, fd, g_epi.m_max_fd, mb->id);
 			return -1;
 		}
 
-		if (g_epi.fds[fd].type != fd_type_remote || mb->id != g_epi.fds[fd].id) { 
-			TRACE_LOG ("connection %d closed, discard %u, %u block", fd, mb->id, g_epi.fds[fd].id);
+		if (g_epi.m_fds[fd].type != fd_type_remote || mb->id != g_epi.m_fds[fd].id) { 
+			TRACE_LOG ("connection %d closed, discard %u, %u block", fd, mb->id, g_epi.m_fds[fd].id);
 			return -1;
 		}
 
-		if (mb->type == FIN_BLOCK && g_epi.fds[fd].type != fd_type_listen) {
+		if (mb->type == FIN_BLOCK && g_epi.m_fds[fd].type != fd_type_listen) {
 			add_to_close_queue (fd);
 			return 0;
 		}
@@ -99,10 +99,10 @@ namespace {
 	{
 		char trash[trash_size];
 
-		if (g_epi.evs[pos].events & EPOLLHUP) {
+		if (g_epi.m_evs[pos].events & EPOLLHUP) {
 			if (is_conn) { // Child Crashed
-				int pfd = g_epi.evs[pos].data.fd;
-				bind_config_elem_t* bc = g_epi.fds[pfd].bc_elem;
+				int pfd = g_epi.m_evs[pos].data.fd;
+				bind_config_elem_t* bc = g_epi.m_fds[pfd].bc_elem;
 				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->id, bc->name.c_str());
 				char buf[100];
 				snprintf(buf, sizeof(buf), "%s.%s", bc->name.c_str(), "child.core");
@@ -111,8 +111,8 @@ namespace {
 				asynsvr_send_warning(buf, bc->online_id, bc->bind_ip);
 #endif
 				// close all connections that are related to the crashed child process
-				for (int i = 0; i <= g_epi.maxfd; ++i) {
-					if ((g_epi.fds[i].bc_elem == bc) && (g_epi.fds[i].type != fd_type_listen)) {
+				for (int i = 0; i <= g_epi.m_max_fd; ++i) {
+					if ((g_epi.m_fds[i].bc_elem == bc) && (g_epi.m_fds[i].type != fd_type_listen)) {
 						//todo 
 						do_del_conn(i, is_conn);
 						//todo end
@@ -142,7 +142,7 @@ namespace {
 	}
 	void handle_asyn_connect(int fd)
 	{
-		fdinfo_t* fdinfo = &(g_epi.fds[fd]);
+		fdinfo_t* fdinfo = &(g_epi.m_fds[fd]);
 
 		int error;
 		socklen_t len = sizeof(error);
@@ -154,7 +154,7 @@ namespace {
 
 		if (!error) {
 			fdinfo->type = fd_type_remote;
-			mod_events(g_epi.epfd, fd, EPOLLIN);
+			mod_events(g_epi.m_fd, fd, EPOLLIN);
 			DEBUG_LOG("ASYNC CONNECTED TO[fd=%d id=%u]", fd, fdinfo->id);
 		} else {
 			ERROR_LOG("failed to connect to fd=%d id=%u err=%d (%s)",
@@ -167,69 +167,6 @@ namespace {
 	}
 }//end of namespace
 
-
-static inline int add_events (int epfd, int fd, uint32_t flag)
-{
-	struct epoll_event ev;
-
-	ev.events = flag;
-	ev.data.fd = fd;
-epoll_add_again:
-	if (unlikely (0 != epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev))) {
-		if (errno == EINTR){
-			goto epoll_add_again;
-		}else{
-			ERROR_LOG ("epoll_ctl add %d error: %m, %d", fd, -1);
-			return -1;
-		}
-	}
-	return 0; 
-}
-
-int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, bind_config_elem_t* bc_elem)
-{
-	static uint32_t seq = 0;
-	uint32_t flag;
-
-	switch (type) {
-	case fd_type_pipe:
-	case fd_type_mcast:
-	case fd_type_addr_mcast:
-	case fd_type_udp:
-		flag = EPOLLIN;
-		break;
-	case fd_type_asyn_connect:
-		flag = EPOLLOUT;
-		break;
-	default:
-		flag = EPOLLIN | EPOLLET;
-	break;
-	}
-
-	if (0 != add_events(g_epi.epfd, fd, flag)) {
-		return -1;
-	}
-
-	memset(&g_epi.fds[fd], 0, sizeof(struct fdinfo_t));
-	g_epi.fds[fd].sockfd = fd;
-	g_epi.fds[fd].type = type;
-	
-	g_epi.fds[fd].id = ++seq;
-	if (0 == seq) {
-		g_epi.fds[fd].id = ++seq;
-	}
-	if (peer) {
-		g_epi.fds[fd].sk.remote_ip = peer->sin_addr.s_addr;
-		g_epi.fds[fd].sk.remote_port = peer->sin_port;
-	}
-	g_epi.fds[fd].bc_elem = bc_elem;
-	g_epi.maxfd = g_epi.maxfd > fd ? g_epi.maxfd : fd;
-	g_epi.count++;
-
-	TRACE_LOG("add fd:%d, type:%d, id:%u", fd, type, g_epi.fds[fd].id);
-	return 0;
-}
-
 int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* bc_elem)
 {
 	int ret_code = -1;
@@ -240,7 +177,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 		lib_tcp::set_io_block(listenfd, false);
 		lib_tcp::set_io_block(listenfd, false);
 
-		do_add_conn(listenfd, fd_type_listen, 0, bc_elem);
+		g_epi.do_add_conn(listenfd, fd_type_listen, 0, bc_elem);
 		ret_code = 0;
 	}
 
@@ -267,33 +204,33 @@ inline void free_cb(struct conn_buf_t *p)
 
 void net_exit ()
 {
-	for (int i = 0; i < g_epi.maxfd + 1; i++) {
-		if (g_epi.fds[i].type == fd_type_unused){
+	for (int i = 0; i < g_epi.m_max_fd + 1; i++) {
+		if (g_epi.m_fds[i].type == fd_type_unused){
 			continue;
 		}
-		free_cb (&g_epi.fds[i].cb);
+		free_cb (&g_epi.m_fds[i].cb);
 		close (i);
 	}
 
-	free (g_epi.fds);
-	free (g_epi.evs);
-	close (g_epi.epfd);
+	free (g_epi.m_fds);
+	free (g_epi.m_evs);
+	close (g_epi.m_fd);
 }
 int do_write_conn(int fd)
 {
 	int send_bytes;
 
-	send_bytes = safe_tcp_send_n(fd, g_epi.fds[fd].cb.sendptr, g_epi.fds[fd].cb.sendlen);
+	send_bytes = safe_tcp_send_n(fd, g_epi.m_fds[fd].cb.sendptr, g_epi.m_fds[fd].cb.sendlen);
 	if (send_bytes == 0) {
 		return 0;
 	} else if (send_bytes > 0) {
-		if ((uint32_t)send_bytes < g_epi.fds[fd].cb.sendlen) {
-			memmove(g_epi.fds[fd].cb.sendptr, g_epi.fds[fd].cb.sendptr + send_bytes, 
-				g_epi.fds[fd].cb.sendlen - send_bytes);
+		if ((uint32_t)send_bytes < g_epi.m_fds[fd].cb.sendlen) {
+			memmove(g_epi.m_fds[fd].cb.sendptr, g_epi.m_fds[fd].cb.sendptr + send_bytes, 
+				g_epi.m_fds[fd].cb.sendlen - send_bytes);
 		}
 
-		g_epi.fds[fd].cb.sendlen -= send_bytes;
-		g_epi.fds[fd].sk.last_tm = time(0);
+		g_epi.m_fds[fd].cb.sendlen -= send_bytes;
+		g_epi.m_fds[fd].sk.last_tm = time(0);
 	} else {
 //		ERROR_LOG("failed to write to fd=%d err=%d %s", fd, errno, strerror(errno));
 		return -1;
@@ -303,43 +240,43 @@ int do_write_conn(int fd)
 }
 inline void del_from_close_queue (int fd)
 {
-	if (g_epi.fds[fd].flag & CN_NEED_CLOSE) {
-		g_epi.fds[fd].flag &= ~CN_NEED_CLOSE;
-		list_del_init (&g_epi.fds[fd].list);
+	if (g_epi.m_fds[fd].flag & CN_NEED_CLOSE) {
+		g_epi.m_fds[fd].flag &= ~CN_NEED_CLOSE;
+		list_del_init (&g_epi.m_fds[fd].list);
 	}
 }
 void do_del_conn(int fd, bool is_conn)
 {
-	if (g_epi.fds[fd].type == fd_type_unused)
+	if (g_epi.m_fds[fd].type == fd_type_unused)
 		return ;
 
 	if (!is_conn) {
 		g_dll.on_fd_closed(fd);
 	} else if (is_conn){
 		shm_block_t mb;
-		mb.id = g_epi.fds[fd].id;
+		mb.id = g_epi.m_fds[fd].id;
 		mb.fd = fd;
 		mb.type = CLOSE_BLOCK;
 		mb.length = sizeof (mb);
-		shmq_push(&(g_epi.fds[fd].bc_elem->recvq), &mb, NULL);
+		shmq_push(&(g_epi.m_fds[fd].bc_elem->recvq), &mb, NULL);
 	}
 
 	del_from_etin_queue(fd);
 	del_from_close_queue(fd);
 
-	free_cb (&g_epi.fds[fd].cb);
-	g_epi.fds[fd].type = fd_type_unused;
+	free_cb (&g_epi.m_fds[fd].cb);
+	g_epi.m_fds[fd].type = fd_type_unused;
 
 	//epoll will auto clear epoll events when fd closed
 	close (fd);
-	g_epi.count--;
+	g_epi.m_fd_count--;
 
-	if (g_epi.maxfd == fd) {
+	if (g_epi.m_max_fd == fd) {
 		int i;
 		for (i = fd - 1; i >= 0; i--)
-			if (g_epi.fds[i].type != fd_type_unused)
+			if (g_epi.m_fds[i].type != fd_type_unused)
 				break;
-		g_epi.maxfd = i;
+		g_epi.m_max_fd = i;
 	}
 	TRACE_LOG ("close fd=%d", fd);
 }
@@ -349,7 +286,7 @@ inline void iterate_close_queue()
 	struct list_head *l, *p;
 	struct fdinfo_t *fi;
 
-	list_for_each_safe (p, l, &g_epi.close_head) {
+	list_for_each_safe (p, l, &g_epi.m_close_head) {
 		fi = list_entry (p, struct fdinfo_t, list);
 		if (fi->cb.sendlen > 0) {
 			do_write_conn(fi->sockfd);
@@ -359,9 +296,9 @@ inline void iterate_close_queue()
 }
 inline void add_to_etin_queue (int fd)
 {
-	if (!(g_epi.fds[fd].flag & (CN_NEED_CLOSE | CN_NEED_POLLIN))) {
-		list_add_tail (&g_epi.fds[fd].list, &g_epi.etin_head);
-		g_epi.fds[fd].flag |= CN_NEED_POLLIN;
+	if (!(g_epi.m_fds[fd].flag & (CN_NEED_CLOSE | CN_NEED_POLLIN))) {
+		list_add_tail (&g_epi.m_fds[fd].list, &g_epi.m_etin_head);
+		g_epi.m_fds[fd].flag |= CN_NEED_POLLIN;
 //		TRACE_LOG ("add fd=%d to etin queue", fd);
 	}
 }
@@ -372,17 +309,17 @@ static int do_open_conn(int fd, int isconn)
 
 	newfd = safe_tcp_accept(fd, &peer, 1);
 	if (newfd != -1) {
-		do_add_conn(newfd, fd_type_remote, &peer, g_epi.fds[fd].bc_elem);
-		g_epi.fds[newfd].sk.last_tm = time(0);
+		g_epi.do_add_conn(newfd, fd_type_remote, &peer, g_epi.m_fds[fd].bc_elem);
+		g_epi.m_fds[newfd].sk.last_tm = time(0);
 
 		if (isconn) {
 			shm_block_t mb;
 
-			mb.id = g_epi.fds[newfd].id;
+			mb.id = g_epi.m_fds[newfd].id;
 			mb.fd = newfd;
 			mb.type = OPEN_BLOCK;
 			mb.length = sizeof (mb) + sizeof (struct skinfo_t);
-			if (shmq_push(&(g_epi.fds[newfd].bc_elem->recvq), &mb, (const uint8_t *)&g_epi.fds[newfd].sk) == -1)
+			if (shmq_push(&(g_epi.m_fds[newfd].bc_elem->recvq), &mb, (const uint8_t *)&g_epi.m_fds[newfd].sk) == -1)
 				do_del_conn(newfd, 2);
 		}
 	} else if ((errno == EMFILE) || (errno == ENFILE)) {
@@ -398,36 +335,36 @@ static int do_read_conn(int fd, uint32_t max)
 {
 	int recv_bytes;
 
-	if (NULL == g_epi.fds[fd].cb.recvptr) {
-		g_epi.fds[fd].cb.rcvprotlen = 0;
-		g_epi.fds[fd].cb.recvlen = 0;
-		g_epi.fds[fd].cb.recvptr = (uint8_t*)mmap (0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-		if (MAP_FAILED == g_epi.fds[fd].cb.recvptr){ 
+	if (NULL == g_epi.m_fds[fd].cb.recvptr) {
+		g_epi.m_fds[fd].cb.rcvprotlen = 0;
+		g_epi.m_fds[fd].cb.recvlen = 0;
+		g_epi.m_fds[fd].cb.recvptr = (uint8_t*)mmap (0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+		if (MAP_FAILED == g_epi.m_fds[fd].cb.recvptr){ 
 			ERROR_LOG("MMAP FAILED");
 			return -1;
 		}
 	}
 
-	if (PAGE_SIZE == g_epi.fds[fd].cb.recvlen) {
+	if (PAGE_SIZE == g_epi.m_fds[fd].cb.recvlen) {
 		TRACE_LOG ("recv buffer is full, fd=%d", fd);
 		return 0;
 	}
 
-	recv_bytes = safe_tcp_recv(fd, g_epi.fds[fd].cb.recvptr + g_epi.fds[fd].cb.recvlen, 
-		max - g_epi.fds[fd].cb.recvlen);
+	recv_bytes = safe_tcp_recv(fd, g_epi.m_fds[fd].cb.recvptr + g_epi.m_fds[fd].cb.recvlen, 
+		max - g_epi.m_fds[fd].cb.recvlen);
 	if (recv_bytes > 0) {
-		g_epi.fds[fd].cb.recvlen += recv_bytes;
-		g_epi.fds[fd].sk.last_tm  = time(0);
+		g_epi.m_fds[fd].cb.recvlen += recv_bytes;
+		g_epi.m_fds[fd].sk.last_tm  = time(0);
 		//close
 	} else if (recv_bytes == 0) {
-		ERROR_LOG("connection [fd=%d ip=0x%X] closed by peer", fd, g_epi.fds[fd].sk.remote_ip);
+		ERROR_LOG("connection [fd=%d ip=0x%X] closed by peer", fd, g_epi.m_fds[fd].sk.remote_ip);
 		return -1;
 	} else { //EAGAIN ...
 		ERROR_LOG("recv error: fd=%d errmsg=%s", fd, strerror(errno));
 		recv_bytes = 0;
 	}
 
-	if (g_epi.fds[fd].cb.recvlen == max) {
+	if (g_epi.m_fds[fd].cb.recvlen == max) {
 		add_to_etin_queue(fd);
 	} else {
 		del_from_etin_queue(fd);
@@ -439,63 +376,63 @@ static int net_recv(int fd, uint32_t max, int is_conn)
 {
 	int cnt = 0;
 	assert (max <= PAGE_SIZE);
-	if (g_epi.fds[fd].type == fd_type_pipe) {
-		read (fd, g_epi.fds[fd].cb.recvptr, max);
+	if (g_epi.m_fds[fd].type == fd_type_pipe) {
+		read (fd, g_epi.m_fds[fd].cb.recvptr, max);
 		return 0;
 	}
 	if (do_read_conn(fd, max) == -1) {
 		return -1;
 	}
 
-	uint8_t* saved_recvptr = g_epi.fds[fd].cb.recvptr;
+	uint8_t* saved_recvptr = g_epi.m_fds[fd].cb.recvptr;
 parse_again:	
 	//unknow protocol length
-	if (g_epi.fds[fd].cb.rcvprotlen == 0) {
+	if (g_epi.m_fds[fd].cb.rcvprotlen == 0) {
 		//parse
-		g_epi.fds[fd].cb.rcvprotlen = g_dll.on_get_pkg_len(fd, (void*)g_epi.fds[fd].cb.recvptr, g_epi.fds[fd].cb.recvlen, is_conn);
+		g_epi.m_fds[fd].cb.rcvprotlen = g_dll.on_get_pkg_len(fd, (void*)g_epi.m_fds[fd].cb.recvptr, g_epi.m_fds[fd].cb.recvlen, is_conn);
 // 		TRACE_LOG("handle_parse pid=%d return %d, buffer len=%d, fd=%d", getpid(),
 // 			epi.fds[fd].cb.rcvprotlen, epi.fds[fd].cb.recvlen, fd);
 	}
 
 	//invalid protocol length
-	if (unlikely(g_epi.fds[fd].cb.rcvprotlen > max)) {
-		g_epi.fds[fd].cb.recvptr = saved_recvptr;
+	if (unlikely(g_epi.m_fds[fd].cb.rcvprotlen > max)) {
+		g_epi.m_fds[fd].cb.recvptr = saved_recvptr;
 		return -1;
 		//unknow protocol length
-	} else if (unlikely(g_epi.fds[fd].cb.rcvprotlen == 0)) {
-		if (g_epi.fds[fd].cb.recvlen == max) {
-			g_epi.fds[fd].cb.recvptr = saved_recvptr;
+	} else if (unlikely(g_epi.m_fds[fd].cb.rcvprotlen == 0)) {
+		if (g_epi.m_fds[fd].cb.recvlen == max) {
+			g_epi.m_fds[fd].cb.recvptr = saved_recvptr;
 //			ERROR_RETURN(("unsupported big protocol, recvlen=%d", epi.fds[fd].cb.recvlen), -1);
 			return -1;
 		}
 		//integrity protocol	
-	} else if (g_epi.fds[fd].cb.recvlen >= g_epi.fds[fd].cb.rcvprotlen) {
+	} else if (g_epi.m_fds[fd].cb.recvlen >= g_epi.m_fds[fd].cb.rcvprotlen) {
 		if (!is_conn) {
-			g_dll.on_srv_pkg(fd, g_epi.fds[fd].cb.recvptr, g_epi.fds[fd].cb.rcvprotlen);
+			g_dll.on_srv_pkg(fd, g_epi.m_fds[fd].cb.recvptr, g_epi.m_fds[fd].cb.rcvprotlen);
 		} else {
 			shm_block_t mb;
 			epi2shm(fd, &mb);
-			if (shmq_push(&g_epi.fds[fd].bc_elem->recvq, &mb, g_epi.fds[fd].cb.recvptr)) {
-				g_epi.fds[fd].cb.recvptr = saved_recvptr;
+			if (shmq_push(&g_epi.m_fds[fd].bc_elem->recvq, &mb, g_epi.m_fds[fd].cb.recvptr)) {
+				g_epi.m_fds[fd].cb.recvptr = saved_recvptr;
 				return -1;
 			}
 		}
 
 		cnt++;
-		if (g_epi.fds[fd].cb.recvlen > g_epi.fds[fd].cb.rcvprotlen) {
-			g_epi.fds[fd].cb.recvptr += g_epi.fds[fd].cb.rcvprotlen;
+		if (g_epi.m_fds[fd].cb.recvlen > g_epi.m_fds[fd].cb.rcvprotlen) {
+			g_epi.m_fds[fd].cb.recvptr += g_epi.m_fds[fd].cb.rcvprotlen;
 		}
-		g_epi.fds[fd].cb.recvlen    -= g_epi.fds[fd].cb.rcvprotlen;
-		g_epi.fds[fd].cb.rcvprotlen  = 0;
-		if (g_epi.fds[fd].cb.recvlen > 0) 
+		g_epi.m_fds[fd].cb.recvlen    -= g_epi.m_fds[fd].cb.rcvprotlen;
+		g_epi.m_fds[fd].cb.rcvprotlen  = 0;
+		if (g_epi.m_fds[fd].cb.recvlen > 0) 
 			goto parse_again;
 	}
 
-	if (g_epi.fds[fd].cb.recvptr != saved_recvptr) {
-		if (g_epi.fds[fd].cb.recvlen) {
-			memmove(saved_recvptr, g_epi.fds[fd].cb.recvptr, g_epi.fds[fd].cb.recvlen);
+	if (g_epi.m_fds[fd].cb.recvptr != saved_recvptr) {
+		if (g_epi.m_fds[fd].cb.recvlen) {
+			memmove(saved_recvptr, g_epi.m_fds[fd].cb.recvptr, g_epi.m_fds[fd].cb.recvlen);
 		}
-		g_epi.fds[fd].cb.recvptr = saved_recvptr;
+		g_epi.m_fds[fd].cb.recvptr = saved_recvptr;
 	}
 
 	return cnt;
@@ -505,7 +442,7 @@ inline void iterate_etin_queue(int max_len, int is_conn)
 	struct list_head *l, *p;
 	struct fdinfo_t *fi;
 
-	list_for_each_safe (p, l, &g_epi.etin_head) {
+	list_for_each_safe (p, l, &g_epi.m_etin_head) {
 		fi = list_entry(p, struct fdinfo_t, list);
 		if (unlikely(fi->type == fd_type_listen)) {
 			//accept
@@ -539,9 +476,9 @@ int net_loop(int timeout, int max_len, int is_conn)
 	iterate_close_queue();
 	iterate_etin_queue(max_len, is_conn);
 
-	int nr = epoll_wait(g_epi.epfd, g_epi.evs, g_epi.max_ev_num, timeout);
+	int nr = epoll_wait(g_epi.m_fd, g_epi.m_evs, g_epi.m_max_ev_num, timeout);
 	if (unlikely(nr < 0 && errno != EINTR)){
-		ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d]", g_epi.maxfd, g_epi.epfd);
+		ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d]", g_epi.m_max_fd, g_epi.m_fd);
 		return -1;
 	}
 
@@ -552,15 +489,15 @@ int net_loop(int timeout, int max_len, int is_conn)
 	}	//todo end
 
 	for (int pos = 0; pos < nr; pos++) {
-		int fd = g_epi.evs[pos].data.fd;
+		int fd = g_epi.m_evs[pos].data.fd;
 
-		if (fd > g_epi.maxfd || g_epi.fds[fd].sockfd != fd || g_epi.fds[fd].type == fd_type_unused) {
+		if (fd > g_epi.m_max_fd || g_epi.m_fds[fd].sockfd != fd || g_epi.m_fds[fd].type == fd_type_unused) {
  			ERROR_LOG("DELAYED EPOLL EVENTS [event fd=%d, cache fd=%d, maxfd=%d, type=%d]", 
- 				fd, g_epi.fds[fd].sockfd, g_epi.maxfd, g_epi.fds[fd].type);
+ 				fd, g_epi.m_fds[fd].sockfd, g_epi.m_max_fd, g_epi.m_fds[fd].type);
 			continue;
 		}
 
-		if ( unlikely(fd_type_pipe == g_epi.fds[fd].type ) ) {
+		if ( unlikely(fd_type_pipe == g_epi.m_fds[fd].type ) ) {
 			if (0 == handle_pipe_event(fd, pos, is_conn)) {
 				continue;
 			} else {
@@ -568,13 +505,13 @@ int net_loop(int timeout, int max_len, int is_conn)
 			}
 		}
 
-		if ( unlikely(fd_type_asyn_connect == g_epi.fds[fd].type) ) {
+		if ( unlikely(fd_type_asyn_connect == g_epi.m_fds[fd].type) ) {
 			handle_asyn_connect(fd);
 			continue;
 		}
 
-		if (g_epi.evs[pos].events & EPOLLIN) {
-			switch (g_epi.fds[fd].type) {
+		if (g_epi.m_evs[pos].events & EPOLLIN) {
+			switch (g_epi.m_fds[fd].type) {
 			case fd_type_listen:
 				//accept
 				while (do_open_conn(fd, is_conn) > 0) ;
@@ -635,25 +572,25 @@ int net_loop(int timeout, int max_len, int is_conn)
 			}
 		}
 
-		if (g_epi.evs[pos].events & EPOLLOUT) {
-			if (g_epi.fds[fd].cb.sendlen > 0 && do_write_conn(fd) == -1) {
+		if (g_epi.m_evs[pos].events & EPOLLOUT) {
+			if (g_epi.m_fds[fd].cb.sendlen > 0 && do_write_conn(fd) == -1) {
 				do_del_conn(fd, is_conn);
 			}
-			if (g_epi.fds[fd].cb.sendlen == 0) {
-				mod_events(g_epi.epfd, fd, EPOLLIN);
+			if (g_epi.m_fds[fd].cb.sendlen == 0) {
+				mod_events(g_epi.m_fd, fd, EPOLLIN);
 			}
 		}
 
-		if (g_epi.evs[pos].events & EPOLLHUP) {
+		if (g_epi.m_evs[pos].events & EPOLLHUP) {
 			do_del_conn(fd, is_conn);
 		}
 	}
 
 	if (is_conn && socket_timeout) {
 		int i;
-		for (i = 0; i <= g_epi.maxfd; ++i) {
-			if ((g_epi.fds[i].type == fd_type_remote)
-				&& ((time(0) - g_epi.fds[i].sk.last_tm) >= socket_timeout)) {
+		for (i = 0; i <= g_epi.m_max_fd; ++i) {
+			if ((g_epi.m_fds[i].type == fd_type_remote)
+				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= socket_timeout)) {
 					do_del_conn(i, is_conn);
 			}
 		}
@@ -679,39 +616,39 @@ int net_loop(int timeout, int max_len, int is_conn)
 
 inline void del_from_etin_queue (int fd)
 {
-	if (g_epi.fds[fd].flag & CN_NEED_POLLIN) {
-		g_epi.fds[fd].flag &= ~CN_NEED_POLLIN;
-		list_del_init (&g_epi.fds[fd].list);
+	if (g_epi.m_fds[fd].flag & CN_NEED_POLLIN) {
+		g_epi.m_fds[fd].flag &= ~CN_NEED_POLLIN;
+		list_del_init (&g_epi.m_fds[fd].list);
 //		TRACE_LOG ("del fd=%d from etin queue", fd);
 	}
 }
 
 int net_t::init( int size, int maxevents )
 {
-	if ((g_epi.epfd = epoll_create(maxevents)) < 0) {
+	if ((g_epi.m_fd = epoll_create(maxevents)) < 0) {
 		ALERT_LOG("EPOLL_CREATE FAILED [error:%s]", strerror (errno));
 		return -1;
 	}
 
-	g_epi.evs = (epoll_event*)calloc(maxevents, sizeof(struct epoll_event));
-	if (!g_epi.evs) {
-		close (g_epi.epfd);
+	g_epi.m_evs = (epoll_event*)calloc(maxevents, sizeof(struct epoll_event));
+	if (!g_epi.m_evs) {
+		close (g_epi.m_fd);
 		ALERT_LOG ("CALLOC EPOLL_EVENT FAILED [size=%d]", maxevents);
 		return -1;
 	}
 
-	g_epi.fds = (struct fdinfo_t*) calloc (size, sizeof (struct fdinfo_t));
-	if (!g_epi.fds){
-		free (g_epi.evs);
-		close (g_epi.epfd);
+	g_epi.m_fds = (struct fdinfo_t*) calloc (size, sizeof (struct fdinfo_t));
+	if (!g_epi.m_fds){
+		free (g_epi.m_evs);
+		close (g_epi.m_fd);
 		ALERT_LOG ("CALLOC FDINFO_T FAILED [size=%d]", size);
 		return -1;
 	}
 
-	g_epi.max_ev_num = maxevents;
-	g_epi.maxfd = 0;
-	g_epi.count = 0;
-	INIT_LIST_HEAD (&g_epi.etin_head);
-	INIT_LIST_HEAD (&g_epi.close_head);
+	g_epi.m_max_ev_num = maxevents;
+	g_epi.m_max_fd = 0;
+	g_epi.m_fd_count = 0;
+	INIT_LIST_HEAD (&g_epi.m_etin_head);
+	INIT_LIST_HEAD (&g_epi.m_close_head);
 	return 0;
 }

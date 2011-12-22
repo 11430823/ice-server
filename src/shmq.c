@@ -42,7 +42,7 @@ void restart_child_process(bind_config_elem_t* bc_elem)
 //		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) { //parent process
 		g_shmq.close_pipe(i, false);
-		do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, 0, bc_elem);
+		g_epi.do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, 0, bc_elem);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
 		g_service.worker_process(i, g_bind_conf.get_elem_num());
@@ -262,10 +262,10 @@ void shmq_destroy(const bind_config_elem_t* exclu_bc_elem, int max_shmq_num)
 
 void epi2shm( int fd, struct shm_block_t *mb )
 {
-	mb->id      = g_epi.fds[fd].id;
+	mb->id      = g_epi.m_fds[fd].id;
 	mb->fd      = fd;
 	mb->type    = DATA_BLOCK;
-	mb->length  = g_epi.fds[fd].cb.rcvprotlen + sizeof (struct shm_block_t);
+	mb->length  = g_epi.m_fds[fd].cb.rcvprotlen + sizeof (struct shm_block_t);
 }
 
 

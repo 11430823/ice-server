@@ -134,8 +134,8 @@ const ip_port_t* get_last_connecting_service();
 static inline
 uint32_t get_remote_ip(int fd)
 {
-	if ((fd >= 0) && (fd <= g_epi.maxfd) && (g_epi.fds[fd].type != fd_type_unused)) {
-		return g_epi.fds[fd].sk.remote_ip;
+	if ((fd >= 0) && (fd <= g_epi.m_max_fd) && (g_epi.m_fds[fd].type != fd_type_unused)) {
+		return g_epi.m_fds[fd].sk.remote_ip;
 	}
 
 	return 0;

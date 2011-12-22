@@ -9,7 +9,7 @@
 
 #include <sys/epoll.h>
 
-#include <ice_lib/list.h>
+#include <ice_lib/lib_list.h>
 
 #pragma pack(1)
 
@@ -43,17 +43,41 @@ struct fdinfo_t {
 	list_head_t	list;
 };
 
-struct epinfo_t {
-	fdinfo_t*	fds;
-	struct epoll_event*	evs;
-	list_head_t	close_head;
-	list_head_t	etin_head;
-	int			epfd;
-	int			maxfd;
-	int			max_ev_num;
-	int			count;
-};
-
 #pragma pack()
 
-extern epinfo_t g_epi;
+class ep_info_t
+{
+public:
+	fdinfo_t*	m_fds;
+	epoll_event*	m_evs;
+	list_head_t	m_close_head;
+	list_head_t	m_etin_head;
+	int			m_fd;
+	int			m_max_fd;//所有FD里最大的FD的值.
+	int			m_max_ev_num;//is the maximum number of events to be returned
+	int			m_fd_count;//FD的数量
+	int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, struct bind_config_elem_t* bc_elem);
+
+public:
+	ep_info_t(void){}
+	//virtual ~ep_info_t(){}
+protected:
+	
+private:
+	ep_info_t(const ep_info_t &cr);
+	ep_info_t & operator=( const ep_info_t &cr);
+};
+
+enum E_FD_TYPE{
+	fd_type_unused = 0,
+	fd_type_listen,
+	fd_type_pipe,
+	fd_type_remote,
+	fd_type_mcast,
+	fd_type_addr_mcast,
+	fd_type_udp,
+	fd_type_asyn_connect
+};
+
+
+extern ep_info_t g_epi;

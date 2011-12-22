@@ -35,7 +35,7 @@ int connect_to_svr(const char* ipaddr, in_addr_t port, int bufsz, int timeout)
 	fd = safe_tcp_connect(ipaddr, port, timeout, 1);
 	if (fd != -1) {
 //		DEBUG_LOG("CONNECTED TO\t[%s:%u fd=%d]", ipaddr, port, fd);
-		do_add_conn(fd, fd_type_remote, &peer, 0);
+		g_epi.do_add_conn(fd, fd_type_remote, &peer, 0);
 	} else {
 //		ERROR_LOG("failed to connect to %s:%u, err=%d %s", ipaddr, port, errno, strerror(errno));
 	}
@@ -114,14 +114,14 @@ connect_again:
 //	if (done) {
 // try best to avoid calling 'callback' inside function asyn_connect_to_svr 
 //		DEBUG_LOG("CONNECTED TO\t[%s:%u fd=%d]", ipaddr, port, sockfd);
-//		do_add_conn(sockfd, fd_type_remote, &peer, 0);
+//		g_epi.do_add_conn(sockfd, fd_type_remote, &peer, 0);
 //		callback(sockfd, arg);
 //		return 1; // if we could avoding calling 'callback' here, the return value is always 0 or -1
 //	}
 
-	do_add_conn(sockfd, fd_type_asyn_connect, &peer, 0);	
-	g_epi.fds[sockfd].callback = callback;
-	g_epi.fds[sockfd].arg 	 = arg;
+	g_epi.do_add_conn(sockfd, fd_type_asyn_connect, &peer, 0);	
+	g_epi.m_fds[sockfd].callback = callback;
+	g_epi.m_fds[sockfd].arg 	 = arg;
 //	DEBUG_LOG("ASYNC CONNECT TO[fd=%d id=%u]", sockfd, epi.fds[sockfd].id);
 
 	return 0;
@@ -191,7 +191,7 @@ int net_send(int fd, const void* data, uint32_t len)
 	int send_bytes;
 
 	//tcp linger send
-	if (g_epi.fds[fd].cb.sendlen > 0) {
+	if (g_epi.m_fds[fd].cb.sendlen > 0) {
 		if (do_write_conn(fd) == -1) {
 			do_del_conn(fd, g_is_parent);
 			return -1;
@@ -200,7 +200,7 @@ int net_send(int fd, const void* data, uint32_t len)
 	}
 
 	send_bytes = 0;
-	if (g_epi.fds[fd].cb.sendlen == 0) {
+	if (g_epi.m_fds[fd].cb.sendlen == 0) {
 		send_bytes = safe_tcp_send_n(fd, data, len);
 		if (send_bytes == -1) {
 //			ERROR_LOG("failed to write to fd=%d err=%d %s", fd, errno, strerror(errno));
@@ -211,24 +211,24 @@ int net_send(int fd, const void* data, uint32_t len)
 
 	//merge buffer
 	if ((int32_t)len > send_bytes){
-		if (!g_epi.fds[fd].cb.sendptr) {
-			g_epi.fds[fd].cb.sendptr = (uint8_t*) malloc (len - send_bytes);
-			if (!g_epi.fds[fd].cb.sendptr)
+		if (!g_epi.m_fds[fd].cb.sendptr) {
+			g_epi.m_fds[fd].cb.sendptr = (uint8_t*) malloc (len - send_bytes);
+			if (!g_epi.m_fds[fd].cb.sendptr)
 //				ERROR_RETURN (("malloc error, %s", strerror(errno)), -1);
-			g_epi.fds[fd].cb.sndbufsz = len - send_bytes;
+			g_epi.m_fds[fd].cb.sndbufsz = len - send_bytes;
 			
-		} else if (g_epi.fds[fd].cb.sndbufsz < g_epi.fds[fd].cb.sendlen + len - send_bytes) {
-			g_epi.fds[fd].cb.sendptr = (uint8_t*)realloc (g_epi.fds[fd].cb.sendptr,
-					g_epi.fds[fd].cb.sendlen + len - send_bytes);
-			if (!g_epi.fds[fd].cb.sendptr)
+		} else if (g_epi.m_fds[fd].cb.sndbufsz < g_epi.m_fds[fd].cb.sendlen + len - send_bytes) {
+			g_epi.m_fds[fd].cb.sendptr = (uint8_t*)realloc (g_epi.m_fds[fd].cb.sendptr,
+					g_epi.m_fds[fd].cb.sendlen + len - send_bytes);
+			if (!g_epi.m_fds[fd].cb.sendptr)
 //				ERROR_RETURN (("realloc error, %s", strerror(errno)), -1);
-			g_epi.fds[fd].cb.sndbufsz = g_epi.fds[fd].cb.sendlen + len - send_bytes;
+			g_epi.m_fds[fd].cb.sndbufsz = g_epi.m_fds[fd].cb.sendlen + len - send_bytes;
 		}
 			
-		memcpy(g_epi.fds[fd].cb.sendptr + g_epi.fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
-		g_epi.fds[fd].cb.sendlen += len - send_bytes;
+		memcpy(g_epi.m_fds[fd].cb.sendptr + g_epi.m_fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
+		g_epi.m_fds[fd].cb.sendlen += len - send_bytes;
 		if (g_is_parent && (g_send_buf_limit_size > 0)
-				&& (g_epi.fds[fd].cb.sendlen > g_send_buf_limit_size)) {
+				&& (g_epi.m_fds[fd].cb.sendlen > g_send_buf_limit_size)) {
 // 			ERROR_LOG("send buf limit exceeded: fd=%d buflen=%u limit=%u",
 // 						fd, epi.fds[fd].cb.sendlen, g_send_buf_limit_size);
 			do_del_conn(fd, g_is_parent);
@@ -236,10 +236,10 @@ int net_send(int fd, const void* data, uint32_t len)
 		}
 	}
 
-	if (g_epi.fds[fd].cb.sendlen > 0 && !prev_stat) 
-		mod_events (g_epi.epfd, fd, EPOLLOUT | EPOLLIN);
-	else if (prev_stat && g_epi.fds[fd].cb.sendlen == 0)
-		mod_events (g_epi.epfd, fd, EPOLLIN);
+	if (g_epi.m_fds[fd].cb.sendlen > 0 && !prev_stat) 
+		mod_events (g_epi.m_fd, fd, EPOLLOUT | EPOLLIN);
+	else if (prev_stat && g_epi.m_fds[fd].cb.sendlen == 0)
+		mod_events (g_epi.m_fd, fd, EPOLLIN);
 
 	return 0;
 }

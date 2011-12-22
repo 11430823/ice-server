@@ -80,7 +80,7 @@ private:
   * @brief Initialize service
   *
   */
-extern "C" int init_service(int isparent)
+extern "C" int on_init(int isparent)
 {
 	if(isparent){
 	}else{
@@ -100,7 +100,7 @@ extern "C" int init_service(int isparent)
   * @brief Finalize service
   *
   */
-extern "C" int fini_service(int isparent)
+extern "C" int on_fini(int isparent)
 {
 	if (!isparent) {
 			/*
@@ -126,7 +126,7 @@ extern "C" void on_events()
   * @brief Return length of the receiving package
   *
   */
-extern "C" int get_pkg_len(int fd, const void* avail_data, int avail_len, int isparent)
+extern "C" int on_get_pkg_len(int fd, const void* avail_data, int avail_len, int isparent)
 {
 	if (avail_len < 4) {
 		return 0;
@@ -146,7 +146,7 @@ extern "C" int get_pkg_len(int fd, const void* avail_data, int avail_len, int is
   * @brief Process packages from clients
   *
   */
-extern "C" int proc_pkg_from_client(void* data, int len, fdsession_t* fdsess)
+extern "C" int on_cli_pkg(void* data, int len, fdsession_t* fdsess)
 {
 	/* 返回非零，断开FD的连接 */ 
 	INFO_LOG("[fd:%d, len:%d, data:%s]", fdsess->fd, len, (char*)data);
@@ -162,7 +162,7 @@ extern "C" int proc_pkg_from_client(void* data, int len, fdsession_t* fdsess)
   * @brief Process packages from servers
   *
   */
-extern "C" void proc_pkg_from_serv(int fd, void* data, int len)
+extern "C" void on_srv_pkg(int fd, void* data, int len)
 {
 }
 
@@ -170,7 +170,7 @@ extern "C" void proc_pkg_from_serv(int fd, void* data, int len)
   * @brief Called each time on client connection closed
   *
   */
-extern "C" void on_client_conn_closed(int fd)
+extern "C" void on_cli_conn_closed(int fd)
 {
 }
 
@@ -185,24 +185,16 @@ extern "C" void on_fd_closed(int fd)
 /**
   * @brief Called to process mcast package from the address and port configured in the config file
   */
-extern "C" void proc_mcast_pkg(void* data, int len)
+extern "C" void on_mcast_pkg(void* data, int len)
 {
 }
 
-/* *
- * @brief Called to reload global data(mainly global function address.etc)
- */
-extern "C" int reload_global_data()
+extern "C" int	on_udp_pkg(int fd, const void* avail_data, int avail_len ,struct sockaddr_in * from, socklen_t fromlen )
 {
 	return 0;
 }
 
-extern "C" int	proc_udp_pkg(int fd, const void* avail_data, int avail_len ,struct sockaddr_in * from, socklen_t fromlen )
-{
-	return 0;
-}
-
-extern "C" void sync_service_info(uint32_t svr_id, const char* svr_name, const char* svr_ip, in_port_t port, int flag)
+extern "C" void on_sync_srv_info(uint32_t svr_id, const char* svr_name, const char* svr_ip, in_port_t port, int flag)
 {
 }
 

@@ -14,7 +14,7 @@
 #include <sys/time.h>
 #include <glib.h>
 
-#include "list.h"
+#include "lib_list.h"
 
 // export now and tm_cur
 extern struct timeval now;
