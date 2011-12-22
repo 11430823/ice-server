@@ -21,8 +21,8 @@ fd_array_session_t	fds;
 namespace {
 	int handle_fini()
 	{
-		for (int i = 0; i <= g_epi.maxfd; ++i) {
-			if ( (g_epi.fds[i].type == fd_type_remote) && (g_epi.fds[i].cb.sendlen > 0) ) {
+		for (int i = 0; i <= g_epi.m_max_fd; ++i) {
+			if ( (g_epi.m_fds[i].type == fd_type_remote) && (g_epi.m_fds[i].cb.sendlen > 0) ) {
 				return -1;
 			}
 		}
@@ -178,7 +178,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	net_exit();
 
 	g_net.init(g_bench_conf.get_max_fd_num(), 2000);//mark 2000 个数量(与其他服务器相连的FD).
-	do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
+	g_epi.do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
 	if ( 0 != handle_init(m_bind_elem)) {// mark
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());

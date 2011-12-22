@@ -14,6 +14,7 @@
 #include "service.h"
 #include "bench_conf.h"
 #include "shmq.h"
+#include "ice_epoll.h"
 
 namespace {
 	int load_config(){
@@ -61,7 +62,7 @@ int main(int argc, char* argv[]){
 			return -1;
 		} else if (pid > 0) {
 			g_shmq.close_pipe(i, false);
-			do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, NULL, bc_elem);			
+			g_epi.do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, NULL, bc_elem);			
 			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {

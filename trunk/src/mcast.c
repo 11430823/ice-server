@@ -13,6 +13,7 @@
 #include "service.h"
 #include "mcast.h"
 #include "bind_conf.h"
+#include "ice_epoll.h"
 
 #pragma pack(1)
 
@@ -177,7 +178,7 @@ int create_addr_mcast_socket()
 		strcpy(pkg->ip, g_service.get_ip());
 		pkg->port       = g_service.get_port();
 	}
-	return do_add_conn(addr_mcast_fd, fd_type_addr_mcast, &addr_mcast_addr, 0);
+	return g_epi.do_add_conn(addr_mcast_fd, fd_type_addr_mcast, &addr_mcast_addr, 0);
 }
 
 void send_addr_mcast_pkg(uint32_t pkg_type)
@@ -308,7 +309,7 @@ int create_mcast_socket()
 //		ERROR_RETURN(("Failed to Join Mcast Grp: err=%d %s", errno, strerror(errno)), -1);
 	}
 
-	return do_add_conn(mcast_fd, fd_type_mcast, &mcast_addr, 0);
+	return g_epi.do_add_conn(mcast_fd, fd_type_mcast, &mcast_addr, 0);
 }
 
 int send_mcast_pkg(const void* data, int len)
