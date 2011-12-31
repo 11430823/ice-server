@@ -10,10 +10,11 @@
 
 extern const uint32_t PAGE_SIZE;
 extern uint32_t g_send_buf_limit_size;
+extern int32_t EPOLL_TIME_OUT;
 
 int net_start(const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem);
 void net_exit ();
-int net_loop(int timeout, int max_len, int is_conn);
+int net_loop(int max_len);
 inline void del_from_etin_queue (int fd);
 void do_del_conn(int fd, bool is_conn);
 int do_write_conn(int fd);
