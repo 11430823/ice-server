@@ -47,7 +47,7 @@ namespace {
 			}
 		}
 
-		if (0 != g_dll.on_fini(0)) {
+		if (0 != g_dll.on_fini(g_is_parent)) {
 			return -1;
 		}
 
