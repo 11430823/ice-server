@@ -32,6 +32,7 @@ net_t g_net;
 time_t socket_timeout = 30;
 const uint32_t PAGE_SIZE      = 8192;
 uint32_t g_send_buf_limit_size = 8192;
+int32_t EPOLL_TIME_OUT = -1;
 
 enum {
 	trash_size		= 4096,
@@ -470,12 +471,12 @@ epoll_mod_again:
 	return 0;
 }
 
-int net_loop(int timeout, int max_len, int is_conn)
+int net_loop(int max_len)
 {
 	iterate_close_queue();
-	iterate_etin_queue(max_len, is_conn);
+	iterate_etin_queue(max_len, g_is_parent);
 
-	int nr = epoll_wait(g_epi.m_fd, g_epi.m_evs, g_epi.m_max_ev_num, timeout);
+	int nr = epoll_wait(g_epi.m_fd, g_epi.m_evs, g_epi.m_max_ev_num, EPOLL_TIME_OUT);
 	if (unlikely(nr < 0 && errno != EINTR)){
 		ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d]", g_epi.m_max_fd, g_epi.m_fd);
 		return -1;
@@ -483,7 +484,7 @@ int net_loop(int timeout, int max_len, int is_conn)
 
 	renew_now();
 	//todo ¼ì²é
-	if (is_conn) {
+	if (g_is_parent) {
 		handle_send_queue();
 	}	//todo end
 
@@ -497,7 +498,7 @@ int net_loop(int timeout, int max_len, int is_conn)
 		}
 
 		if ( unlikely(fd_type_pipe == g_epi.m_fds[fd].type ) ) {
-			if (0 == handle_pipe_event(fd, pos, is_conn)) {
+			if (0 == handle_pipe_event(fd, pos, g_is_parent)) {
 				continue;
 			} else {
 				return -1;
@@ -513,7 +514,7 @@ int net_loop(int timeout, int max_len, int is_conn)
 			switch (g_epi.m_fds[fd].type) {
 			case fd_type_listen:
 				//accept
-				while (do_open_conn(fd, is_conn) > 0) ;
+				while (do_open_conn(fd, g_is_parent) > 0) ;
 				break;
 			case fd_type_mcast:
 				{
@@ -564,8 +565,8 @@ int net_loop(int timeout, int max_len, int is_conn)
 				}
 
 			default:
-				if (net_recv(fd, max_len, is_conn) == -1) {
-					do_del_conn(fd, is_conn);
+				if (net_recv(fd, max_len, g_is_parent) == -1) {
+					do_del_conn(fd, g_is_parent);
 				}
 				break;
 			}
@@ -573,7 +574,7 @@ int net_loop(int timeout, int max_len, int is_conn)
 
 		if (g_epi.m_evs[pos].events & EPOLLOUT) {
 			if (g_epi.m_fds[fd].cb.sendlen > 0 && do_write_conn(fd) == -1) {
-				do_del_conn(fd, is_conn);
+				do_del_conn(fd, g_is_parent);
 			}
 			if (g_epi.m_fds[fd].cb.sendlen == 0) {
 				mod_events(g_epi.m_fd, fd, EPOLLIN);
@@ -581,20 +582,20 @@ int net_loop(int timeout, int max_len, int is_conn)
 		}
 
 		if (g_epi.m_evs[pos].events & EPOLLHUP) {
-			do_del_conn(fd, is_conn);
+			do_del_conn(fd, g_is_parent);
 		}
 	}
 
-	if (is_conn && socket_timeout) {
+	if (g_is_parent && socket_timeout) {
 		int i;
 		for (i = 0; i <= g_epi.m_max_fd; ++i) {
 			if ((g_epi.m_fds[i].type == fd_type_remote)
 				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= socket_timeout)) {
-					do_del_conn(i, is_conn);
+					do_del_conn(i, g_is_parent);
 			}
 		}
 	}
-	if(!is_conn) {
+	if(!g_is_parent) {
 		g_dll.on_events();
 
 		handle_recv_queue();
