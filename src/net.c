@@ -94,14 +94,11 @@ namespace {
 	// Returns:   int
 	// Parameter: int fd
 	// Parameter: int pos
-	// Parameter: int is_conn 1:父进程. 0:子进程
 	//************************************
-	int handle_pipe_event(int fd, int pos, int is_conn)
+	int handle_pipe_event(int fd, int pos)
 	{
-		char trash[trash_size];
-
 		if (g_epi.m_evs[pos].events & EPOLLHUP) {
-			if (is_conn) { // Child Crashed
+			if (g_is_parent) { // Child Crashed
 				int pfd = g_epi.m_evs[pos].data.fd;
 				bind_config_elem_t* bc = g_epi.m_fds[pfd].bc_elem;
 				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->id, bc->name.c_str());
@@ -115,7 +112,7 @@ namespace {
 				for (int i = 0; i <= g_epi.m_max_fd; ++i) {
 					if ((g_epi.m_fds[i].bc_elem == bc) && (g_epi.m_fds[i].type != fd_type_listen)) {
 						//todo 
-						do_del_conn(i, is_conn);
+						do_del_conn(i, g_is_parent);
 						//todo end
 					}
 				}
@@ -136,6 +133,7 @@ namespace {
 				return -1;
 			}
 		} else {
+			char trash[trash_size];
 			while (trash_size == read(fd, trash, trash_size)) ;
 		}
 
@@ -473,8 +471,8 @@ epoll_mod_again:
 
 int net_loop(int max_len)
 {
-	iterate_close_queue();
-	iterate_etin_queue(max_len, g_is_parent);
+	iterate_close_queue();//mark
+	iterate_etin_queue(max_len, g_is_parent);//mark
 
 	int nr = epoll_wait(g_epi.m_fd, g_epi.m_evs, g_epi.m_max_ev_num, EPOLL_TIME_OUT);
 	if (unlikely(nr < 0 && errno != EINTR)){
@@ -485,33 +483,33 @@ int net_loop(int max_len)
 	renew_now();
 	//todo 检查
 	if (g_is_parent) {
-		handle_send_queue();
+		handle_send_queue();//mark
 	}	//todo end
 
 	for (int pos = 0; pos < nr; pos++) {
 		int fd = g_epi.m_evs[pos].data.fd;
-
-		if (fd > g_epi.m_max_fd || g_epi.m_fds[fd].sockfd != fd || g_epi.m_fds[fd].type == fd_type_unused) {
+		fdinfo_t& fdinfo = g_epi.m_fds[fd];
+		if (fd > g_epi.m_max_fd || fdinfo.sockfd != fd || fdinfo.type == fd_type_unused) {
  			ERROR_LOG("DELAYED EPOLL EVENTS [event fd=%d, cache fd=%d, maxfd=%d, type=%d]", 
- 				fd, g_epi.m_fds[fd].sockfd, g_epi.m_max_fd, g_epi.m_fds[fd].type);
+ 				fd, fdinfo.sockfd, g_epi.m_max_fd, fdinfo.type);
 			continue;
 		}
-
-		if ( unlikely(fd_type_pipe == g_epi.m_fds[fd].type ) ) {
-			if (0 == handle_pipe_event(fd, pos, g_is_parent)) {
+		
+		if ( unlikely(fd_type_pipe == fdinfo.type ) ) {
+			if (0 == handle_pipe_event(fd, pos)) {
 				continue;
 			} else {
 				return -1;
 			}
 		}
 
-		if ( unlikely(fd_type_asyn_connect == g_epi.m_fds[fd].type) ) {
-			handle_asyn_connect(fd);
+		if ( unlikely(fd_type_asyn_connect == fdinfo.type) ) {
+			handle_asyn_connect(fd);//mark
 			continue;
 		}
 
 		if (g_epi.m_evs[pos].events & EPOLLIN) {
-			switch (g_epi.m_fds[fd].type) {
+			switch (fdinfo.type) {
 			case fd_type_listen:
 				//accept
 				while (do_open_conn(fd, g_is_parent) > 0) ;
@@ -573,10 +571,10 @@ int net_loop(int max_len)
 		}
 
 		if (g_epi.m_evs[pos].events & EPOLLOUT) {
-			if (g_epi.m_fds[fd].cb.sendlen > 0 && do_write_conn(fd) == -1) {
+			if (fdinfo.cb.sendlen > 0 && do_write_conn(fd) == -1) {
 				do_del_conn(fd, g_is_parent);
 			}
-			if (g_epi.m_fds[fd].cb.sendlen == 0) {
+			if (fdinfo.cb.sendlen == 0) {
 				mod_events(g_epi.m_fd, fd, EPOLLIN);
 			}
 		}
@@ -588,10 +586,11 @@ int net_loop(int max_len)
 
 	if (g_is_parent && socket_timeout) {
 		int i;
+
 		for (i = 0; i <= g_epi.m_max_fd; ++i) {
 			if ((g_epi.m_fds[i].type == fd_type_remote)
 				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= socket_timeout)) {
-					do_del_conn(i, g_is_parent);
+				do_del_conn(i, g_is_parent);
 			}
 		}
 	}

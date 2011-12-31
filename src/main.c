@@ -81,7 +81,7 @@ int main(int argc, char* argv[]){
 	} 
 #endif
 
-	while (!g_daemon.m_stop || g_dll.on_fini(1) != 0) {
+	while (!g_daemon.m_stop || g_dll.on_fini(g_is_parent) != 0) {
 		net_loop(PAGE_SIZE);
 	}
 	g_daemon.killall_children();
