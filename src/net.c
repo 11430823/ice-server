@@ -25,11 +25,11 @@
 #include "mcast.h"
 #include "shmq.h"
 #include "bind_conf.h"
+#include "bench_conf.h"
 
 
 net_t g_net;
 
-time_t SOCKET_TIMEOUT = 30;
 const uint32_t PAGE_SIZE      = 8192;
 uint32_t g_send_buf_limit_size = 8192;
 int32_t EPOLL_TIME_OUT = -1;
@@ -585,10 +585,10 @@ int net_loop(int max_len)
 		}
 	}
 
-	if (g_is_parent && SOCKET_TIMEOUT) {
+	if (g_is_parent && g_bench_conf.get_fd_time_out()) {
 		for (int i = 0; i <= g_epi.m_max_fd; ++i) {
 			if ((g_epi.m_fds[i].type == fd_type_remote)
-				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= SOCKET_TIMEOUT)) {
+				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= g_bench_conf.get_fd_time_out())) {
 				do_del_conn(i, g_is_parent);
 			}
 		}
