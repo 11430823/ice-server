@@ -29,7 +29,7 @@
 
 net_t g_net;
 
-time_t socket_timeout = 30;
+time_t SOCKET_TIMEOUT = 30;
 const uint32_t PAGE_SIZE      = 8192;
 uint32_t g_send_buf_limit_size = 8192;
 int32_t EPOLL_TIME_OUT = -1;
@@ -300,7 +300,7 @@ inline void add_to_etin_queue (int fd)
 //		TRACE_LOG ("add fd=%d to etin queue", fd);
 	}
 }
-static int do_open_conn(int fd, int isconn)
+static int do_open_conn(int fd)
 {
 	struct sockaddr_in peer;
 	int newfd;
@@ -310,7 +310,7 @@ static int do_open_conn(int fd, int isconn)
 		g_epi.do_add_conn(newfd, fd_type_remote, &peer, g_epi.m_fds[fd].bc_elem);
 		g_epi.m_fds[newfd].sk.last_tm = time(0);
 
-		if (isconn) {
+		if (g_is_parent) {
 			shm_block_t mb;
 
 			mb.id = g_epi.m_fds[newfd].id;
@@ -444,7 +444,7 @@ inline void iterate_etin_queue(int max_len, int is_conn)
 		fi = list_entry(p, struct fdinfo_t, list);
 		if (unlikely(fi->type == fd_type_listen)) {
 			//accept
-			while (do_open_conn(fi->sockfd, is_conn) > 0) ;
+			while (do_open_conn(fi->sockfd) > 0) ;
 		} else if (net_recv(fi->sockfd, max_len, is_conn) == -1) {
 			do_del_conn(fi->sockfd, is_conn);
 		}
@@ -481,10 +481,9 @@ int net_loop(int max_len)
 	}
 
 	renew_now();
-	//todo ¼ì²é
 	if (g_is_parent) {
 		handle_send_queue();//mark
-	}	//todo end
+	}
 
 	for (int pos = 0; pos < nr; pos++) {
 		int fd = g_epi.m_evs[pos].data.fd;
@@ -512,7 +511,7 @@ int net_loop(int max_len)
 			switch (fdinfo.type) {
 			case fd_type_listen:
 				//accept
-				while (do_open_conn(fd, g_is_parent) > 0) ;
+				while (do_open_conn(fd) > 0) ;
 				break;
 			case fd_type_mcast:
 				{
@@ -561,11 +560,13 @@ int net_loop(int max_len)
 					}
 					break;
 				}
-
-			default:
+			case fd_type_remote:
 				if (net_recv(fd, max_len, g_is_parent) == -1) {
 					do_del_conn(fd, g_is_parent);
 				}
+				break;
+			default:
+				ALERT_LOG("FDINFO TYPE[TYPE=%u]", fdinfo.type);
 				break;
 			}
 		}
@@ -584,12 +585,10 @@ int net_loop(int max_len)
 		}
 	}
 
-	if (g_is_parent && socket_timeout) {
-		int i;
-
-		for (i = 0; i <= g_epi.m_max_fd; ++i) {
+	if (g_is_parent && SOCKET_TIMEOUT) {
+		for (int i = 0; i <= g_epi.m_max_fd; ++i) {
 			if ((g_epi.m_fds[i].type == fd_type_remote)
-				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= socket_timeout)) {
+				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= SOCKET_TIMEOUT)) {
 				do_del_conn(i, g_is_parent);
 			}
 		}
