@@ -11,6 +11,13 @@
 
 #include <ice_lib/lib_list.h>
 
+#define CN_NEED_CLOSE	0x01
+#define CN_NEED_POLLIN	0x02
+
+extern const uint32_t PAGE_SIZE;
+extern uint32_t g_send_buf_limit_size;
+extern int32_t EPOLL_TIME_OUT;
+
 #pragma pack(1)
 
 struct conn_buf_t {
@@ -56,8 +63,16 @@ public:
 	int			m_max_fd;//所有FD里最大的FD的值.
 	int			m_max_ev_num;//is the maximum number of events to be returned
 	int			m_fd_count;//FD的数量
+	//************************************
+	// Brief:     
+	// Returns:   int 0:success,-1:error
+	// Parameter: int size
+	// Parameter: int maxevents
+	//************************************
+	int init(int size, int maxevents);
+	int loop(int max_len);
 	int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer, struct bind_config_elem_t* bc_elem);
-
+	
 public:
 	ep_info_t(void){}
 	//virtual ~ep_info_t(){}
@@ -70,14 +85,23 @@ private:
 
 enum E_FD_TYPE{
 	fd_type_unused = 0,
-	fd_type_listen,
-	fd_type_pipe,
-	fd_type_remote,
-	fd_type_mcast,
-	fd_type_addr_mcast,
-	fd_type_udp,
-	fd_type_asyn_connect
+	fd_type_listen = 1,
+	fd_type_pipe = 2,
+	fd_type_remote = 3,
+	fd_type_mcast = 4,
+	fd_type_addr_mcast = 5,
+	fd_type_udp = 6,
+	fd_type_asyn_connect = 7,
 };
+
+int net_start(const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem);
+void net_exit ();
+
+inline void del_from_etin_queue (int fd);
+void do_del_conn(int fd, bool is_conn);
+int do_write_conn(int fd);
+int mod_events(int epfd, int fd, uint32_t flag);
+inline void add_to_etin_queue (int fd);
 
 
 extern ep_info_t g_epi;
