@@ -9,7 +9,6 @@
 
 #include "daemon.h"
 #include "ice_dll.h"
-#include "net.h"
 #include "bind_conf.h"
 #include "service.h"
 #include "bench_conf.h"
@@ -82,7 +81,7 @@ int main(int argc, char* argv[]){
 #endif
 
 	while (!g_daemon.m_stop || g_dll.on_fini(g_is_parent) != 0) {
-		g_epi.loop(PAGE_SIZE);
+		g_epi.loop(g_bench_conf.get_page_size());
 	}
 	g_daemon.killall_children();
 	//TODO 下面没有检查

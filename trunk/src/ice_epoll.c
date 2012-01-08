@@ -17,7 +17,6 @@
 #include <ice_lib/lib_tcp.h>
 
 #include "ice_epoll.h"
-#include "net.h"
 #include "service.h"
 #include "tcp.h"
 #include "shmq.h"
@@ -28,8 +27,7 @@
 #include "mcast.h"
 #include "bench_conf.h"
 
-const uint32_t PAGE_SIZE      = 8192;
-uint32_t g_send_buf_limit_size = 8192;
+uint32_t SEND_BUF_LIMIT_SIZE = 8192;
 int32_t EPOLL_TIME_OUT = -1;
 
 ep_info_t g_epi;
@@ -170,14 +168,14 @@ namespace {
 		if (NULL == g_epi.m_fds[fd].cb.recvptr) {
 			g_epi.m_fds[fd].cb.rcvprotlen = 0;
 			g_epi.m_fds[fd].cb.recvlen = 0;
-			g_epi.m_fds[fd].cb.recvptr = (uint8_t*)mmap (0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+			g_epi.m_fds[fd].cb.recvptr = (uint8_t*)mmap (0, g_bench_conf.get_page_size(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 			if (MAP_FAILED == g_epi.m_fds[fd].cb.recvptr){ 
 				ERROR_LOG("MMAP FAILED");
 				return -1;
 			}
 		}
 
-		if (PAGE_SIZE == g_epi.m_fds[fd].cb.recvlen) {
+		if (g_bench_conf.get_page_size() == g_epi.m_fds[fd].cb.recvlen) {
 			TRACE_LOG ("recv buffer is full, fd=%d", fd);
 			return 0;
 		}
@@ -207,7 +205,7 @@ namespace {
 	int net_recv(int fd, uint32_t max, int is_conn)
 	{
 		int cnt = 0;
-		assert (max <= PAGE_SIZE);
+		assert (max <= g_bench_conf.get_page_size());
 		if (g_epi.m_fds[fd].type == fd_type_pipe) {
 			read (fd, g_epi.m_fds[fd].cb.recvptr, max);
 			return 0;
@@ -367,7 +365,7 @@ inline void free_cb(struct conn_buf_t *p)
 		p->sendptr = NULL;
 	}
 	if (p->recvptr) {
-		munmap (p->recvptr, PAGE_SIZE);
+		munmap (p->recvptr, g_bench_conf.get_page_size());
 		p->recvptr = NULL;
 	}
 

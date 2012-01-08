@@ -10,12 +10,12 @@
 #include <ice_lib/lib_tcp.h>
 
 #include "mcast.h"
-#include "net.h"
 #include "service.h"
 #include "tcp.h"
 #include "net_if.h"
 #include "shmq.h"
 #include "bind_conf.h"
+#include "bench_conf.h"
 
 static int g_ip_resolved;
 static ip_port_t g_ip_port;
@@ -227,8 +227,8 @@ int net_send(int fd, const void* data, uint32_t len)
 			
 		memcpy(g_epi.m_fds[fd].cb.sendptr + g_epi.m_fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
 		g_epi.m_fds[fd].cb.sendlen += len - send_bytes;
-		if (g_is_parent && (g_send_buf_limit_size > 0)
-				&& (g_epi.m_fds[fd].cb.sendlen > g_send_buf_limit_size)) {
+		if (g_is_parent && (SEND_BUF_LIMIT_SIZE > 0)
+				&& (g_epi.m_fds[fd].cb.sendlen > SEND_BUF_LIMIT_SIZE)) {
 // 			ERROR_LOG("send buf limit exceeded: fd=%d buflen=%u limit=%u",
 // 						fd, epi.fds[fd].cb.sendlen, g_send_buf_limit_size);
 			do_del_conn(fd, g_is_parent);
@@ -254,8 +254,8 @@ int send_pkg_to_client(fdsession_t* fdsess, const void* pkg, const int pkglen)
 
 	int send_bytes, cur_len;
 	for (send_bytes = 0; send_bytes < pkglen; send_bytes += cur_len) {
-		if ((pkglen - send_bytes) > (int32_t)(PAGE_SIZE - sizeof(shm_block_t))) {
-			cur_len = PAGE_SIZE - sizeof(shm_block_t);
+		if ((pkglen - send_bytes) > (int32_t)(g_bench_conf.get_page_size() - sizeof(shm_block_t))) {
+			cur_len = g_bench_conf.get_page_size() - sizeof(shm_block_t);
 		} else {
 			cur_len = pkglen - send_bytes;
 		}

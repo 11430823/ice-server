@@ -9,7 +9,6 @@
 #include <ice_lib/lib_util.h>
 
 #include "ice_dll.h"
-#include "net.h"
 #include "service.h"
 #include "mcast.h"
 #include "bind_conf.h"

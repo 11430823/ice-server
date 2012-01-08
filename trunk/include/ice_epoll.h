@@ -12,10 +12,9 @@
 #include <ice_lib/lib_list.h>
 
 #define CN_NEED_CLOSE	0x01
-#define CN_NEED_POLLIN	0x02
+#define CN_NEED_POLLIN	0x02//普通或优先级带数据可读
 
-extern const uint32_t PAGE_SIZE;
-extern uint32_t g_send_buf_limit_size;
+extern uint32_t SEND_BUF_LIMIT_SIZE;
 extern int32_t EPOLL_TIME_OUT;
 
 #pragma pack(1)

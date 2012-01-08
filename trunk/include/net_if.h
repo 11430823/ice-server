@@ -18,7 +18,6 @@
 #include <netinet/in.h>
 
 #include "service.h"
-#include "net.h"
 #include "ice_epoll.h"
 
 /**

@@ -7,11 +7,9 @@
 
 #include "service.h"
 #include "bind_conf.h"
-#include "net.h"
 #include "daemon.h"
 #include "ice_dll.h"
 #include "mcast.h"
-#include "net.h"
 #include "net_if.h"
 #include "bench_conf.h"
 
@@ -164,7 +162,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	}
 
 	while ( !g_daemon.m_stop || 0 != handle_fini() ) {
-		g_epi.loop(PAGE_SIZE);//mark
+		g_epi.loop(g_bench_conf.get_page_size());//mark
 	}
 fail:
 	do_destroy_shmq(m_bind_elem);

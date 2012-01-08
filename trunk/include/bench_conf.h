@@ -31,6 +31,7 @@ public:
 	uint32_t get_log_max_files()const;
 	uint32_t get_log_save_next_file_interval_min()const;
 	time_t get_fd_time_out()const;
+	uint32_t get_page_size()const;
 private:
 	uint32_t m_max_fd_num;//打开文件的最大数量
 	bool m_daemon;//是否后台运行	
@@ -42,6 +43,7 @@ private:
 	uint32_t m_log_save_next_file_interval_min;//每多少时间(分钟)重新保存文件中(新文件)
 	//std::string libdata_path;//数据段SO路径//mark 增加在线加载功能
 	time_t m_fd_time_out;//连接的FD超时秒数,0:无超时
+	uint32_t m_page_size;//数据包的最大字节数
 };
 
 extern bench_conf_t g_bench_conf;
