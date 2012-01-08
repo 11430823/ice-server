@@ -11,10 +11,10 @@
 
 #include "shmq.h"
 #include "bind_conf.h"
-#include "net.h"
 #include "daemon.h"
 #include "service.h"
 #include "ice_epoll.h"
+#include "bench_conf.h"
 
 shmq_t g_shmq;
 inline struct shm_block_t* tail_mb (const struct shm_queue_t *q)
@@ -92,7 +92,7 @@ int shmq_pop(struct shm_queue_t* q, struct shm_block_t** mb)
 		exit(-1);
 	}
 #endif
-	if (cur_mb->length > PAGE_SIZE){
+	if (cur_mb->length > g_bench_conf.get_page_size()){
 		ERROR_LOG("large packet, len=%d", cur_mb->length);
 		return -1;
 	}
@@ -160,7 +160,7 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 
 	assert(mb->length >= sizeof(shm_block_t));
 
-	if (mb->length > PAGE_SIZE) {
+	if (mb->length > g_bench_conf.get_page_size()) {
 		ERROR_LOG("too large packet, len=%d", mb->length);
 		return -1;
 	}
@@ -173,7 +173,7 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 	for (cnt = 0; cnt != 10; ++cnt) {
 		//queue is full, (page_size): prevent overwriting the buffer which shmq_pop refers to
 		if ( unlikely((q->addr->tail > q->addr->head)
-			&& (q->addr->tail < q->addr->head + (int)mb->length + (int)PAGE_SIZE)) ) {
+			&& (q->addr->tail < q->addr->head + (int)mb->length + (int)g_bench_conf.get_page_size())) ) {
 				ALERT_LOG("queue [%p] is full, wait 5 microsecs: [cnt=%d]", q, cnt);
 				usleep(5);
 		} else {

@@ -78,6 +78,11 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
+	
+	if (0 != get_val(m_page_size, key, "common", "page_size")){
+		ret = -1;
+		goto ret;
+	}
 
 	if (0 != get_val(m_log_dir, key, "log", "dir")){
 		ret = -1;
@@ -121,6 +126,7 @@ bench_conf_t::bench_conf_t()
 	m_log_max_files = 0;
 	m_log_save_next_file_interval_min = 0;
 	m_fd_time_out = 0;
+	m_page_size = 0;
 }
 
 bool bench_conf_t::is_daemon()const
@@ -184,4 +190,9 @@ uint32_t bench_conf_t::get_log_save_next_file_interval_min() const
 time_t bench_conf_t::get_fd_time_out() const
 {
 	return m_fd_time_out;
+}
+
+uint32_t bench_conf_t::get_page_size() const
+{
+	return m_page_size;
 }
