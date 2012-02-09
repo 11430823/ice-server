@@ -14,17 +14,24 @@ enum {
 	OPEN_BLOCK,
 	CLOSE_BLOCK	// parent informs child that a connection had been closed
 };
+
+enum {
+	E_PIPE_INDEX_RDONLY = 0,
+	E_PIPE_INDEX_WRONLY = 1,
+	E_PIPE_INDEX_MAX,
+};
+
 #pragma pack(1)
 struct shm_head_t {
-	volatile int head;
-	volatile int tail;
-	atomic_t blk_cnt;
+	volatile int head;//初始化时结构体大小sizeof (shm_head_t)
+	volatile int tail;//初始化时结构体大小sizeof (shm_head_t)
+	atomic_t blk_cnt;//初始化时 0 
 };
 
 struct shm_queue_t {
 	shm_head_t* addr;
 	u_int length;
-	int pipe_handles[2];
+	int pipe_handles[E_PIPE_INDEX_MAX];
 	shm_queue_t();
 };
 
