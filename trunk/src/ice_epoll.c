@@ -684,30 +684,30 @@ int ep_info_t::loop( int max_len )
 
 int ep_info_t::init( int size, int maxevents )
 {
-	if ((g_epi.m_fd = epoll_create(maxevents)) < 0) {
+	if ((m_fd = epoll_create(maxevents)) < 0) {
 		ALERT_LOG("EPOLL_CREATE FAILED [error:%s]", strerror (errno));
 		return -1;
 	}
 
-	g_epi.m_evs = (epoll_event*)calloc(maxevents, sizeof(struct epoll_event));
-	if (!g_epi.m_evs) {
-		close (g_epi.m_fd);
+	m_evs = (epoll_event*)calloc(maxevents, sizeof(struct epoll_event));
+	if (NULL == m_evs) {
+		close (m_fd);
 		ALERT_LOG ("CALLOC EPOLL_EVENT FAILED [size=%d]", maxevents);
 		return -1;
 	}
 
-	g_epi.m_fds = (struct fdinfo_t*) calloc (size, sizeof (struct fdinfo_t));
-	if (!g_epi.m_fds){
-		free (g_epi.m_evs);
-		close (g_epi.m_fd);
+	m_fds = (struct fdinfo_t*) calloc (size, sizeof (struct fdinfo_t));
+	if (NULL == m_fds){
+		free (m_evs);
+		close (m_fd);
 		ALERT_LOG ("CALLOC FDINFO_T FAILED [size=%d]", size);
 		return -1;
 	}
 
-	g_epi.m_max_ev_num = maxevents;
-	g_epi.m_max_fd = 0;
-	g_epi.m_fd_count = 0;
-	INIT_LIST_HEAD (&g_epi.m_etin_head);
-	INIT_LIST_HEAD (&g_epi.m_close_head);
+	m_max_ev_num = maxevents;
+	m_max_fd = 0;
+	m_fd_count = 0;
+	INIT_LIST_HEAD (&m_etin_head);
+	INIT_LIST_HEAD (&m_close_head);
 	return 0;
 }

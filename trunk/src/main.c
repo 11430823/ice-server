@@ -39,7 +39,7 @@ int main(int argc, char* argv[]){
 		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), NULL,
 		g_bench_conf.get_log_save_next_file_interval_min());
 
-	if (0 != g_dll.register_plugin(g_bench_conf.get_liblogic_path().c_str())){
+	if (0 != g_dll.register_plugin()){
 		return -1;
 	}
 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
 			return -1;
 		} else if (pid > 0) {
 			g_shmq.close_pipe(i, false);
-			g_epi.do_add_conn(bc_elem->sendq.pipe_handles[0], fd_type_pipe, NULL, bc_elem);			
+			g_epi.do_add_conn(bc_elem->sendq.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL, bc_elem);			
 			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
