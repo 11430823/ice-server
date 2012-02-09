@@ -6,6 +6,7 @@
 #include "ice_dll.h"
 #include "service.h"
 #include "bind_conf.h"
+#include "bench_conf.h"
 
 ice_dll_t g_dll;
 
@@ -24,12 +25,12 @@ namespace {
 
 }//end of namespace
 
-int ice_dll_t::register_plugin( const char* file_name)
+int ice_dll_t::register_plugin()
 {
 	char* error; 
 	int   ret_code = -1;
 
-	m_handle = dlopen(file_name, RTLD_NOW);
+	m_handle = dlopen(g_bench_conf.get_liblogic_path().c_str(), RTLD_NOW);
 	if ((error = dlerror()) != NULL) {
 		ALERT_LOG("DLOPEN ERROR [error:%s]", error);
 		goto out;
@@ -50,7 +51,7 @@ int ice_dll_t::register_plugin( const char* file_name)
 	ret_code = 0;
 
 out:
-	BOOT_LOG(ret_code, "dlopen [file name:%s, state:%s]", file_name, (0 != ret_code ? "FAIL" : "OK"));
+	BOOT_LOG(ret_code, "dlopen [file name:%s, state:%s]", g_bench_conf.get_liblogic_path().c_str(), (0 != ret_code ? "FAIL" : "OK"));
 	return ret_code;
 }
 

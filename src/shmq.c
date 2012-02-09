@@ -201,18 +201,19 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 	return 0;
 }
 namespace {
-	int pipe_create(int pipe_handles[2])
+	int pipe_create(int pipe_handles[E_PIPE_INDEX_MAX])
 	{
 		if (pipe (pipe_handles) == -1){
+			ALERT_LOG("PIPE CREATE FAILED [err:%s]", strerror(errno));
 			return -1;
 		}
 
-		fcntl (pipe_handles[0], F_SETFL, O_NONBLOCK | O_RDONLY);
-		fcntl (pipe_handles[1], F_SETFL, O_NONBLOCK | O_WRONLY);
+		fcntl (pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
+		fcntl (pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFL, O_NONBLOCK | O_WRONLY);
 
 	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
-		fcntl (pipe_handles[0], F_SETFD, FD_CLOEXEC);
-		fcntl (pipe_handles[1], F_SETFD, FD_CLOEXEC);
+		fcntl (pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFD, FD_CLOEXEC);
+		fcntl (pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFD, FD_CLOEXEC);
 
 		return 0;
 	}
@@ -229,7 +230,9 @@ namespace {
 		q->addr->head = sizeof (shm_head_t);
 		q->addr->tail = sizeof (shm_head_t);
 		atomic_set (&(q->addr->blk_cnt), 0);
-		pipe_create (q->pipe_handles);
+		if (0 != pipe_create (q->pipe_handles)){
+			return -1;
+		}
 		return 0;
 	}
 }//end of namespace
@@ -284,12 +287,12 @@ void shmq_t::close_pipe(int idx, bool is_child )
 	if (is_child) {
 		// close fds inherited from parent process
 		for (int i = 0; i != idx; ++i ) {
-			close(g_bind_conf.get_elem(i)->recvq.pipe_handles[1]);
-			close(g_bind_conf.get_elem(i)->sendq.pipe_handles[0]);
+			close(g_bind_conf.get_elem(i)->recvq.pipe_handles[E_PIPE_INDEX_WRONLY]);
+			close(g_bind_conf.get_elem(i)->sendq.pipe_handles[E_PIPE_INDEX_RDONLY]);
 		}
 	} else {
-		close(g_bind_conf.get_elem(idx)->recvq.pipe_handles[0]);
-		close(g_bind_conf.get_elem(idx)->sendq.pipe_handles[1]);
+		close(g_bind_conf.get_elem(idx)->recvq.pipe_handles[E_PIPE_INDEX_RDONLY]);
+		close(g_bind_conf.get_elem(idx)->sendq.pipe_handles[E_PIPE_INDEX_WRONLY]);
 	}
 }
 
