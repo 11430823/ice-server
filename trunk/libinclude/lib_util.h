@@ -92,3 +92,23 @@ struct DeletePair
 	}
 	//for_each(m_users.begin(), m_users.end(), DeletePair());
 };
+
+//////////////////////////////////////////////////////////////////////////
+//使用宏管理成员变量
+#define PROPERTY_READONLY_DEFAULT(varType, varName)\
+		private:	varType varName;\
+		public:		varType get_##varName(void) { return varName; }
+
+#define PROPERTY_READONLY_BY_REF_DEFAULT(varType, varName)\
+		private:	varType varName;\
+		public:		const varType& get_##varName(void) { return varName; }
+
+#define PROPERTY_RW_DEFAULT(varType, varName)\
+		private:	varType varName;\
+		public:		varType get_##varName(void) { return varName; } \
+		public:		void set_##varName(varType var) { varName = var; }
+
+#define PROPERTY_RW_BY_REF_DEFAULT(varType, varName)\
+		private:	varType varName;\
+		public:		const varType& get_##varName(void) { return varName; } \
+		public:		void set_##varName(const varType& var) { varName = var; }

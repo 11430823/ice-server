@@ -31,7 +31,7 @@ struct conn_buf_t {
 struct skinfo_t {
 	uint16_t	remote_port;
 	uint32_t	remote_ip;
-	time_t	last_tm;
+	time_t		last_tm;
 };
 
 struct fdinfo_t {
