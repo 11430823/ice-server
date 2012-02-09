@@ -152,11 +152,6 @@ std::string bench_conf_t::get_log_dir() const
 	return m_log_dir;
 }
 
-uint32_t bench_conf_t::get_log_level() const
-{
-	return m_log_level;
-}
-
 uint32_t bench_conf_t::get_log_max_byte() const
 {	
 	return m_log_max_byte;
@@ -170,14 +165,4 @@ uint32_t bench_conf_t::get_log_max_files() const
 uint32_t bench_conf_t::get_log_save_next_file_interval_min() const
 {
 	return m_log_save_next_file_interval_min;
-}
-
-time_t bench_conf_t::get_fd_time_out() const
-{
-	return m_fd_time_out;
-}
-
-uint32_t bench_conf_t::get_page_size() const
-{
-	return m_page_size_max;
 }

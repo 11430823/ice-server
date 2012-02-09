@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
 
 	g_daemon.prase_args(argc, argv);
 
-	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_log_level(),
+	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
 		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), NULL,
 		g_bench_conf.get_log_save_next_file_interval_min());
 
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]){
 #endif
 
 	while (!g_daemon.m_stop || g_dll.on_fini(g_is_parent) != 0) {
-		g_epi.loop(g_bench_conf.get_page_size());
+		g_epi.loop(g_bench_conf.get_m_page_size_max());
 	}
 	g_daemon.killall_children();
 	//TODO 下面没有检查
