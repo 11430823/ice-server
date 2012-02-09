@@ -144,7 +144,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	char prefix[10] = { 0 };
 	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
 	prefix[len] = '_';
-	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_log_level(),
+	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
 		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), prefix,
 		g_bench_conf.get_log_save_next_file_interval_min());
 
@@ -162,7 +162,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	}
 
 	while ( !g_daemon.m_stop || 0 != handle_fini() ) {
-		g_epi.loop(g_bench_conf.get_page_size());//mark
+		g_epi.loop(g_bench_conf.get_m_page_size_max());//mark
 	}
 fail:
 	do_destroy_shmq(m_bind_elem);

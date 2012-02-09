@@ -254,8 +254,8 @@ int send_pkg_to_client(fdsession_t* fdsess, const void* pkg, const int pkglen)
 
 	int send_bytes, cur_len;
 	for (send_bytes = 0; send_bytes < pkglen; send_bytes += cur_len) {
-		if ((pkglen - send_bytes) > (int32_t)(g_bench_conf.get_page_size() - sizeof(shm_block_t))) {
-			cur_len = g_bench_conf.get_page_size() - sizeof(shm_block_t);
+		if ((pkglen - send_bytes) > (int32_t)(g_bench_conf.get_m_page_size_max() - sizeof(shm_block_t))) {
+			cur_len = g_bench_conf.get_m_page_size_max() - sizeof(shm_block_t);
 		} else {
 			cur_len = pkglen - send_bytes;
 		}
