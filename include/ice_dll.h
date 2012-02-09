@@ -22,7 +22,7 @@ public:
 	// Brief:	注册插件
 	// Returns:	int 0:success -1:error
 	//************************************
-	int  register_plugin(const char* file_name);
+	int  register_plugin();
 
 //The following interfaces are called only by the child process
 	//************************************

@@ -54,7 +54,7 @@ struct fdinfo_t {
 class ep_info_t
 {
 public:
-	fdinfo_t*	m_fds;
+	fdinfo_t*	m_fds;//连接的FD信息
 	epoll_event*	m_evs;
 	list_head_t	m_close_head;
 	list_head_t	m_etin_head;
