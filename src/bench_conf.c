@@ -107,16 +107,6 @@ ret:
 	return ret;
 }
 
-std::string bench_conf_t::get_liblogic_path() const
-{
-	return m_liblogic_path;
-}
-
-uint32_t bench_conf_t::get_max_fd_num() const
-{
-	return m_max_fd_num;
-}
-
 bench_conf_t::bench_conf_t()
 {
 	m_max_fd_num = 0;
@@ -127,11 +117,6 @@ bench_conf_t::bench_conf_t()
 	m_log_save_next_file_interval_min = 0;
 	m_fd_time_out = 0;
 	m_page_size_max = 0;
-}
-
-bool bench_conf_t::is_daemon()const
-{
-	return m_daemon;
 }
 
 std::string bench_conf_t::get_strval(std::string& key, std::string& name) const

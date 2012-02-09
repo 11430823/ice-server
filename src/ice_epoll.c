@@ -524,13 +524,15 @@ int ep_info_t::do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer,
 
 	m_fds[fd].id = ++seq;
 	if (0 == seq) {
-		m_fds[fd].id = ++seq;
+		m_fds[fd].id = ++seq;//mark 有可能和前面的ID重复
 	}
 	if (peer) {
 		m_fds[fd].sk.remote_ip = peer->sin_addr.s_addr;
 		m_fds[fd].sk.remote_port = peer->sin_port;
-		//mark 没有初始化SK中的时间参数?
+		m_fds[fd].sk.last_tm = get_now_tv()->tv_sec;
+		KDEBUG_LOG(0, "time now :%d", m_fds[fd].sk.last_tm);
 	}
+	KDEBUG_LOG(0, "time now :%d", get_now_tv()->tv_sec);
 	m_fds[fd].bc_elem = bc_elem;
 	m_max_fd = m_max_fd > fd ? m_max_fd : fd;
 	m_fd_count++;

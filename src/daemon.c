@@ -57,10 +57,10 @@ namespace {
 		struct rlimit rlim;
 
 		/* set open files */
-		rlim.rlim_cur = g_bench_conf.get_max_fd_num();
-		rlim.rlim_max = g_bench_conf.get_max_fd_num();
+		rlim.rlim_cur = g_bench_conf.get_m_max_fd_num();
+		rlim.rlim_max = g_bench_conf.get_m_max_fd_num();
 		if (-1 == setrlimit(RLIMIT_NOFILE, &rlim)) {
-			ALERT_LOG("INIT FD RESOURCE FAILED [OPEN FILES NUMBER:%d]", g_bench_conf.get_max_fd_num());
+			ALERT_LOG("INIT FD RESOURCE FAILED [OPEN FILES NUMBER:%d]", g_bench_conf.get_m_max_fd_num());
 		}
 
 		/* set core dump */
@@ -127,7 +127,7 @@ void daemon_t::prase_args( int argc, char** argv )
 	rlimit_reset();
 	set_signal();
 	save_argv(argc, argv);
-	if (g_bench_conf.is_daemon()){
+	if (g_bench_conf.get_m_daemon()){
 		daemon (1, 1);
 	}
 }

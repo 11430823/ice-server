@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	if (0 != g_epi.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num())){
+	if (0 != g_epi.init(g_bench_conf.get_m_max_fd_num(), g_bench_conf.get_m_max_fd_num())){
 		return -1;
 	}
 

@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include <ice_lib/lib_util.h>
+
 class bench_conf_t 
 {
 public:
@@ -22,9 +24,6 @@ public:
 	// Returns:   int(0:正确,其它:错误)
 	//************************************
 	int load();
-	uint32_t get_max_fd_num()const;
-	bool is_daemon()const;
-	std::string get_liblogic_path() const;
 	std::string get_log_dir()const;
 	uint32_t get_log_level()const;
 	uint32_t get_log_max_byte()const;
@@ -32,10 +31,10 @@ public:
 	uint32_t get_log_save_next_file_interval_min()const;
 	time_t get_fd_time_out()const;
 	uint32_t get_page_size()const;
+	PROPERTY_READONLY_DEFAULT(uint32_t, m_max_fd_num);//打开文件的最大数量
+	PROPERTY_READONLY_DEFAULT(bool, m_daemon);//是否后台运行
+	PROPERTY_READONLY_DEFAULT(std::string, m_liblogic_path);////代码段SO路径
 private:
-	uint32_t m_max_fd_num;//打开文件的最大数量
-	bool m_daemon;//是否后台运行	
-	std::string m_liblogic_path;//代码段SO路径
 	std::string m_log_dir;//日志目录
 	uint32_t m_log_level;//日志等级
 	uint32_t m_log_max_byte;//日志每个文件的最大大小(字节)

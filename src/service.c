@@ -153,7 +153,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	shmq_destroy(m_bind_elem, n_inited_bc);
 	net_exit();
 
-	g_epi.init(g_bench_conf.get_max_fd_num(), 2000);//2000个数量(总FD连接数量)
+	g_epi.init(g_bench_conf.get_m_max_fd_num(), 2000);//2000个数量(总FD连接数量)
 	g_epi.do_add_conn(m_bind_elem->recvq.pipe_handles[0], fd_type_pipe, NULL, NULL);
 
 	if ( 0 != handle_init(m_bind_elem)) {
