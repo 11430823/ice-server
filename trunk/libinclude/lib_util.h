@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+namespace ice {
+
 #ifdef  likely
 #undef  likely
 #endif
@@ -112,3 +114,5 @@ struct DeletePair
 		private:	varType varName;\
 		public:		const varType& get_##varName(void) { return varName; } \
 		public:		void set_##varName(const varType& var) { varName = var; }
+
+}//end of namespace ice
