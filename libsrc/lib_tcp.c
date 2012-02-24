@@ -2,7 +2,7 @@
 
 #include "lib_tcp.h"
 
-int lib_tcp::set_io_block( int fd, bool is_block )
+int ice::lib_tcp::set_io_block( int fd, bool is_block )
 {
 	int val;
 	if (is_block) {
