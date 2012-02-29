@@ -3,6 +3,7 @@
 #include "lib_file.h"
 #include "log.h"
 
+namespace ice {
 int get_current_dir_file( const char *path, std::vector<std::string>& file_names )
 {
 	DIR* dirp;
@@ -21,8 +22,10 @@ int get_current_dir_file( const char *path, std::vector<std::string>& file_names
 		}
 		closedir(dirp);
 	} else {
-		KERROR_LOG(0, "open fail");
+		KERROR_LOG(0, "open fail [path:%s]", path);
 		return -1;
 	}	
 	return 0;
 }
+
+}//end namespace ice
