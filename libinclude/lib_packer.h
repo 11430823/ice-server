@@ -2,14 +2,14 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	用于对数据包进行解包，或者把数据打包成数据包。pdu == Protocol Data Unit
-	brief:		
+	purpose:	用于对数据包进行解包，或者把数据打包成数据包
+	brief:		ok
 *********************************************************************/
 #pragma once
 
 #include <cstring>
 
-#include "byte_swap.h"
+#include "lib_byte_swap.h"
 
 namespace ice {
 

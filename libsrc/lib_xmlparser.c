@@ -2,7 +2,7 @@
 
 using namespace std;
 
-#include "xmlparser.h"
+#include "lib_xmlparser.h"
 
 namespace ice {
 
@@ -31,5 +31,5 @@ void load_xmlconf(const char* file, int (*parser)(xmlNodePtr cur_node))
 	}
 }
 
-}
+}//end namespace ice
 
