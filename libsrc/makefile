@@ -11,5 +11,8 @@ $(EXE):
 	$(CC) $(LOCAL_SRCS) $(INCLUDES) $(GLIB_INCLUDES) $(LINK) $(FLAG) $@
 	cp -f $@ ../lib/
 	rm $@
+install:
+# 将头文件放入指定的目录中
+# 将SO放入指定的目录中
 clean:
 	rm $(EXE) *.o -f
