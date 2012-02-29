@@ -11,6 +11,7 @@
 
 #include <netinet/in.h>
 namespace ice{
+
 class lib_tcp
 {
 public:
@@ -30,4 +31,4 @@ private:
 	lib_tcp& operator=(const lib_tcp& cr);
 };
 
-}
+}//end of namespace ice

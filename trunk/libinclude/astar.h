@@ -8,6 +8,8 @@
 
 #pragma once
 
+#if 0
+
 #include <cstdlib>
 
 #include <algorithm>
@@ -479,3 +481,4 @@ AStar<GridData>::get_grid(const GridIndex& idx)
 	return 0;
 }
 
+#endif
