@@ -25,74 +25,90 @@ namespace ice {
 #endif
 #define unlikely(x)  __builtin_expect(!!(x), 0)
 
-#define FOREACH(container,it) \
-	for(typeof((container).begin()) it = (container).begin();(it)!=(container).end();++(it))
+#define FOREACH(container, it) \
+	for(typeof((container).begin()) it = (container).begin(); (it) != (container).end(); ++(it))
 
+#define FOREACH_PREV(container, it) \
+	for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
+//************************************
+// Brief:     由字符串转换为所需类型
+// Returns:   void
+// Parameter: T & value	所需类型
+// Parameter: const std::string & s	待转换的字符串
+//************************************
 template <class T> 
-void g_convert_from_string(T &value, const std::string &s) {
+inline void convert_from_string(T &value, const std::string &s) {
 	std::stringstream ss(s);
 	ss >> value;
 }
 
 template<typename T>
-void g_safe_delete(T p)
+inline void safe_delete(T p)
 {
 	delete p;
 	p = NULL;
 };
 
 template<typename T>
-void g_safe_delete_arr(T p)
+inline void safe_delete_arr(T p)
 {
 	delete []p;
 	p = NULL;
 };
 
-/* *
- *  @brief 获取数组个数
- */
+//************************************
+// Brief:     由数组名,获取数组个数
+// Returns:   uint32_t	数组个数
+// Parameter: const T & name 数组名称
+//************************************
 template<typename T>
-uint32_t g_arr_num(const T& name)
+inline uint32_t get_arr_num(const T& name)
 {
 	return sizeof(name)/sizeof(name[0]);
 };
 
-/* *
- *  @brief 切割字符(以单个符号为间断)like: 1,2,3 or 1;2;3 or aa/b/cc ...
- */
+//************************************
+// Brief:     切割字符(以单个符号为间断)like: 1,2,3 or 1;2;3 or aa/b/cc ...
+// Returns:   void
+// Parameter: std::vector<T> & dst_result 切割后的结果
+// Parameter: std::string & src_str	待切割的字符串
+// Parameter: char tag	切割依据符号
+//************************************
 template <typename T>
-void g_cat_string(std::vector<T>& dst_result, std::string& src_str, char tag)
+inline void cat_string(std::vector<T>& dst_result, std::string& src_str, char tag)
 {
 	std::stringstream ss(src_str);        
 	std::string sub_str;        
-	while(std::getline(ss,sub_str,tag)){
+	while(std::getline(ss, sub_str, tag)){
 		//以tag为间隔分割str的内容 
 		T i;
-		g_convert_from_string(i,sub_str);
+		convert_from_string(i,sub_str);
 		dst_result.push_back(i);
 	}
 };
 
+//删除(非空)指针并置空
+//使用方法://for_each(vector.begin(),vector.end(),DeletePtr());
 struct DeletePtr
 {
 	template<typename T>
 	void operator() (const T* ptr) const{
 		if (ptr){
-			g_safe_delete(ptr);
+			safe_delete(ptr);
 		}
 	}
-	//for_each(vs.begin(),vs.end(),DeletePtr());
 };
 
+//删除(非空)map中val位置上的指针并置空
+//用法://for_each(map.begin(), map.end(), DeletePair());
 struct DeletePair
 {
 	template<typename Ty1, typename Ty2>
 	void operator() (const std::pair<Ty1, Ty2> &ptr) const{
 		if (ptr.second){
-			g_safe_delete(ptr.second);
+			safe_delete(ptr.second);
 		}		
 	}
-	//for_each(m_users.begin(), m_users.end(), DeletePair());
 };
 
 //////////////////////////////////////////////////////////////////////////
