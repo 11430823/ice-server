@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "timer.h"
-#include "log.h"
+#include "lib_log.h"
 
 
 #define TIMER_VEC_SIZE    5

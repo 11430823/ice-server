@@ -8,8 +8,6 @@
 
 #pragma once
 
-namespace ice {
-
 #define __builtin_prefetch(x,y,z) 1
 
 /**
@@ -250,5 +248,3 @@ static inline void list_splice_init (struct list_head *list, struct list_head *h
 		     pos = list_entry(pos->member.next, typeof(*pos), member),	\
 		     __builtin_prefetch(pos->member.next,0,1))
 #endif
-
-}//end namespace ice
