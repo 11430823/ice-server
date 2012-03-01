@@ -6,11 +6,9 @@
 	brief:		ok
 *********************************************************************/
 
-
 #pragma once
 
 #include <netinet/in.h>
-namespace ice{
 
 class lib_tcp
 {
@@ -30,5 +28,3 @@ private:
 	lib_tcp(const lib_tcp& cr);
 	lib_tcp& operator=(const lib_tcp& cr);
 };
-
-}//end of namespace ice

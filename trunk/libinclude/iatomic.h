@@ -2,7 +2,7 @@
 	platform:	此文件由内核中提取
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	原子操作
 	brief:		ok
 *********************************************************************/
 

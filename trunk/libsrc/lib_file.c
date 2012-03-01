@@ -1,10 +1,9 @@
 #include <dirent.h>
 
 #include "lib_file.h"
-#include "log.h"
+#include "lib_log.h"
 
-namespace ice {
-int get_current_dir_file( const char *path, std::vector<std::string>& file_names )
+int get_dir_file( const char *path, std::vector<std::string>& file_names )
 {
 	DIR* dirp;
 	struct dirent* direntp;
@@ -27,5 +26,3 @@ int get_current_dir_file( const char *path, std::vector<std::string>& file_names
 	}	
 	return 0;
 }
-
-}//end namespace ice

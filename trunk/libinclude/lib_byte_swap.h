@@ -12,8 +12,6 @@
 #include <stdint.h>
 #include <byteswap.h>
 
-namespace ice {
-
 inline int8_t bswap(int8_t x)
 {
 	return x;
@@ -65,6 +63,4 @@ inline unsigned long bswap(unsigned long x)
 	return bswap_32(x);
 }
 #endif
-
-} // namespace ice
 

@@ -2,8 +2,6 @@
 
 #include "lib_tcp.h"
 
-namespace ice {
-
 int lib_tcp::set_io_block( int fd, bool is_block )
 {
 	int val;
@@ -14,5 +12,3 @@ int lib_tcp::set_io_block( int fd, bool is_block )
 	}
 	return fcntl(fd, F_SETFL, val);
 }
-
-}//end namespace ice

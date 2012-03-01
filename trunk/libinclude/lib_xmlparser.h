@@ -20,8 +20,6 @@ extern "C" {
 #include <libxml/tree.h>
 }
 
-namespace ice {
-
 typedef std::ios_base& (&manip_t)(std::ios_base&);
 
 /**
@@ -188,6 +186,4 @@ void get_xml_prop_def(T1& val, xmlNodePtr cur, const void* prop, const T2& def, 
  * @throws XmlParseError
  */
 void load_xmlconf(const char* file, int (*parser)(xmlNodePtr cur_node));
-
-}
 

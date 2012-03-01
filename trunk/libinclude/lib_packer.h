@@ -11,8 +11,6 @@
 
 #include "lib_byte_swap.h"
 
-namespace ice {
-
 /**
 * @brief 把val转换字节序，并且打包到(uint8_t*)pkg + idx，然后增加idx的值，idx的增量为val变量占用的字节数。\n
 *        比如val的类型是uint32_t，则idx的值增加4。
@@ -100,5 +98,3 @@ inline void unpack_h(const void* pkg, T& val, int& idx)
 	val = *(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx));
 	idx += sizeof val;
 }
-
-} // namespace ice
