@@ -21,14 +21,25 @@ namespace{
 
 #define MAX_LOG_CNT 10000000 //日志文件最大数量
 #define LOG_BUF_SIZE 8192 //每条日志的字节数
-	lib_log::E_LOG_LEVEL  s_log_level;	  // default log level
-	uint32_t s_log_size;//每个日志的最大字节数
-	int s_log_max_files;//最大文件数量
+#define LOG_FILE_NAME_PRE_SIZE 32//日志文件名前缀
+
+	struct log_info_t {
+		E_LOG_LEVEL  level;	  // default log level
+		uint32_t each_file_size_max;//每个日志的最大字节数
+		char dir_name[NAME_MAX];//日志目录
+		uint32_t max_file;//最大文件数量
+		std::string file_pre_name;//文件名前缀
+		log_info_t(){
+			level = log_lvl_debug;
+			each_file_size_max = 0;
+			memset(dir_name, 0, sizeof(dir_name));
+			max_file = 0;
+		}
+	}log_info;
+
 	int s_max_log_files;//轮转模式中文件数量
-	lib_log::E_LOG_DEST s_log_dest; // write log to terminal by default
+	E_LOG_DEST s_log_dest = log_dest_terminal; // write log to terminal by default
 	int s_multi_thread;
-	char s_log_dir[256];//日志目录
-	char s_log_pre[32];//文件名前缀
 	int  s_logtime_interval; // 每个日志文件记录日志的总时间（秒）
 	int s_has_init;//是否初始化
 	const char* lognames[] = { "emerg", "alert", "crit", 
@@ -49,14 +60,14 @@ namespace{
 		pthread_mutex_unlock(&g_shift_fd_mutex);\
 	}
 
-static struct fds_t {
+struct fds_t {
 	int		seq;
 	int		opfd;//文件FD
 	int		day;//一年中的天数
 	char	base_filename[64];//基本文件名
 	int		base_filename_len;//基本文件名长度
 	int  	cur_day_seq_count;//当天轮转文件的个数
-} fds_info[lib_log::log_lvl_max];
+} fds_info[log_lvl_max];
 
 //************************************
 // Brief:     生成日志文件路径
@@ -68,17 +79,17 @@ static struct fds_t {
 //************************************
 inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
 {
-	assert((lvl >= lib_log::log_lvl_emerg) && (lvl < lib_log::log_lvl_max));
+	assert((lvl >= log_lvl_emerg) && (lvl < log_lvl_max));
 
 	if (s_logtime_interval) {
 		time_t t = time(0) / s_logtime_interval * s_logtime_interval;
 		struct tm tmp_tm;
 		localtime_r(&t, &tmp_tm);
 
-		sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", s_log_dir, fds_info[lvl].base_filename,
+		sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", log_info.dir_name, fds_info[lvl].base_filename,
 			tmp_tm.tm_year + 1900, tmp_tm.tm_mon + 1, tmp_tm.tm_mday, tmp_tm.tm_hour, tmp_tm.tm_min);
 	} else {
-		sprintf(file_name, "%s/%s%04d%02d%02d%07d", s_log_dir, fds_info[lvl].base_filename,
+		sprintf(file_name, "%s/%s%04d%02d%02d%07d", log_info.dir_name, fds_info[lvl].base_filename,
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
 	}
 }
@@ -114,7 +125,7 @@ inline int get_logfile_seqno(const char* filename, int loglvl)
 
 inline void log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
 {
-	assert((lvl >= lib_log::log_lvl_emerg) && (lvl < lib_log::log_lvl_max));
+	assert((lvl >= log_lvl_emerg) && (lvl < log_lvl_max));
 
 	sprintf(file_name, "%s%04d%02d%02d%07d", fds_info[lvl].base_filename,
 		tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
@@ -124,7 +135,7 @@ int get_log_seq_recycle(int lvl)
 {
 	char file_name[FILENAME_MAX] = { 0 };
 
-	DIR* dir = opendir(s_log_dir);
+	DIR* dir = opendir(log_info.dir_name);
 	if (!dir) {
 		return -1;
 	}
@@ -177,7 +188,7 @@ void rm_files_by_seqno(int loglvl, int seqno, const struct tm* tm)
 
 	log_file_name(loglvl, seqno, filename, tm);
 
-	DIR* dir = opendir(s_log_dir);
+	DIR* dir = opendir(log_info.dir_name);
 	if (!dir) {
 		return;
 	}
@@ -188,7 +199,7 @@ void rm_files_by_seqno(int loglvl, int seqno, const struct tm* tm)
 			&& (strncmp(dentry->d_name, fds_info[loglvl].base_filename, fds_info[loglvl].base_filename_len) == 0)
 			&& (strcmp(filename, dentry->d_name) != 0) ) {
 				char filepath[FILENAME_MAX];
-				snprintf(filepath, sizeof(filepath), "%s/%s", s_log_dir, dentry->d_name);
+				snprintf(filepath, sizeof(filepath), "%s/%s", log_info.dir_name, dentry->d_name);
 				remove(filepath);
 				// if there are duplicated seqno caused by the '!dir' above and thus leads to some bugs, we should remove the 'break;' below
 				break;
@@ -210,7 +221,7 @@ int open_fd(int lvl, const struct tm* tm)
 		if (  fds_info[lvl].day != tm->tm_yday ) {
 			fds_info[lvl].cur_day_seq_count = 1;
 			fds_info[lvl].day = tm->tm_yday;
-			s_max_log_files = s_log_max_files;//隔天了，恢复日志模式
+			s_max_log_files = log_info.max_file;//隔天了，恢复日志模式
 		} else {
 			fds_info[lvl].cur_day_seq_count ++ ;
 		}
@@ -249,7 +260,7 @@ int shift_fd(int lvl, const struct tm* tm)
 			return 0;
 		}
 	} else {
-		if (likely(((uint32_t)length < s_log_size) && (fds_info[lvl].day == tm->tm_yday))) {
+		if (likely(((uint32_t)length < log_info.each_file_size_max) && (fds_info[lvl].day == tm->tm_yday))) {
 			SHIFT_FD_UNLOCK();
 			return 0;
 		}
@@ -278,7 +289,7 @@ int shift_fd(int lvl, const struct tm* tm)
 
 }//end of namespace 
 
-int lib_log::log_init_t(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, int logtime)
+int log_init_by_time(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, int logtime)
 {
 	assert((logtime > 0) && (logtime <= 30000000));
 
@@ -288,7 +299,7 @@ int lib_log::log_init_t(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, 
 	BOOT_LOG(ret, "Set log dir %s, per file size by time", dir);
 }
 
-int lib_log::log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
+int log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
 	int maxfiles, const char* pre_name)
 {
 	int ret_code = -1;
@@ -316,21 +327,19 @@ int lib_log::log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
 		goto loop_return;
 	}
 
-	s_log_level = lvl;
-	s_log_size      = size;
-	s_log_max_files = maxfiles;
+	log_info.level = lvl;
+	log_info.each_file_size_max      = size;
+	log_info.max_file = maxfiles;
 	s_max_log_files = maxfiles;
 
-	strncpy(s_log_dir, dir, sizeof(s_log_dir) - 1);
-	if (NULL != pre_name) {
-		strncpy(s_log_pre, pre_name, sizeof(s_log_pre) - 1);
-	}
+	strncpy(log_info.dir_name, dir, sizeof(log_info.dir_name) - 1);
+	log_info.file_pre_name = pre_name;
 
 	for (int i = log_lvl_emerg; i < log_lvl_max; i++) {
 		fds_info[i].base_filename_len
 			= snprintf(fds_info[i].base_filename, 
 			sizeof(fds_info[i].base_filename), "%s%s",
-			s_log_pre, lognames[i]);
+			log_info.file_pre_name.c_str(), lognames[i]);
 		fds_info[i].opfd = -1;
 		fds_info[i].seq  = s_logtime_interval ? get_log_time() : request_log_seq(i);
 		if (fds_info[i].seq < 0) {
@@ -346,32 +355,26 @@ loop_return:
 	BOOT_LOG(ret_code, "Set log dir %s, per file size %g MB", dir, size / 1024.0 / 1024.0);
 }
 
-void lib_log::set_log_dest(E_LOG_DEST dest)
+void set_log_dest(E_LOG_DEST dest)
 {
 	assert(s_has_init);
 	s_log_dest = dest;
 }
 
-lib_log::lib_log()
-{
-	s_log_level	 = log_lvl_debug;
-	s_log_dest = log_dest_terminal;
-}
-
-void lib_log::log_fini()
+void log_fini()
 {
 	assert(s_has_init);
 
-	s_log_level     = log_lvl_debug;
-	s_log_size      = 0;
+	log_info.level     = log_lvl_debug;
+	log_info.each_file_size_max      = 0;
 	s_max_log_files = 0;
 	s_log_dest    = log_dest_terminal;
 	s_has_init      = 0;
-	s_log_max_files = 0;
+	log_info.max_file = 0;
 	s_logtime_interval   = 0;
 
-	memset(s_log_dir, 0, sizeof(s_log_dir));
-	memset(s_log_pre, 0, sizeof(s_log_pre));
+	log_info.file_pre_name.clear();
+	memset(log_info.dir_name, 0, sizeof(log_info.dir_name));
 
 	for (int i = log_lvl_emerg; i < log_lvl_max; i++) {
 		if (fds_info[i].opfd != -1) {
@@ -381,14 +384,14 @@ void lib_log::log_fini()
 	memset(fds_info, 0, sizeof(fds_info));
 }
 
-void lib_log::enable_multi_thread()
+void enable_multi_thread()
 {
 	s_multi_thread = 1;
 }
 
-void lib_log::write_log( int lvl,uint32_t key, const char* fmt, ... )
+void write_log( int lvl,uint32_t key, const char* fmt, ... )
 {
-	if (lvl > s_log_level) {
+	if (lvl > log_info.level) {
 		return;
 	}
 
@@ -435,9 +438,9 @@ void lib_log::write_log( int lvl,uint32_t key, const char* fmt, ... )
 	write(fds_info[lvl].opfd, log_buffer, end + pos);
 }
 
-void lib_log::write_syslog( int lvl, const char* fmt, ... )
+void write_syslog( int lvl, const char* fmt, ... )
 {
-	if (lvl > s_log_level) {
+	if (lvl > log_info.level) {
 		return;
 	}
 
@@ -478,7 +481,7 @@ void lib_log::write_syslog( int lvl, const char* fmt, ... )
 	va_end(ap);
 }
 
-void lib_log::boot_log( int ok, int dummy, const char* fmt, ... )
+void boot_log( int ok, int dummy, const char* fmt, ... )
 {
 #define SCREEN_COLS	80
 #define BOOT_OK		"\e[1m\e[32m[ OK ]\e[m"

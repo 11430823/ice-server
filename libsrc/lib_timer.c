@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "timer.h"
+#include "lib_timer.h"
 #include "lib_log.h"
 
 
@@ -37,9 +37,8 @@ find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expir
 
 void setup_timer()
 {
-	int i;
 	renew_now();
-	for (i = 0; i < TIMER_VEC_SIZE; i++) {
+	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
 		INIT_LIST_HEAD(&vec[i].head);
 		vec[i].expire = 1 << (i + 2);
 	}
