@@ -1,5 +1,5 @@
 /********************************************************************
-	platform:	此文件由内核中提取
+	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	
