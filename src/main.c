@@ -87,6 +87,6 @@ int main(int argc, char* argv[]){
 	//TODO 下面没有检查
 	net_exit();
 	shmq_destroy(0, g_bind_conf.get_elem_num());
-	log_fini();
+	destroy_log();
 	return 0;
 }

@@ -3,54 +3,136 @@
 #include "lib_timer.h"
 #include "lib_log.h"
 
-
-#define TIMER_VEC_SIZE    5
-
-struct tvec_root_s {
-	struct list_head head;
-	int     expire;
-	time_t  min_expiring_time;
-};
-
-static struct tvec_root_s  vec[TIMER_VEC_SIZE];
-static struct list_head    micro_timer;
-
 struct timeval  now;
 struct tm       tm_cur;
 
-enum {
-	max_timer_type	= 10000
-};
+namespace {
+#define TIMER_VEC_SIZE    5
 
-/*用于保存定时器回调函数的地址*/
-static timer_cb_func_t tcfs[max_timer_type];
+	struct tvec_root_s {
+		struct list_head head;
+		int     expire;
+		time_t  min_expiring_time;
+		tvec_root_s(){
+			INIT_LIST_HEAD(&head);
+			expire = 0;
+			min_expiring_time = 0;
+		}
+	};
 
-static inline void add_timer(timer_struct_t* t);
+	struct tvec_root_s  vec[TIMER_VEC_SIZE];
+	struct list_head    micro_timer;
+	enum {
+		max_timer_type	= 10000
+	};
+	/*用于保存定时器回调函数的地址*/
+	static timer_cb_func_t tcfs[max_timer_type];
 
-static inline int  find_min_idx(time_t diff, int max_idx);
-static inline void set_min_exptm(time_t exptm, int idx);
+	static inline void add_timer(timer_struct_t* t);
 
-static inline timer_struct_t*
-find_event(list_head_t* head, timer_cb_func_t func);
-static inline timer_struct_t*
-find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expire);
+	static inline int  find_min_idx(time_t diff, int max_idx);
+	static inline void set_min_exptm(time_t exptm, int idx);
 
-void setup_timer()
+	static inline timer_struct_t* find_event(list_head_t* head, timer_cb_func_t func);
+	static inline timer_struct_t* find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expire);
+	void scan_timer_list(const int idx)
+	{
+		int    i;
+		time_t min_exptm = 0;
+		timer_struct_t *t;
+		list_head_t *cur, *next;
+
+		list_for_each_safe(cur, next, &vec[idx].head) {
+			t = list_entry(cur, timer_struct_t, entry);
+			if (t->function) {
+				i = find_min_idx(t->expire - now.tv_sec, idx);
+				if (i != idx) {
+					list_del(&t->entry);
+					list_add_tail(&t->entry, &vec[i].head);
+					set_min_exptm(t->expire, i);
+				} else if ((t->expire < min_exptm) || !min_exptm) {
+					min_exptm = t->expire;
+				}
+			} else {
+				ice::do_remove_timer(t, 1);			
+			}
+		}
+
+		vec[idx].min_expiring_time = min_exptm;
+	}
+
+	/*----------------------------------------------
+  *  inline utilities
+  *----------------------------------------------*/
+	inline void add_timer(timer_struct_t *t)
+	{
+		int i, diff;
+
+		diff = t->expire - now.tv_sec;
+		for (i = 0; i != (TIMER_VEC_SIZE - 1); ++i) {
+			if (diff <= vec[i].expire)
+				break;
+		}
+
+		list_add_tail(&t->entry, &vec[i].head);
+		set_min_exptm(t->expire, i);
+	}
+
+	inline int find_min_idx(time_t diff, int max_idx)
+	{
+		while (max_idx && (vec[max_idx - 1].expire >= diff)) {
+			--max_idx;
+		}
+		return max_idx;
+	}
+
+	inline void set_min_exptm(time_t exptm, int idx)
+	{
+		if ((exptm < vec[idx].min_expiring_time) || (vec[idx].min_expiring_time == 0)) {
+			vec[idx].min_expiring_time = exptm;
+		}
+	}
+
+	inline timer_struct_t* find_event(list_head_t* head, timer_cb_func_t function)
+	{
+		timer_struct_t* t;
+
+		list_for_each_entry(t, head, sprite_list) {
+			if (t->function == function)
+				return t;
+		}
+
+		return NULL;
+	}
+
+	inline timer_struct_t* find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expire)
+	{
+		timer_struct_t* t;
+
+		list_for_each_entry(t, head, sprite_list) {
+			if (t->function == function && t->expire == expire)
+				return t;
+		}
+
+		return NULL;
+	}
+
+}//end namespace
+
+void ice::setup_timer()
 {
 	renew_now();
 	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
-		INIT_LIST_HEAD(&vec[i].head);
 		vec[i].expire = 1 << (i + 2);
 	}
 	INIT_LIST_HEAD(&micro_timer);
 }
 
-void destroy_timer()
+void ice::destroy_timer()
 {
-	int i;
 	list_head_t *l, *p;
 
-	for (i = 0; i < TIMER_VEC_SIZE; i++) {
+	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
 		list_for_each_safe(l, p, &vec[i].head) {
 			timer_struct_t* t = list_entry(l, timer_struct_t, entry);
 			do_remove_timer(t, 1);
@@ -63,8 +145,8 @@ void destroy_timer()
 	}
 }
 
-timer_struct_t*
-add_event(list_head_t* head, timer_cb_func_t function, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag)
+timer_struct_t* ice::add_event(list_head_t* head, timer_cb_func_t function, void* owner,
+						  void* data, time_t expire, E_TIMER_CHG_MODE flag)
 {
 	timer_struct_t* timer;
 
@@ -94,48 +176,20 @@ new_timer:
 	return timer;
 }
 
-timer_struct_t*
-add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag)
+timer_struct_t* ice::add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag)
 {
-if (!tcfs[fidx]) {
-return 0;
+	if (!tcfs[fidx]) {
+		return 0;
+	}
+
+	timer_struct_t* timer = add_event(head, tcfs[fidx], owner, data, expire, flag);
+	if (timer) {
+		timer->func_indx = fidx;
+	}
+	return timer;
 }
 
-timer_struct_t* timer = add_event(head, tcfs[fidx], owner, data, expire, flag);
-if (timer) {
-timer->func_indx = fidx;
-}
-return timer;
-}
-
-static void
-scan_timer_list(const int idx)
-{
-	int    i;
-	time_t min_exptm = 0;
-	timer_struct_t *t;
-	list_head_t *cur, *next;
-
-	list_for_each_safe(cur, next, &vec[idx].head) {
-		t = list_entry(cur, timer_struct_t, entry);
-		if (t->function) {
-			i = find_min_idx(t->expire - now.tv_sec, idx);
-			if (i != idx) {
-				list_del(&t->entry);
-				list_add_tail(&t->entry, &vec[i].head);
-				set_min_exptm(t->expire, i);
-			} else if ((t->expire < min_exptm) || !min_exptm) {
-				min_exptm = t->expire;
-			}
-		} else {
-			do_remove_timer(t, 1);			
-		}
- 	}
-
-	vec[idx].min_expiring_time = min_exptm;
-}
-
-void scan_seconds_timer()
+void ice::scan_seconds_timer()
 {
 	list_head_t *l, *p;
 	timer_struct_t* t;
@@ -159,7 +213,7 @@ void scan_seconds_timer()
 	}
 }
 
-void mod_expire_time(timer_struct_t* t, time_t expiretime)
+void ice::mod_expire_time(timer_struct_t* t, time_t expiretime)
 {
 	if (!t->expire) return;
 
@@ -176,8 +230,7 @@ void mod_expire_time(timer_struct_t* t, time_t expiretime)
 	set_min_exptm(t->expire, j);
 }
 
-micro_timer_struct_t*
-add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data)
+micro_timer_struct_t* ice::add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data)
 {
 	micro_timer_struct_t* timer = (micro_timer_struct_t*)g_slice_alloc(sizeof *timer);
 	INIT_LIST_HEAD(&timer->entry);
@@ -191,8 +244,7 @@ add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, voi
 	return timer;
 }
 
-micro_timer_struct_t*
-add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data)
+micro_timer_struct_t* ice::add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data)
 {
 	micro_timer_struct_t* timer = add_micro_event(tcfs[fidx], tv, owner, data);
 	if (timer) {
@@ -201,8 +253,7 @@ add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data)
 	return timer;
 }
 
-void
-scan_microseconds_timer()
+void ice::scan_microseconds_timer()
 {
 	list_head_t *l, *p;
 	micro_timer_struct_t* t;
@@ -219,7 +270,7 @@ scan_microseconds_timer()
 	}
 }
 
-void remove_micro_timers(void* owner)
+void ice::remove_micro_timers(void* owner)
 {
 	list_head_t *l, *p;
 	micro_timer_struct_t* t;
@@ -232,69 +283,10 @@ void remove_micro_timers(void* owner)
 	}
 }
 
-/*----------------------------------------------
-  *  inline utilities
-  *----------------------------------------------*/
-static inline void
-add_timer(timer_struct_t *t)
-{
-	int i, diff;
 
-	diff = t->expire - now.tv_sec;
-	for (i = 0; i != (TIMER_VEC_SIZE - 1); ++i) {
-		if (diff <= vec[i].expire)
-			break;
-	}
-
-	list_add_tail(&t->entry, &vec[i].head);
-	set_min_exptm(t->expire, i);
-}
-
-static inline int
-find_min_idx(time_t diff, int max_idx)
-{
-	while (max_idx && (vec[max_idx - 1].expire >= diff)) {
-		--max_idx;
-	}
-	return max_idx;
-}
-
-static inline void
-set_min_exptm(time_t exptm, int idx)
-{
-	if ((exptm < vec[idx].min_expiring_time) || (vec[idx].min_expiring_time == 0)) {
-		vec[idx].min_expiring_time = exptm;
-	}
-}
-
-static inline timer_struct_t *
-find_event(list_head_t* head, timer_cb_func_t function)
-{
-	timer_struct_t* t;
-
-	list_for_each_entry(t, head, sprite_list) {
-		if (t->function == function)
-			return t;
-	}
-
-	return NULL;
-}
-
-static inline timer_struct_t *
-find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expire)
-{
-	timer_struct_t* t;
-
-	list_for_each_entry(t, head, sprite_list) {
-		if (t->function == function && t->expire == expire)
-			return t;
-	}
-
-	return NULL;
-}
 
 /*根据定时器的类型ID登记回调函数的地址*/
-int register_timer_callback(int nbr, timer_cb_func_t cb)
+int ice::register_timer_callback(int nbr, timer_cb_func_t cb)
 {
 	if (nbr <= 0 || nbr >= max_timer_type) {
 		return -1;
@@ -306,14 +298,14 @@ int register_timer_callback(int nbr, timer_cb_func_t cb)
 	return 0;
 }
 
-void unregister_timers_callback()
+void ice::unregister_timers_callback()
 {
 	memset(tcfs, 0, sizeof(tcfs));
 
 }
 
 /*重新加载text.so后，回调函数的地址发生变化，更新已启动的定时器回调函数地址*/
-void refresh_timers_callback()
+void ice::refresh_timers_callback()
 {
 	int i;
 	for (i = 0; i < TIMER_VEC_SIZE; i++) {
@@ -329,7 +321,7 @@ void refresh_timers_callback()
 	}
 }
 
-void handle_timer()
+void ice::handle_timer()
 {
 	static time_t last = 0;
 	renew_now();
@@ -342,7 +334,7 @@ void handle_timer()
 	scan_microseconds_timer();
 }
 
-void do_remove_timer(timer_struct_t* t, int freed)
+void ice::do_remove_timer(timer_struct_t* t, int freed)
 {
 	if (t->sprite_list.next != 0) {
 		list_del(&t->sprite_list);
@@ -356,7 +348,7 @@ void do_remove_timer(timer_struct_t* t, int freed)
 	}
 }
 
-void remove_timers(list_head_t* head)
+void ice::remove_timers(list_head_t* head)
 {
 	timer_struct_t *t;
 	list_head_t *l, *m;
@@ -367,7 +359,7 @@ void remove_timers(list_head_t* head)
 	}
 }
 
-void remove_micro_timer(micro_timer_struct_t *t, int freed)
+void ice::remove_micro_timer(micro_timer_struct_t *t, int freed)
 {
 	if (freed) {
 		list_del_init(&t->entry);

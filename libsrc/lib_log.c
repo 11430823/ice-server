@@ -24,21 +24,17 @@ namespace{
 #define LOG_FILE_NAME_PRE_SIZE 32//日志文件名前缀
 
 	struct log_info_t {
-		E_LOG_LEVEL  level;	  // default log level
+		ice::E_LOG_LEVEL  level;	  // default log level
 		uint32_t each_file_size_max;//每个日志的最大字节数
 		char dir_name[NAME_MAX];//日志目录
-		uint32_t max_file;//最大文件数量
 		std::string file_pre_name;//文件名前缀
 		log_info_t(){
-			level = log_lvl_debug;
-			each_file_size_max = 0;
+			level = ice::log_lvl_debug;
 			memset(dir_name, 0, sizeof(dir_name));
-			max_file = 0;
 		}
 	}log_info;
 
-	int s_max_log_files;//轮转模式中文件数量
-	E_LOG_DEST s_log_dest = log_dest_terminal; // write log to terminal by default
+	ice::E_LOG_DEST s_log_dest = ice::log_dest_terminal; // write log to terminal by default
 	int s_multi_thread;
 	int  s_logtime_interval; // 每个日志文件记录日志的总时间（秒）
 	int s_has_init;//是否初始化
@@ -51,259 +47,169 @@ namespace{
 	};
 	const char* color_end = "\e[m";
 	pthread_mutex_t g_shift_fd_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define SHIFT_FD_LOCK() \
-	if (s_multi_thread){\
-		pthread_mutex_lock(&g_shift_fd_mutex);\
+	#define SHIFT_FD_LOCK() \
+		if (s_multi_thread){\
+			pthread_mutex_lock(&g_shift_fd_mutex);\
+		}
+	#define SHIFT_FD_UNLOCK() \
+		if (s_multi_thread){\
+			pthread_mutex_unlock(&g_shift_fd_mutex);\
+		}
+
+	struct fds_t {
+		int		seq;
+		int		opfd;//文件FD
+		int		day;//一年中的天数
+		char	base_filename[64];//基本文件名
+		int		base_filename_len;//基本文件名长度
+		int  	cur_day_seq_count;//当天轮转文件的个数
+	} fds_info[ice::log_lvl_max];
+
+	//************************************
+	// Brief:     生成日志文件路径
+	// Returns:   void	
+	// Parameter: int lvl	日志等级
+	// Parameter: int seq	日志序号
+	// Parameter: char * file_name	产生的日志文件路径
+	// Parameter: const struct tm * tm 时间
+	//************************************
+	inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
+	{
+		assert((lvl >= ice::log_lvl_emerg) && (lvl < ice::log_lvl_max));
+
+		if (s_logtime_interval) {
+			time_t t = time(0) / s_logtime_interval * s_logtime_interval;
+			struct tm tmp_tm;
+			localtime_r(&t, &tmp_tm);
+
+			sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", log_info.dir_name, fds_info[lvl].base_filename,
+				tmp_tm.tm_year + 1900, tmp_tm.tm_mon + 1, tmp_tm.tm_mday, tmp_tm.tm_hour, tmp_tm.tm_min);
+		} else {
+			sprintf(file_name, "%s/%s%04d%02d%02d%07d", log_info.dir_name, fds_info[lvl].base_filename,
+				tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
+		}
 	}
-#define SHIFT_FD_UNLOCK() \
-	if (s_multi_thread){\
-		pthread_mutex_unlock(&g_shift_fd_mutex);\
+
+	//************************************
+	// Brief:     非轮转模式获取日志序号
+	// Returns:   int	日志序号
+	// Parameter: int lvl	日志等级
+	//************************************
+	int get_log_seq_nonrecycle(int lvl)
+	{
+		char file_name[FILENAME_MAX];
+
+		struct tm tm;
+		time_t now = time(0);
+		localtime_r(&now, &tm);	
+
+		int seq = 0;
+		for (; seq != MAX_LOG_CNT; ++seq) {
+			gen_log_file_path(lvl, seq, file_name, &tm);
+			if (access(file_name, F_OK) == -1) {
+				break;
+			}
+		}
+
+		return (seq ? (seq - 1) : 0);
 	}
 
-struct fds_t {
-	int		seq;
-	int		opfd;//文件FD
-	int		day;//一年中的天数
-	char	base_filename[64];//基本文件名
-	int		base_filename_len;//基本文件名长度
-	int  	cur_day_seq_count;//当天轮转文件的个数
-} fds_info[log_lvl_max];
+	inline int get_logfile_seqno(const char* filename, int loglvl)
+	{
+		return atoi(&filename[fds_info[loglvl].base_filename_len + 8]);
+	}
 
-//************************************
-// Brief:     生成日志文件路径
-// Returns:   void	
-// Parameter: int lvl	日志等级
-// Parameter: int seq	日志序号
-// Parameter: char * file_name	产生的日志文件路径
-// Parameter: const struct tm * tm 时间
-//************************************
-inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
-{
-	assert((lvl >= log_lvl_emerg) && (lvl < log_lvl_max));
+	inline void log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
+	{
+		assert((lvl >= ice::log_lvl_emerg) && (lvl < ice::log_lvl_max));
 
-	if (s_logtime_interval) {
-		time_t t = time(0) / s_logtime_interval * s_logtime_interval;
-		struct tm tmp_tm;
-		localtime_r(&t, &tmp_tm);
-
-		sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", log_info.dir_name, fds_info[lvl].base_filename,
-			tmp_tm.tm_year + 1900, tmp_tm.tm_mon + 1, tmp_tm.tm_mday, tmp_tm.tm_hour, tmp_tm.tm_min);
-	} else {
-		sprintf(file_name, "%s/%s%04d%02d%02d%07d", log_info.dir_name, fds_info[lvl].base_filename,
+		sprintf(file_name, "%s%04d%02d%02d%07d", fds_info[lvl].base_filename,
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
 	}
-}
 
-//************************************
-// Brief:     非轮转模式获取日志序号
-// Returns:   int	日志序号
-// Parameter: int lvl	日志等级
-//************************************
-int get_log_seq_nonrecycle(int lvl)
-{
-	char file_name[FILENAME_MAX];
+	inline int get_log_time()
+	{
+		return time(0) / s_logtime_interval;
+	}
 
-	struct tm tm;
-	time_t now = time(0);
-	localtime_r(&now, &tm);	
+	inline int request_log_seq(int lvl)
+	{
+		return  get_log_seq_nonrecycle(lvl);
+	}
 
-	int seq = 0;
-	for (; seq != MAX_LOG_CNT; ++seq) {
-		gen_log_file_path(lvl, seq, file_name, &tm);
-		if (access(file_name, F_OK) == -1) {
-			break;
+	int open_fd(int lvl, const struct tm* tm)
+	{
+		int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
+
+		char file_name[FILENAME_MAX];
+		gen_log_file_path(lvl, fds_info[lvl].seq, file_name, tm);
+
+		fds_info[lvl].opfd = open(file_name, flag, 0644);
+		if (fds_info[lvl].opfd != -1) {
+			if (  fds_info[lvl].day != tm->tm_yday ) {
+				fds_info[lvl].cur_day_seq_count = 1;
+				fds_info[lvl].day = tm->tm_yday;
+			} else {
+				fds_info[lvl].cur_day_seq_count ++ ;
+			}
+
+			flag  = fcntl(fds_info[lvl].opfd, F_GETFD, 0);
+			flag |= FD_CLOEXEC;
+			fcntl(fds_info[lvl].opfd, F_SETFD, flag);
 		}
+
+		return fds_info[lvl].opfd;
 	}
 
-	return (seq ? (seq - 1) : 0);
-}
+	int shift_fd(int lvl, const struct tm* tm)
+	{
+		SHIFT_FD_LOCK();
 
-inline int get_logfile_seqno(const char* filename, int loglvl)
-{
-	return atoi(&filename[fds_info[loglvl].base_filename_len + 8]);
-}
-
-inline void log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
-{
-	assert((lvl >= log_lvl_emerg) && (lvl < log_lvl_max));
-
-	sprintf(file_name, "%s%04d%02d%02d%07d", fds_info[lvl].base_filename,
-		tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
-}
-
-int get_log_seq_recycle(int lvl)
-{
-	char file_name[FILENAME_MAX] = { 0 };
-
-	DIR* dir = opendir(log_info.dir_name);
-	if (!dir) {
-		return -1;
-	}
-
-	struct dirent* dentry;
-	while ((dentry = readdir(dir))) {
-		if ( (strncmp(dentry->d_name, fds_info[lvl].base_filename,
-			fds_info[lvl].base_filename_len) == 0)
-			&& (strcmp(dentry->d_name, file_name) > 0) ) {
-				snprintf(file_name, sizeof(file_name), "%s", dentry->d_name);
+		if ( unlikely((fds_info[lvl].opfd < 0) && (open_fd(lvl, tm) < 0)) ) {
+			SHIFT_FD_UNLOCK();
+			return -1;
 		}
-	}
 
-	closedir(dir);
-
-	struct tm tm;
-	time_t now = time(0);
-	localtime_r(&now, &tm);
-
-	if (file_name[0] == '\0') {
-		log_file_name(lvl, 0, file_name, &tm);
-	}
-
-	char* date  = &file_name[fds_info[lvl].base_filename_len];
-	char  today[9];
-	int   seqno = get_logfile_seqno(file_name, lvl);
-
-	snprintf(today, sizeof(today), "%4d%02d%02d",
-		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
-	if (strncmp(today, date, 8)) {
-		++seqno;
-	}
-
-	return seqno % s_max_log_files;
-}
-
-inline int get_log_time()
-{
-	return time(0) / s_logtime_interval;
-}
-
-inline int request_log_seq(int lvl)
-{
-	return (s_max_log_files ? get_log_seq_recycle(lvl) : get_log_seq_nonrecycle(lvl));
-}
-
-void rm_files_by_seqno(int loglvl, int seqno, const struct tm* tm)
-{
-	char filename[128];
-
-	log_file_name(loglvl, seqno, filename, tm);
-
-	DIR* dir = opendir(log_info.dir_name);
-	if (!dir) {
-		return;
-	}
-
-	struct dirent* dentry;
-	while ((dentry = readdir(dir))) {
-		if ( (seqno == get_logfile_seqno(dentry->d_name, loglvl))
-			&& (strncmp(dentry->d_name, fds_info[loglvl].base_filename, fds_info[loglvl].base_filename_len) == 0)
-			&& (strcmp(filename, dentry->d_name) != 0) ) {
-				char filepath[FILENAME_MAX];
-				snprintf(filepath, sizeof(filepath), "%s/%s", log_info.dir_name, dentry->d_name);
-				remove(filepath);
-				// if there are duplicated seqno caused by the '!dir' above and thus leads to some bugs, we should remove the 'break;' below
-				break;
-		}
-	}
-
-	closedir(dir);
-}
-
-int open_fd(int lvl, const struct tm* tm)
-{
-	int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
-
-	char file_name[FILENAME_MAX];
-	gen_log_file_path(lvl, fds_info[lvl].seq, file_name, tm);
-
-	fds_info[lvl].opfd = open(file_name, flag, 0644);
-	if (fds_info[lvl].opfd != -1) {
-		if (  fds_info[lvl].day != tm->tm_yday ) {
-			fds_info[lvl].cur_day_seq_count = 1;
-			fds_info[lvl].day = tm->tm_yday;
-			s_max_log_files = log_info.max_file;//隔天了，恢复日志模式
+		//off_t length = lseek(fds_info[lvl].opfd, 0, SEEK_END);
+		if (s_logtime_interval) {
+			if (likely(fds_info[lvl].seq == get_log_time())) {//todo 判断文件大于上限是否重新打开一个文件
+				SHIFT_FD_UNLOCK();
+				return 0;
+			}
 		} else {
-			fds_info[lvl].cur_day_seq_count ++ ;
-		}
-		if  ( s_max_log_files !=0  //轮转模式
-			&&  fds_info[lvl].cur_day_seq_count > s_max_log_files/*可用文件写完了*/){
-			//直接关闭轮转模式
-			fds_info[lvl].seq = s_max_log_files ;
-			s_max_log_files = 0;
+			if (likely((fds_info[lvl].day == tm->tm_yday))) {
+				SHIFT_FD_UNLOCK();
+				return 0;
+			}
 		}
 
-		flag  = fcntl(fds_info[lvl].opfd, F_GETFD, 0);
-		flag |= FD_CLOEXEC;
-		fcntl(fds_info[lvl].opfd, F_SETFD, flag);
-		// remove files only if logfile recyle is used
-		if (s_max_log_files) {
-			rm_files_by_seqno(lvl, fds_info[lvl].seq, tm);
+		close(fds_info[lvl].opfd);
+
+		if (s_logtime_interval) {
+			fds_info[lvl].seq = get_log_time();
+		} else {
+			// if logfile recycle is not used
+			if (fds_info[lvl].day != tm->tm_yday) {
+				fds_info[lvl].seq = 0;
+			} else {
+				fds_info[lvl].seq = (fds_info[lvl].seq + 1) % MAX_LOG_CNT;
+			}
 		}
-	}
 
-	return fds_info[lvl].opfd;
-}
-
-int shift_fd(int lvl, const struct tm* tm)
-{
-	SHIFT_FD_LOCK();
-
-	if ( unlikely((fds_info[lvl].opfd < 0) && (open_fd(lvl, tm) < 0)) ) {
+		int ret = open_fd(lvl, tm);
 		SHIFT_FD_UNLOCK();
-		return -1;
+		return ret;
 	}
-
-	off_t length = lseek(fds_info[lvl].opfd, 0, SEEK_END);
-	if (s_logtime_interval) {
-		if (likely(fds_info[lvl].seq == get_log_time())) {
-			SHIFT_FD_UNLOCK();
-			return 0;
-		}
-	} else {
-		if (likely(((uint32_t)length < log_info.each_file_size_max) && (fds_info[lvl].day == tm->tm_yday))) {
-			SHIFT_FD_UNLOCK();
-			return 0;
-		}
-	}
-
-	close(fds_info[lvl].opfd);
-
-	if (s_logtime_interval) {
-		fds_info[lvl].seq = get_log_time();
-	} else if (s_max_log_files) {
-		// if logfile recycle is used
-		fds_info[lvl].seq = (fds_info[lvl].seq + 1) % s_max_log_files;
-	} else {
-		// if logfile recycle is not used
-		if (fds_info[lvl].day != tm->tm_yday) {
-			fds_info[lvl].seq = 0;
-		} else {
-			fds_info[lvl].seq = (fds_info[lvl].seq + 1) % MAX_LOG_CNT;
-		}
-	}
-
-	int ret = open_fd(lvl, tm);
-	SHIFT_FD_UNLOCK();
-	return ret;
-}
 
 }//end of namespace 
 
-int log_init_by_time(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, int logtime)
+int ice::setup_log_by_time(const char* dir, E_LOG_LEVEL lvl, const char* pre_name, uint32_t logtime)
 {
 	assert((logtime > 0) && (logtime <= 30000000));
 
 	s_logtime_interval = logtime * 60;
 
-	int ret = log_init(dir, lvl, 0, 0, pre_name);
-	BOOT_LOG(ret, "Set log dir %s, per file size by time", dir);
-}
-
-int log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
-	int maxfiles, const char* pre_name)
-{
 	int ret_code = -1;
-	assert((maxfiles >= 0) && (maxfiles <= MAX_LOG_CNT));
 
 	if (!dir || (strlen(dir) == 0)) {
 		goto loop_return;
@@ -314,13 +220,6 @@ int log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
 		goto loop_return;
 	}
 
-	//log file is no larger than 2GB
-	static const uint32_t max_size = 1 << 31;
-	if ( size > max_size ) {
-		fprintf(stderr, "init log error, invalid log size=%d\n", size);
-		goto loop_return;
-	}
-
 	//必须可写
 	if (0 != access(dir, W_OK)) {
 		fprintf(stderr, "access log dir %s error, %m\n", dir);
@@ -328,9 +227,6 @@ int log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
 	}
 
 	log_info.level = lvl;
-	log_info.each_file_size_max      = size;
-	log_info.max_file = maxfiles;
-	s_max_log_files = maxfiles;
 
 	strncpy(log_info.dir_name, dir, sizeof(log_info.dir_name) - 1);
 	log_info.file_pre_name = pre_name;
@@ -352,25 +248,22 @@ int log_init(const char* dir, E_LOG_LEVEL lvl, uint32_t size,
 	ret_code    = 0;
 
 loop_return:
-	BOOT_LOG(ret_code, "Set log dir %s, per file size %g MB", dir, size / 1024.0 / 1024.0);
+	BOOT_LOG(ret_code, "Set log dir %s, per file name %s, time %u", dir, pre_name, logtime);
 }
 
-void set_log_dest(E_LOG_DEST dest)
+void ice::log_set_dest(E_LOG_DEST dest)
 {
 	assert(s_has_init);
 	s_log_dest = dest;
 }
 
-void log_fini()
+void ice::destroy_log()
 {
 	assert(s_has_init);
 
 	log_info.level     = log_lvl_debug;
-	log_info.each_file_size_max      = 0;
-	s_max_log_files = 0;
 	s_log_dest    = log_dest_terminal;
 	s_has_init      = 0;
-	log_info.max_file = 0;
 	s_logtime_interval   = 0;
 
 	log_info.file_pre_name.clear();
@@ -384,12 +277,12 @@ void log_fini()
 	memset(fds_info, 0, sizeof(fds_info));
 }
 
-void enable_multi_thread()
+void ice::log_enable_multi_thread()
 {
 	s_multi_thread = 1;
 }
 
-void write_log( int lvl,uint32_t key, const char* fmt, ... )
+void ice::write_log( int lvl,uint32_t key, const char* fmt, ... )
 {
 	if (lvl > log_info.level) {
 		return;
@@ -438,7 +331,7 @@ void write_log( int lvl,uint32_t key, const char* fmt, ... )
 	write(fds_info[lvl].opfd, log_buffer, end + pos);
 }
 
-void write_syslog( int lvl, const char* fmt, ... )
+void ice::write_syslog( int lvl, const char* fmt, ... )
 {
 	if (lvl > log_info.level) {
 		return;
@@ -481,7 +374,7 @@ void write_syslog( int lvl, const char* fmt, ... )
 	va_end(ap);
 }
 
-void boot_log( int ok, int dummy, const char* fmt, ... )
+void ice::boot_log( int ok, int dummy, const char* fmt, ... )
 {
 #define SCREEN_COLS	80
 #define BOOT_OK		"\e[1m\e[32m[ OK ]\e[m"
