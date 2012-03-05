@@ -28,86 +28,6 @@
 
 #define FOREACH_PREV(container, it) \
 	for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
-//************************************
-// Brief:     由字符串转换为所需类型
-// Returns:   void
-// Parameter: T & value	所需类型
-// Parameter: const std::string & s	待转换的字符串
-//************************************
-template <class T> 
-inline void convert_from_string(T &value, const std::string &s) {
-	std::stringstream ss(s);
-	ss >> value;
-}
-
-template<typename T>
-inline void safe_delete(T p)
-{
-	delete p;
-	p = NULL;
-};
-
-template<typename T>
-inline void safe_delete_arr(T p)
-{
-	delete []p;
-	p = NULL;
-};
-
-//************************************
-// Brief:     由数组名,获取数组个数
-// Returns:   uint32_t	数组个数
-// Parameter: const T & name 数组名称
-//************************************
-template<typename T>
-inline uint32_t get_arr_num(const T& name)
-{
-	return sizeof(name)/sizeof(name[0]);
-};
-
-//************************************
-// Brief:     切割字符(以单个符号为间断)like: 1,2,3 or 1;2;3 or aa/b/cc ...
-// Returns:   void
-// Parameter: std::vector<T> & dst_result 切割后的结果
-// Parameter: std::string & src_str	待切割的字符串
-// Parameter: char tag	切割依据符号
-//************************************
-template <typename T>
-inline void cat_string(std::vector<T>& dst_result, std::string& src_str, char tag)
-{
-	std::stringstream ss(src_str);        
-	std::string sub_str;        
-	while(std::getline(ss, sub_str, tag)){
-		//以tag为间隔分割str的内容 
-		T i;
-		convert_from_string(i,sub_str);
-		dst_result.push_back(i);
-	}
-};
-
-//删除(非空)指针并置空
-//使用方法://for_each(vector.begin(),vector.end(),DeletePtr());
-struct DeletePtr
-{
-	template<typename T>
-	void operator() (const T* ptr) const{
-		if (ptr){
-			safe_delete(ptr);
-		}
-	}
-};
-
-//删除(非空)map中val位置上的指针并置空
-//用法://for_each(map.begin(), map.end(), DeletePair());
-struct DeletePair
-{
-	template<typename Ty1, typename Ty2>
-	void operator() (const std::pair<Ty1, Ty2> &ptr) const{
-		if (ptr.second){
-			safe_delete(ptr.second);
-		}		
-	}
-};
 
 //////////////////////////////////////////////////////////////////////////
 //使用宏管理成员变量
@@ -128,3 +48,92 @@ struct DeletePair
 		private:	varType varName;\
 		public:		const varType& get_##varName(void) { return varName; } \
 		public:		void set_##varName(const varType& var) { varName = var; }
+
+namespace ice{
+	//************************************
+	// Brief:     由字符串转换为所需类型
+	// Returns:   void
+	// Parameter: T & value	所需类型
+	// Parameter: const std::string & s	待转换的字符串
+	// notice: Parameter: const std::string & s
+	// 1.(中间有空格的话,它会用空格分割,只取空格前的部分)
+	// 2. 如果你习惯了C分割的atoi直接将空字符串转成0，那么用stringstream时，千万不要做这种事情
+	//convert_from_string(x, "");
+	//x输出不一定为0
+	//************************************
+	template <class T> 
+	inline void convert_from_string(T &value, const std::string &s) {
+		std::stringstream ss(s);
+		ss >> value;
+	}
+
+	template<typename T>
+	inline void safe_delete(T p)
+	{
+		delete p;
+		p = NULL;
+	};
+
+	template<typename T>
+	inline void safe_delete_arr(T p)
+	{
+		delete []p;
+		p = NULL;
+	};
+
+	//************************************
+	// Brief:     由数组名,获取数组个数
+	// Returns:   uint32_t	数组个数
+	// Parameter: const T & name 数组名称
+	//************************************
+	template<typename T>
+	inline uint32_t get_arr_num(const T& name)
+	{
+		return sizeof(name)/sizeof(name[0]);
+	};
+
+	//************************************
+	// Brief:     切割字符(以单个符号为间断)like: 1,2,3 or 1;2;3 or aa/b/cc ...
+	// Returns:   void
+	// Parameter: std::vector<T> & dst_result 切割后的结果
+	// Parameter: std::string & src_str	待切割的字符串
+	// Parameter: char tag	切割依据符号
+	//************************************
+	template <typename T>
+	inline void cat_string(std::vector<T>& dst_result, std::string& src_str, char tag)
+	{
+		std::stringstream ss(src_str);        
+		std::string sub_str;        
+		while(std::getline(ss, sub_str, tag)){
+			//以tag为间隔分割str的内容 
+			T i;
+			convert_from_string(i,sub_str);
+			dst_result.push_back(i);
+		}
+	};
+
+	//删除(非空)指针并置空
+	//使用方法://for_each(vector.begin(),vector.end(),DeletePtr());
+	struct DeletePtr
+	{
+		template<typename T>
+		void operator() (const T* ptr) const{
+			if (ptr){
+				safe_delete(ptr);
+			}
+		}
+	};
+
+	//删除(非空)map中val位置上的指针并置空
+	//用法://for_each(map.begin(), map.end(), DeletePair());
+	struct DeletePair
+	{
+		template<typename Ty1, typename Ty2>
+		void operator() (const std::pair<Ty1, Ty2> &ptr) const{
+			if (ptr.second){
+				safe_delete(ptr.second);
+			}		
+		}
+	};
+
+}//end namespace ice

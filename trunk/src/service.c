@@ -167,7 +167,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 fail:
 	do_destroy_shmq(m_bind_elem);
 	net_exit();
-	log_fini();
+	destroy_log();
 	exit(0);
 }
 
