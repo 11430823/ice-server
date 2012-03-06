@@ -8,7 +8,8 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 
-#include <ice_lib/lib_tcp.h>
+#include <lib_tcp.h>
+#include <lib_file.h>
 
 #include "tcp.h"
 #include "inet_utils.h"
@@ -233,7 +234,7 @@ int safe_tcp_accept(int sockfd, struct sockaddr_in* peer, int nonblock)
 		}
 	}
 
-	if (nonblock && (lib_tcp::set_io_block(newfd, false) == -1)) {
+	if (nonblock && (ice::set_io_block(newfd, false) == -1)) {
 		err   = errno;
 		close(newfd);
 		errno = err;
@@ -273,7 +274,7 @@ int safe_tcp_connect(const char* ipaddr, in_port_t port, int timeout, int nonblo
 		set_sock_snd_timeo(sockfd, 0);
 	}
 
-	lib_tcp::set_io_block(sockfd, !nonblock);
+	ice::set_io_block(sockfd, !nonblock);
 
 	return sockfd;
 //------------------------

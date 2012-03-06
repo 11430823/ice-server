@@ -9,7 +9,7 @@
 
 #include <sys/epoll.h>
 
-#include <ice_lib/lib_list.h>
+#include <lib_list.h>
 
 #define CN_NEED_CLOSE	0x01
 #define CN_NEED_POLLIN	0x02//普通或优先级带数据可读

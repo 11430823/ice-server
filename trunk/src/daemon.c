@@ -7,8 +7,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <ice_lib/lib_util.h>
-#include <ice_lib/log.h>
+#include <lib_util.h>
+#include <lib_log.h>
 
 #include "daemon.h"
 #include "bind_conf.h"

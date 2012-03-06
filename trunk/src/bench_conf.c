@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <sstream>
 
-#include <ice_lib/log.h>
+#include <lib_log.h>
 
 #include "bench_conf.h"
 
@@ -92,14 +92,6 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(m_log_max_byte, key, "log", "size")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(m_log_max_files, key, "log", "max_files")){
-		ret = -1;
-		goto ret;
-	}
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -112,8 +104,6 @@ bench_conf_t::bench_conf_t()
 	m_max_fd_num = 0;
 	m_daemon = false;
 	m_log_level = 0;
-	m_log_max_byte = 0;
-	m_log_max_files = 0;
 	m_log_save_next_file_interval_min = 0;
 	m_fd_time_out = 0;
 	m_page_size_max = 0;
@@ -150,16 +140,6 @@ ret_return:
 std::string bench_conf_t::get_log_dir() const
 {
 	return m_log_dir;
-}
-
-uint32_t bench_conf_t::get_log_max_byte() const
-{	
-	return m_log_max_byte;
-}
-
-uint32_t bench_conf_t::get_log_max_files() const
-{
-	return m_log_max_files;
 }
 
 uint32_t bench_conf_t::get_log_save_next_file_interval_min() const

@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
-#include <ice_lib/lib_tcp.h>
+#include <lib_file.h>
 
 #include "mcast.h"
 #include "service.h"
@@ -89,7 +89,7 @@ int asyn_connect_to_svr(const char* ipaddr, in_addr_t port, int bufsz, void (*ca
 // 					ipaddr, port, errno, strerror(errno));
 		return -1;
 	}
-	lib_tcp::set_io_block(sockfd, false);
+	ice::set_io_block(sockfd, false);
 
 	// connect to svr
 	int done = 1;

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <ice_lib/lib_util.h>
-#include <ice_lib/log.h>
+#include <lib_util.h>
+#include <lib_log.h>
 
 #include "service.h"
 #include "bind_conf.h"
@@ -144,9 +144,8 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	char prefix[10] = { 0 };
 	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
 	prefix[len] = '_';
-	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
-		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), prefix,
-		g_bench_conf.get_log_save_next_file_interval_min());
+	ice::setup_log_by_time(g_bench_conf.get_log_dir().c_str(), (ice::E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
+		prefix, g_bench_conf.get_log_save_next_file_interval_min());
 
 	//释放资源(从父进程继承来的资源)
 	g_shmq.close_pipe(n_inited_bc, true);
@@ -167,7 +166,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 fail:
 	do_destroy_shmq(m_bind_elem);
 	net_exit();
-	destroy_log();
+	ice::destroy_log();
 	exit(0);
 }
 
