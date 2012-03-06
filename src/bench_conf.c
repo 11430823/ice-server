@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include <lib_log.h>
+#include <lib_util.h>
 
 #include "bench_conf.h"
 
@@ -33,8 +34,7 @@ namespace {
 			for (uint32_t i = 0; i < len; i++){
 				val += a[i];
 			}
-			std::stringstream ss(val);
-			ss >> data;
+			ice::convert_from_string(data, val);
 		}
 		g_strfreev(a);
 		return 0;
@@ -92,6 +92,14 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
+	if (0 != get_val(m_log_save_next_file_interval_min, key, "log", "save_next_file_interval_min")){
+		ret = -1;
+		goto ret;
+	}
+	if (0 != get_val(m_core_size, key, "core", "size")){
+		ret = -1;
+		goto ret;
+	}
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -135,14 +143,4 @@ ret_return:
 		g_key_file_free(file_key);
 	}
 	return str;
-}
-
-std::string bench_conf_t::get_log_dir() const
-{
-	return m_log_dir;
-}
-
-uint32_t bench_conf_t::get_log_save_next_file_interval_min() const
-{
-	return m_log_save_next_file_interval_min;
 }

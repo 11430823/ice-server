@@ -21,10 +21,10 @@ namespace {
 
 	std::vector<std::string> g_argvs;
 	const char version[] = "0.0.1";
-	const int core_size = 1 << 30;
 
 	void sigterm_handler(int signo) 
 	{
+		//停止服务（不重启）
 		ALERT_LOG("SIG_TERM FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
 		g_daemon.m_stop     = true;
 		g_daemon.m_restart  = false;
@@ -32,6 +32,7 @@ namespace {
 
 	void sighup_handler(int signo) 
 	{
+		//停止&&重启服务
 		ALERT_LOG("SIGHUP FROM [pid=%d]", getpid());
 		g_daemon.m_restart  = true;
 		g_daemon.m_stop     = true;
@@ -64,10 +65,10 @@ namespace {
 		}
 
 		/* set core dump */
-		rlim.rlim_cur = core_size;
-		rlim.rlim_max = core_size;
+		rlim.rlim_cur = g_bench_conf.get_m_core_size();
+		rlim.rlim_max = g_bench_conf.get_m_core_size();
 		if (-1 == setrlimit(RLIMIT_CORE, &rlim)) {
-			ALERT_LOG("INIT CORE FILE RESOURCE FAILED [CORE DUMP SIZE:%d]", core_size);
+			ALERT_LOG("INIT CORE FILE RESOURCE FAILED [CORE DUMP SIZE:%d]", g_bench_conf.get_m_core_size());
 		}
 	}
 
@@ -128,7 +129,7 @@ void daemon_t::prase_args( int argc, char** argv )
 	set_signal();
 	save_argv(argc, argv);
 	if (g_bench_conf.get_m_daemon()){
-		daemon (1, 1);
+		daemon(1, 1);
 	}
 }
 

@@ -1,11 +1,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <ice_server/net_if.h>
-#include <ice_server/ice_dll.h>
-#include <ice_server/bench_conf.h>
-#include <ice_lib/log.h>
-#include <ice_lib/timer.h>
+#include <net_if.h>
+#include <ice_dll.h>
+#include <bench_conf.h>
+#include <lib_log.h>
+#include <lib_timer.h>
 
 #pragma pack(1)
 /* SERVER和CLIENT的协议包头格式 */

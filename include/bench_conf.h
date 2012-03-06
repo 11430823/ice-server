@@ -24,20 +24,17 @@ public:
 	// Returns:   int(0:正确,其它:错误)
 	//************************************
 	int load();
-	std::string get_log_dir()const;
-	uint32_t get_log_save_next_file_interval_min()const;
-	time_t get_fd_time_out()const;
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_max_fd_num);//打开文件的最大数量
 	PROPERTY_READONLY_DEFAULT(bool, m_daemon);//是否后台运行
 	PROPERTY_READONLY_DEFAULT(std::string, m_liblogic_path);////代码段SO路径
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_log_level);//日志等级
 	PROPERTY_READONLY_DEFAULT(time_t, m_fd_time_out);//连接的FD超时秒数,0:无超时
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_page_size_max);//数据包的最大字节数
+	PROPERTY_READONLY_DEFAULT(std::string, m_log_dir);//日志目录
+	PROPERTY_READONLY_DEFAULT(uint32_t, m_log_save_next_file_interval_min);//每多少时间(分钟)重新保存文件中(新文件)
+	PROPERTY_READONLY_DEFAULT(uint32_t, m_core_size);//core文件的大小，字节
 private:
-	std::string m_log_dir;//日志目录
-	uint32_t m_log_save_next_file_interval_min;//每多少时间(分钟)重新保存文件中(新文件)
 	//std::string libdata_path;//数据段SO路径//mark 增加在线加载功能
-	
 };
 
 extern bench_conf_t g_bench_conf;

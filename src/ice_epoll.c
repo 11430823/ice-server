@@ -530,7 +530,7 @@ int ep_info_t::do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer,
 		m_fds[fd].sk.remote_ip = peer->sin_addr.s_addr;
 		m_fds[fd].sk.remote_port = peer->sin_port;
 		m_fds[fd].sk.last_tm = ice::get_now_tv()->tv_sec;
-		KDEBUG_LOG(0, "time now :%ld", m_fds[fd].sk.last_tm);
+		KDEBUG_LOG(0, "time now has peer :%ld", m_fds[fd].sk.last_tm);
 	}
 	KDEBUG_LOG(0, "time now :%ld", ice::get_now_tv()->tv_sec);
 	m_fds[fd].bc_elem = bc_elem;
