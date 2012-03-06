@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <dlfcn.h>
 
-#include <ice_lib/log.h>
+#include <lib_log.h>
 
 #include "ice_dll.h"
 #include "service.h"

@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include <ice_lib/lib_util.h>
+#include <lib_util.h>
 
 class bench_conf_t 
 {
@@ -25,8 +25,6 @@ public:
 	//************************************
 	int load();
 	std::string get_log_dir()const;
-	uint32_t get_log_max_byte()const;
-	uint32_t get_log_max_files()const;
 	uint32_t get_log_save_next_file_interval_min()const;
 	time_t get_fd_time_out()const;
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_max_fd_num);//打开文件的最大数量
@@ -37,8 +35,6 @@ public:
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_page_size_max);//数据包的最大字节数
 private:
 	std::string m_log_dir;//日志目录
-	uint32_t m_log_max_byte;//日志每个文件的最大大小(字节)
-	uint32_t m_log_max_files;//日志文件的最大数量
 	uint32_t m_log_save_next_file_interval_min;//每多少时间(分钟)重新保存文件中(新文件)
 	//std::string libdata_path;//数据段SO路径//mark 增加在线加载功能
 	

@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <ice_lib/lib_util.h>
-#include <ice_lib/log.h>
+#include <lib_util.h>
+#include <lib_log.h>
 
 #include "daemon.h"
 #include "ice_dll.h"
@@ -35,9 +35,8 @@ int main(int argc, char* argv[]){
 
 	g_daemon.prase_args(argc, argv);
 
-	log_init_ex(g_bench_conf.get_log_dir().c_str(), (E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
-		g_bench_conf.get_log_max_byte(), g_bench_conf.get_log_max_files(), NULL,
-		g_bench_conf.get_log_save_next_file_interval_min());
+	ice::setup_log_by_time(g_bench_conf.get_log_dir().c_str(), (ice::E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
+		NULL, g_bench_conf.get_log_save_next_file_interval_min());
 
 	if (0 != g_dll.register_plugin()){
 		return -1;
@@ -87,6 +86,6 @@ int main(int argc, char* argv[]){
 	//TODO 下面没有检查
 	net_exit();
 	shmq_destroy(0, g_bind_conf.get_elem_num());
-	destroy_log();
+	ice::destroy_log();
 	return 0;
 }

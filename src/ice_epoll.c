@@ -11,10 +11,10 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include <ice_lib/lib_util.h>
-#include <ice_lib/log.h>
-#include <ice_lib/timer.h>
-#include <ice_lib/lib_tcp.h>
+#include <lib_util.h>
+#include <lib_log.h>
+#include <lib_timer.h>
+#include <lib_file.h>
 
 #include "ice_epoll.h"
 #include "service.h"
@@ -347,7 +347,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 
 	int listenfd = safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
 	if (-1 != listenfd) {
-		lib_tcp::set_io_block(listenfd, false);
+		ice::set_io_block(listenfd, false);
 
 		g_epi.do_add_conn(listenfd, fd_type_listen, 0, bc_elem);
 		ret_code = 0;
@@ -529,10 +529,10 @@ int ep_info_t::do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer,
 	if (peer) {
 		m_fds[fd].sk.remote_ip = peer->sin_addr.s_addr;
 		m_fds[fd].sk.remote_port = peer->sin_port;
-		m_fds[fd].sk.last_tm = get_now_tv()->tv_sec;
-		KDEBUG_LOG(0, "time now :%d", m_fds[fd].sk.last_tm);
+		m_fds[fd].sk.last_tm = ice::get_now_tv()->tv_sec;
+		KDEBUG_LOG(0, "time now :%ld", m_fds[fd].sk.last_tm);
 	}
-	KDEBUG_LOG(0, "time now :%d", get_now_tv()->tv_sec);
+	KDEBUG_LOG(0, "time now :%ld", ice::get_now_tv()->tv_sec);
 	m_fds[fd].bc_elem = bc_elem;
 	m_max_fd = m_max_fd > fd ? m_max_fd : fd;
 	m_fd_count++;
@@ -552,7 +552,7 @@ int ep_info_t::loop( int max_len )
 		return -1;
 	}
 
-	renew_now();
+	ice::renew_now();
 	if (g_is_parent) {
 		handle_send_queue();//mark
 	}

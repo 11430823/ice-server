@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ice_lib/log.h>
-#include <ice_lib/lib_util.h>
+#include <lib_log.h>
+#include <lib_util.h>
 
 #include "bind_conf.h"
 #include "daemon.h"

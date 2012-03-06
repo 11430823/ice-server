@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <ice_lib/iatomic.h>
+#include <lib_iatomic.h>
 
 enum {
 	DATA_BLOCK = 0,

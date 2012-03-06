@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 
 #include <glib.h>
-#include <ice_lib/lib_util.h>
+#include <lib_util.h>
 
 #include "ice_dll.h"
 #include "service.h"
