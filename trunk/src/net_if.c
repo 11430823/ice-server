@@ -227,8 +227,8 @@ int net_send(int fd, const void* data, uint32_t len)
 			
 		memcpy(g_epi.m_fds[fd].cb.sendptr + g_epi.m_fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
 		g_epi.m_fds[fd].cb.sendlen += len - send_bytes;
-		if (g_is_parent && (SEND_BUF_LIMIT_SIZE > 0)
-				&& (g_epi.m_fds[fd].cb.sendlen > SEND_BUF_LIMIT_SIZE)) {
+		if (g_is_parent && (g_bench_conf.get_m_page_size_max() > 0)
+				&& (g_epi.m_fds[fd].cb.sendlen > g_bench_conf.get_m_page_size_max())) {
 // 			ERROR_LOG("send buf limit exceeded: fd=%d buflen=%u limit=%u",
 // 						fd, epi.fds[fd].cb.sendlen, g_send_buf_limit_size);
 			do_del_conn(fd, g_is_parent);

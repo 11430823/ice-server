@@ -62,12 +62,9 @@ fdsession_t* get_fdsess( int fd )
 static inline void
 handle_process(uint8_t* recvbuf, int rcvlen, int fd)
 {
-
 	fdsession_t* fdsess = get_fdsess(fd);
 	if (fdsess) {
-
 		if (g_dll.on_cli_pkg(recvbuf, rcvlen, fdsess)) {
-
 			close_client_conn(fd);
 		}
 	}

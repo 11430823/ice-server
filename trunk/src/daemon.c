@@ -135,11 +135,11 @@ void daemon_t::prase_args( int argc, char** argv )
 
 daemon_t::~daemon_t()
 {
-	if (g_daemon.m_restart && !g_daemon.m_prog_name.empty()) {
+	if (m_restart && !m_prog_name.empty()) {
 		killall_children();
 
 		ALERT_LOG("SERVER RESTARTING...");
-		chdir(g_daemon.m_current_dir.c_str());
+		chdir(m_current_dir.c_str());
 		char* argvs[200];
 		int i = 0;
 		FOREACH(g_argvs, it){
@@ -147,7 +147,7 @@ daemon_t::~daemon_t()
 			i++;
 		}
 
-		execv(g_daemon.m_prog_name.c_str(), argvs);
+		execv(m_prog_name.c_str(), argvs);
 		ALERT_LOG("RESTART FAILED...");
 	}
 }

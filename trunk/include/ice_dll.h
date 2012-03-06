@@ -33,7 +33,7 @@ public:
 	//************************************
 	// Brief:  	Called to process packages from clients. Called once for each package.
 	// 			Return non-zero if you want to close the client connection from which the `pkg` is sent,
-	// 			otherwise returns 0. If non-zero is returned, `on_client_conn_closed` will be called too. 
+	// 			otherwise returns 0. If non-zero is returned, `on_cli_conn_closed` will be called too. 
 	//************************************
 	int (*on_cli_pkg)(void* pkg, int pkglen, fdsession_t* fdsess);
 	//************************************
@@ -45,7 +45,7 @@ public:
 	//************************************
 	void (*on_mcast_pkg)(const void* data, int len);
 	//************************************
-	// Brief:	Called each time when a client close a connection, or when `proc_pkg_from_client` returns -1.
+	// Brief:	Called each time when a client close a connection, or when `on_cli_pkg` returns non-zero.
 	//************************************
 	void (*on_cli_conn_closed)(int fd);
 	//************************************

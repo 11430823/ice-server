@@ -27,15 +27,14 @@
 #include "mcast.h"
 #include "bench_conf.h"
 
-uint32_t SEND_BUF_LIMIT_SIZE = 8192;
 int32_t EPOLL_TIME_OUT = -1;
 
 ep_info_t g_epi;
 
 enum {
 	trash_size		= 4096,
-		mcast_pkg_size	= 8192,
-		udp_pkg_size	= 8192
+	mcast_pkg_size	= 8192,
+	udp_pkg_size	= 8192
 };
 
 namespace {
@@ -117,9 +116,9 @@ namespace {
 	inline void add_to_close_queue(int fd)
 	{
 		del_from_etin_queue (fd);
-		if (!(g_epi.m_fds[fd].flag & CN_NEED_CLOSE)) {
+		if (!(g_epi.m_fds[fd].flag & FD_FLAG_NEED_CLOSE)) {
 			list_add_tail (&g_epi.m_fds[fd].list, &g_epi.m_close_head);
-			g_epi.m_fds[fd].flag |= CN_NEED_CLOSE;
+			g_epi.m_fds[fd].flag |= FD_FLAG_NEED_CLOSE;
 			// 		TRACE_LOG("add fd=%d to close queue, %x", fd, epi.fds[fd].flag);
 		}
 	}
@@ -413,8 +412,8 @@ int do_write_conn(int fd)
 }
 inline void del_from_close_queue (int fd)
 {
-	if (g_epi.m_fds[fd].flag & CN_NEED_CLOSE) {
-		g_epi.m_fds[fd].flag &= ~CN_NEED_CLOSE;
+	if (g_epi.m_fds[fd].flag & FD_FLAG_NEED_CLOSE) {
+		g_epi.m_fds[fd].flag &= ~FD_FLAG_NEED_CLOSE;
 		list_del_init (&g_epi.m_fds[fd].list);
 	}
 }
@@ -456,7 +455,7 @@ void do_del_conn(int fd, bool is_conn)
 
 inline void add_to_etin_queue (int fd)
 {
-	if (!(g_epi.m_fds[fd].flag & (CN_NEED_CLOSE | CN_NEED_POLLIN))) {
+	if (!(g_epi.m_fds[fd].flag & (FD_FLAG_NEED_CLOSE | CN_NEED_POLLIN))) {
 		list_add_tail (&g_epi.m_fds[fd].list, &g_epi.m_etin_head);
 		g_epi.m_fds[fd].flag |= CN_NEED_POLLIN;
 		//		TRACE_LOG ("add fd=%d to etin queue", fd);
@@ -592,9 +591,7 @@ int ep_info_t::loop( int max_len )
 									for (i = 0; i != 100; ++i) {
 										int len = recv(fd, buf, mcast_pkg_size, MSG_DONTWAIT);
 										if (len > 0) {
-											if (g_dll.on_mcast_pkg) {
-												g_dll.on_mcast_pkg((void*)buf, len);
-											}
+											g_dll.on_mcast_pkg((void*)buf, len);
 										} else {
 											break;
 										}

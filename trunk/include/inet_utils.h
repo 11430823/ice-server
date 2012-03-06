@@ -10,9 +10,7 @@
  *
  *============================================================
  */
-
-#ifndef LIBTAOMEE_INET_UTILS_H_
-#define LIBTAOMEE_INET_UTILS_H_
+#pragma once
 
 #include <stddef.h>
 
@@ -40,6 +38,4 @@ int eai_to_errno(int eai);
 #ifdef __cplusplus
 }
 #endif
-
-#endif // LIBTAOMEE_INET_UTILS_H_
 
