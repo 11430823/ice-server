@@ -300,5 +300,5 @@ shm_queue_t::shm_queue_t()
 {
 	addr = NULL;
 	length = 0;
-	memset(pipe_handles, 0, sizeof(pipe_handles)/sizeof(pipe_handles[0]));
+	memset(pipe_handles, 0, ice::get_arr_num(pipe_handles));
 }

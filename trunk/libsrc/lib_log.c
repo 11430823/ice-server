@@ -229,13 +229,17 @@ int ice::setup_log_by_time(const char* dir, E_LOG_LEVEL lvl, const char* pre_nam
 	log_info.level = lvl;
 
 	strncpy(log_info.dir_name, dir, sizeof(log_info.dir_name) - 1);
-	log_info.file_pre_name = pre_name;
+	if (NULL == pre_name){
+		log_info.file_pre_name.clear();
+	}else{
+		log_info.file_pre_name = pre_name;
+	}
 
 	for (int i = log_lvl_emerg; i < log_lvl_max; i++) {
+		std::string file_base_name = log_info.file_pre_name + lognames[i];
 		fds_info[i].base_filename_len
 			= snprintf(fds_info[i].base_filename, 
-			sizeof(fds_info[i].base_filename), "%s%s",
-			log_info.file_pre_name.c_str(), lognames[i]);
+			sizeof(fds_info[i].base_filename), "%s", file_base_name.c_str());
 		fds_info[i].opfd = -1;
 		fds_info[i].seq  = s_logtime_interval ? get_log_time() : request_log_seq(i);
 		if (fds_info[i].seq < 0) {
