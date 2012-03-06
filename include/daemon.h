@@ -34,11 +34,10 @@ public:
 	volatile bool m_restart;
 	//子进程ID
 	std::vector<atomic_t> child_pids;
-private:
 	//程序名称
-	std::string m_prog_name;
+	PROPERTY_READONLY_DEFAULT(std::string, m_prog_name);
 	//当前目录
-	std::string m_current_dir;
+	PROPERTY_READONLY_DEFAULT(std::string, m_current_dir);
 };
 
 extern daemon_t g_daemon;

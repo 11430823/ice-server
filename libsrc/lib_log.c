@@ -20,7 +20,7 @@
 namespace{
 
 #define MAX_LOG_CNT 10000000 //日志文件最大数量
-#define LOG_BUF_SIZE 8192 //每条日志的字节数
+#define LOG_BUF_SIZE 8192 //每条日志的最大字节数
 #define LOG_FILE_NAME_PRE_SIZE 32//日志文件名前缀
 
 	struct log_info_t {
@@ -327,9 +327,9 @@ void ice::write_log( int lvl,uint32_t key, const char* fmt, ... )
 	}
 
 	char log_buffer[LOG_BUF_SIZE];
-	int pos = snprintf(log_buffer, LOG_BUF_SIZE, "[%02d:%02d:%02d] %u [%05d]",
+	int pos = snprintf(log_buffer, ice::get_arr_num(log_buffer), "[%02d:%02d:%02d] %u [%05d]",
 		tm.tm_hour, tm.tm_min, tm.tm_sec, key, getpid());
-	int end = vsnprintf(log_buffer + pos, LOG_BUF_SIZE - pos, fmt, ap);
+	int end = vsnprintf(log_buffer + pos, ice::get_arr_num(log_buffer) - pos, fmt, ap);
 	va_end(ap);
 
 	write(fds_info[lvl].opfd, log_buffer, end + pos);

@@ -11,8 +11,7 @@
  *============================================================
  */
 
-#ifndef ASYNC_SERVER_NET_INTERFACE_H_
-#define ASYNC_SERVER_NET_INTERFACE_H_
+#pragma once
 
 #include <stdint.h>
 #include <netinet/in.h>
@@ -170,5 +169,4 @@ int send_pkg_to_client(fdsession_t* fdsess, const void* pkg, const int pkglen);
   * @param fd client socket fd to be closed
   */
 void close_client_conn(int fd);
-#endif // ASYNC_SERVER_NET_INTERFACE_H_
 
