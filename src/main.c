@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
 
 	g_daemon.prase_args(argc, argv);
 
-	ice::setup_log_by_time(g_bench_conf.get_m_log_dir().c_str(), (ice::E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
+	ice::lib_log_t::setup_by_time(g_bench_conf.get_m_log_dir().c_str(), (ice::lib_log_t::E_LEVEL)g_bench_conf.get_m_log_level(),
 		NULL, g_bench_conf.get_m_log_save_next_file_interval_min());
 
 	if (0 != g_dll.register_plugin()){
@@ -86,6 +86,6 @@ int main(int argc, char* argv[]){
 	//TODO 下面没有检查
 	net_exit();
 	shmq_destroy(0, g_bind_conf.get_elem_num());
-	ice::destroy_log();
+	ice::lib_log_t::destroy();
 	return 0;
 }

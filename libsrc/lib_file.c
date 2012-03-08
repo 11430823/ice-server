@@ -4,7 +4,7 @@
 #include "lib_file.h"
 #include "lib_log.h"
 
-int ice::set_io_block( int fd, bool is_block )
+int ice::lib_file_t::set_io_block( int fd, bool is_block )
 {
 	int val;
 	if (is_block) {
@@ -15,7 +15,7 @@ int ice::set_io_block( int fd, bool is_block )
 	return fcntl(fd, F_SETFL, val);
 }
 
-int ice::get_dir_file( const char *path, std::vector<std::string>& file_names )
+int ice::lib_file_t::get_dir_file( const char *path, std::vector<std::string>& file_names )
 {
 	DIR* dirp;
 	struct dirent* direntp;

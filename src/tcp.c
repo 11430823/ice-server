@@ -234,7 +234,7 @@ int safe_tcp_accept(int sockfd, struct sockaddr_in* peer, int nonblock)
 		}
 	}
 
-	if (nonblock && (ice::set_io_block(newfd, false) == -1)) {
+	if (nonblock && (ice::lib_file_t::set_io_block(newfd, false) == -1)) {
 		err   = errno;
 		close(newfd);
 		errno = err;
@@ -274,7 +274,7 @@ int safe_tcp_connect(const char* ipaddr, in_port_t port, int timeout, int nonblo
 		set_sock_snd_timeo(sockfd, 0);
 	}
 
-	ice::set_io_block(sockfd, !nonblock);
+	ice::lib_file_t::set_io_block(sockfd, !nonblock);
 
 	return sockfd;
 //------------------------
