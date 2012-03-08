@@ -141,7 +141,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 	char prefix[10] = { 0 };
 	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
 	prefix[len] = '_';
-	ice::setup_log_by_time(g_bench_conf.get_m_log_dir().c_str(), (ice::E_LOG_LEVEL)g_bench_conf.get_m_log_level(),
+	ice::lib_log_t::setup_by_time(g_bench_conf.get_m_log_dir().c_str(), (ice::lib_log_t::E_LEVEL)g_bench_conf.get_m_log_level(),
 		prefix, g_bench_conf.get_m_log_save_next_file_interval_min());
 
 	//释放资源(从父进程继承来的资源)
@@ -163,7 +163,7 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 fail:
 	do_destroy_shmq(m_bind_elem);
 	net_exit();
-	ice::destroy_log();
+	ice::lib_log_t::destroy();
 	exit(0);
 }
 

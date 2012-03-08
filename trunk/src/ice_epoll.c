@@ -346,7 +346,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 
 	int listenfd = safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
 	if (-1 != listenfd) {
-		ice::set_io_block(listenfd, false);
+		ice::lib_file_t::set_io_block(listenfd, false);
 
 		g_epi.do_add_conn(listenfd, fd_type_listen, 0, bc_elem);
 		ret_code = 0;
