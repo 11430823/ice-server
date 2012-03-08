@@ -6,18 +6,9 @@
 #include <bench_conf.h>
 #include <lib_log.h>
 #include <lib_timer.h>
+#include <lib_byte_swap.h>
 
-#pragma pack(1)
-/* SERVER和CLIENT的协议包头格式 */
-struct cli_proto_head_t {
-	uint32_t len; /* 协议的长度 */
-	uint16_t cmd; /* 协议的命令号 */
-	uint32_t id; /* 账号 */
-	uint32_t seq_num;/* 序列号 */
-	uint32_t ret; /* S->C, 错误码 */
-	uint8_t body[]; /* 包体信息 */
-};
-#pragma pack()
+
 
 class test_timer;
 test_timer* p;
@@ -119,7 +110,7 @@ extern "C" int on_fini(int isparent)
   */
 extern "C" void on_events()
 {
-//	handle_timer();
+	//handle_timer();
 }
 
 /**
@@ -132,12 +123,17 @@ extern "C" int on_get_pkg_len(int fd, const void* avail_data, int avail_len, int
 		return 0;
 	}
 
-	uint32_t len = *(uint32_t *)avail_data;
- 	if (isparent) {
- 		if (len > 32*1024 || len < (int)sizeof(cli_proto_head_t)) {
- 			return -1;
- 		}
- 	}
+	cli_proto_head_t* head = (cli_proto_head_t *)avail_data;
+	uint32_t len = ice::bswap(head->len);
+	TRACE_LOG("[len:%u]", len);
+	if (isparent) {
+		if (len > g_bench_conf.get_m_page_size_max() || len < (uint32_t)sizeof(cli_proto_head_t)) {
+			CRIT_LOG("[fd:%d, avail_len:%d, isparent:%d, len:%u, page_size_max:%u]",
+				fd, avail_len, isparent, len, g_bench_conf.get_m_page_size_max());
+			return -1;
+		}
+	}
+
 	INFO_LOG("[fd:%d, avail_len:%d, isparent:%d, avail_data:%s]", fd, avail_len, isparent, (char*)avail_data);
 	return len;
 }
@@ -153,8 +149,7 @@ extern "C" int on_cli_pkg(void* data, int len, fdsession_t* fdsess)
 	cli_proto_head_t* p = (cli_proto_head_t*)data;
 	INFO_LOG("[cmd:%d, id:%d, len:%d, ret:%d, seq_num:%d]", p->cmd, p->id, p->len, p->ret, p->seq_num);
 	
-	net_send(fdsess->fd, data, len);
-//	send_pkg_to_client(fdsess, data, len);
+	send_pkg_to_client(fdsess, data, len);
 	return 0;
 }
 

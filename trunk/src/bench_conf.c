@@ -100,6 +100,10 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
+	if (0 != get_val(m_shmq_size, key, "common", "shmq_size")){
+		ret = -1;
+		goto ret;
+	}
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -115,6 +119,9 @@ bench_conf_t::bench_conf_t()
 	m_log_save_next_file_interval_min = 0;
 	m_fd_time_out = 0;
 	m_page_size_max = 0;
+	m_log_save_next_file_interval_min = 0;
+	m_core_size = 0;
+	m_shmq_size = 0;
 }
 
 std::string bench_conf_t::get_strval(std::string& key, std::string& name) const

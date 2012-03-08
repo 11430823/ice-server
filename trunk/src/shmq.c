@@ -274,8 +274,8 @@ void epi2shm( int fd, struct shm_block_t *mb )
 
 int shmq_t::create( struct bind_config_elem_t* p )
 {
-	p->sendq.length = m_shmq_max_len;
-	p->recvq.length = m_shmq_max_len;
+	p->sendq.length = g_bench_conf.get_m_shmq_size();
+	p->recvq.length = g_bench_conf.get_m_shmq_size();
 
 	int err = create_shmq(&(p->sendq)) | create_shmq(&(p->recvq));
 	BOOT_LOG(err, "Create shared memory queue: %dMB, err:%d", p->recvq.length / 1024 / 512, err);

@@ -24,31 +24,37 @@ int main()
 
 	sockaddr_in addr;
 	addr.sin_family=AF_INET;
-	addr.sin_port=htons(7845); //保证字节顺序
-	inet_pton(AF_INET, "10.1.1.142", &addr.sin_addr);
+	addr.sin_port=htons(6000); //保证字节顺序
+	inet_pton(AF_INET, "192.168.1.31", &addr.sin_addr);
 
 	int nResult=connect(fd,(sockaddr*)&addr,sizeof(sockaddr));
 	if(0 != nResult){
 		cout<<"connect failed"<<endl;
 	}
+    /*
 	char sz_recv[1000];
 	int len = recv(fd, sz_recv, 1000, 0);
 	cout<<len<<endl;
 	cout<<sz_recv<<endl;
-	/*
+    */
 
 	cli_proto_head_t head;
-	head.cmd = 1;
-	head.id = 102356;
+    uint32_t j = 10000;
+	head.cmd = htons(1);
+	head.id = htonl(102356);
 	head.ret = 0;
-	head.seq_num = 1000;
-	head.len = sizeof(cli_proto_head_t);
-	for (int i = 0; i < 1000; i++){
-		head.seq_num++;
+	head.seq_num = htonl(j);
+	head.len = htonl(sizeof(cli_proto_head_t));
+    int i = 0;
+	//for (i = 0; i < 1000; i++){
+		head.seq_num = htonl(j+i);
 		send(fd, (char*)&head, sizeof(cli_proto_head_t), 0);
-	}
+	//}
+	char sz_recv[1000];
+	int len = recv(fd, sz_recv, 1000, 0);
+	cout<<len<<endl;
+	cout<<sz_recv<<endl;
 	close(fd);
 
-	*/
 	return 0;
 }

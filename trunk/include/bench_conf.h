@@ -33,6 +33,7 @@ public:
 	PROPERTY_READONLY_DEFAULT(std::string, m_log_dir);//日志目录
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_log_save_next_file_interval_min);//每多少时间(分钟)重新保存文件中(新文件)
 	PROPERTY_READONLY_DEFAULT(uint32_t, m_core_size);//core文件的大小，字节
+	PROPERTY_READONLY_DEFAULT(uint32_t, m_shmq_size);//共享内存大小
 private:
 	//std::string libdata_path;//数据段SO路径//mark 增加在线加载功能
 };
