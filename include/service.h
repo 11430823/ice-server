@@ -5,6 +5,7 @@
 
 #include <glib/ghash.h>
 
+#pragma pack(1)
 struct fd_array_session_t {
 	int			count;
 	GHashTable*	cn;
@@ -14,12 +15,15 @@ struct config_cache_t{
 	int					idle_timeout;
 	struct bind_config_elem_t*	bc_elem;
 };
+
 struct fdsession_t {
 	int			fd;
 	uint32_t	id;
 	in_port_t	remote_port;
 	uint32_t	remote_ip;
 };
+
+#pragma pack()
 
 fdsession_t* get_fdsess(int fd);
 
