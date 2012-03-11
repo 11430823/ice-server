@@ -15,6 +15,7 @@
 #include <lib_log.h>
 #include <lib_timer.h>
 #include <lib_file.h>
+#include <lib_tcp.h>
 
 #include "ice_epoll.h"
 #include "service.h"
@@ -179,7 +180,7 @@ namespace {
 			return 0;
 		}
 
-		recv_bytes = safe_tcp_recv(fd, g_epi.m_fds[fd].cb.recvptr + g_epi.m_fds[fd].cb.recvlen, 
+		recv_bytes = ice::lib_tcp_t::safe_tcp_recv(fd, g_epi.m_fds[fd].cb.recvptr + g_epi.m_fds[fd].cb.recvlen, 
 			max - g_epi.m_fds[fd].cb.recvlen);
 		if (recv_bytes > 0) {
 			g_epi.m_fds[fd].cb.recvlen += recv_bytes;
@@ -288,8 +289,8 @@ epoll_add_again:
 		struct sockaddr_in peer;
 		int newfd;
 
-		newfd = safe_tcp_accept(fd, &peer, 1);
-		if (newfd != -1) {
+		newfd = ice::lib_tcp_sever_t::safe_tcp_accept(fd, &peer, false);
+		if (-1 != newfd) {
 			g_epi.do_add_conn(newfd, fd_type_remote, &peer, g_epi.m_fds[fd].bc_elem);
 			g_epi.m_fds[newfd].sk.last_tm = time(0);
 
@@ -344,7 +345,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 {
 	int ret_code = -1;
 
-	int listenfd = safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
+	int listenfd = ice::lib_tcp_sever_t::safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
 	if (-1 != listenfd) {
 		ice::lib_file_t::set_io_block(listenfd, false);
 
@@ -392,7 +393,7 @@ int do_write_conn(int fd)
 {
 	int send_bytes;
 
-	send_bytes = safe_tcp_send_n(fd, g_epi.m_fds[fd].cb.sendptr, g_epi.m_fds[fd].cb.sendlen);
+	send_bytes = ice::lib_tcp_t::safe_tcp_send_n(fd, g_epi.m_fds[fd].cb.sendptr, g_epi.m_fds[fd].cb.sendlen);
 	if (send_bytes == 0) {
 		return 0;
 	} else if (send_bytes > 0) {

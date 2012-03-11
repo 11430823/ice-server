@@ -45,22 +45,3 @@ int get_ip_addr(const char* nif, int af, void* ipaddr, size_t len)
 	return ret_code;
 }
 
-int eai_to_errno(int eai)
-{
-	switch (eai) {
-	case EAI_ADDRFAMILY:
-		return EAFNOSUPPORT;
-	case EAI_AGAIN:
-		return EAGAIN;
-	case EAI_MEMORY:
-		return ENOMEM;
-	case EAI_SERVICE:
-	case EAI_SOCKTYPE:
-		return ESOCKTNOSUPPORT;
-	case EAI_SYSTEM:
-		return errno;
-	default:
-		return EADDRNOTAVAIL;
-	}
-}
-

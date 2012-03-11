@@ -7,7 +7,9 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+
 #include <lib_file.h>
+#include <lib_tcp.h>
 
 #include "mcast.h"
 #include "service.h"
@@ -16,6 +18,7 @@
 #include "shmq.h"
 #include "bind_conf.h"
 #include "bench_conf.h"
+
 
 static int g_ip_resolved;
 static ip_port_t g_ip_port;
@@ -32,7 +35,7 @@ int connect_to_svr(const char* ipaddr, in_addr_t port, int bufsz, int timeout)
 //		ERROR_RETURN(("inet_pton %s failed, %m", ipaddr), -1);
 	}
 
-	fd = safe_tcp_connect(ipaddr, port, timeout, 1);
+	fd = ice::lib_tcp_cli_t::safe_tcp_connect(ipaddr, port, timeout, false);
 	if (fd != -1) {
 //		DEBUG_LOG("CONNECTED TO\t[%s:%u fd=%d]", ipaddr, port, fd);
 		g_epi.do_add_conn(fd, fd_type_remote, &peer, 0);
@@ -201,7 +204,7 @@ int net_send(int fd, const void* data, uint32_t len)
 
 	send_bytes = 0;
 	if (g_epi.m_fds[fd].cb.sendlen == 0) {
-		send_bytes = safe_tcp_send_n(fd, data, len);
+		send_bytes = ice::lib_tcp_t::safe_tcp_send_n(fd, data, len);
 		if (send_bytes == -1) {
 //			ERROR_LOG("failed to write to fd=%d err=%d %s", fd, errno, strerror(errno));
 			do_del_conn(fd, g_is_parent);
