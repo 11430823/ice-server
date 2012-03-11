@@ -14,7 +14,7 @@
 namespace ice{
 	class lib_tcp_t
 	{
-		PROPERTY_READONLY_DEFAULT(int, m_fd);
+		PROPERTY_READONLY_DEFAULT(int, fd);
 	public:
 		lib_tcp_t();
 		//virtual ~lib_tcp_t();
