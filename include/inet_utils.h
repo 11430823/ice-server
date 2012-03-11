@@ -28,12 +28,7 @@ extern "C" {
  */
 int get_ip_addr(const char* nif, int af, void* ipaddr, size_t len);
 
-/**
- * @brief 把getnameinfo、getaddrinfo等函数返回的EAI_XXX错误码转换成类似的EXXX(errno)错误码。
- * @param eai EAI_XXX错误码
- * @return 返回类似的EXXX(errno)错误码
- */
-int eai_to_errno(int eai);
+
 
 #ifdef __cplusplus
 }
