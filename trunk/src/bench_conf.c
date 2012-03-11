@@ -60,47 +60,47 @@ int bench_conf_t::load()
 		goto ret;
 	}
 
-	if (0 != get_val(m_liblogic_path, key, "plugin", "liblogic")){
+	if (0 != get_val(this->liblogic_path, key, "plugin", "liblogic")){
 		ret = -1;
 		goto ret;
 	}
 
-	if (0 != get_val(m_max_fd_num, key, "common", "max_fd_num")){
+	if (0 != get_val(this->max_fd_num, key, "common", "max_fd_num")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(m_daemon, key, "common", "is_daemon")){
+	if (0 != get_val(this->is_daemon, key, "common", "is_daemon")){
 		ret = -1;
 		goto ret;
 	}
 
-	if (0 != get_val(m_fd_time_out, key, "common", "fd_time_out")){
+	if (0 != get_val(this->fd_time_out, key, "common", "fd_time_out")){
 		ret = -1;
 		goto ret;
 	}
 	
-	if (0 != get_val(m_page_size_max, key, "common", "page_size_max")){
+	if (0 != get_val(this->page_size_max, key, "common", "page_size_max")){
 		ret = -1;
 		goto ret;
 	}
 
-	if (0 != get_val(m_log_dir, key, "log", "dir")){
+	if (0 != get_val(this->log_dir, key, "log", "dir")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(m_log_level, key, "log", "level")){
+	if (0 != get_val(this->log_level, key, "log", "level")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(m_log_save_next_file_interval_min, key, "log", "save_next_file_interval_min")){
+	if (0 != get_val(this->log_save_next_file_interval_min, key, "log", "save_next_file_interval_min")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(m_core_size, key, "core", "size")){
+	if (0 != get_val(this->core_size, key, "core", "size")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(m_shmq_size, key, "common", "shmq_size")){
+	if (0 != get_val(this->shmq_size, key, "common", "shmq_size")){
 		ret = -1;
 		goto ret;
 	}
@@ -113,15 +113,15 @@ ret:
 
 bench_conf_t::bench_conf_t()
 {
-	m_max_fd_num = 0;
-	m_daemon = false;
-	m_log_level = 0;
-	m_log_save_next_file_interval_min = 0;
-	m_fd_time_out = 0;
-	m_page_size_max = 0;
-	m_log_save_next_file_interval_min = 0;
-	m_core_size = 0;
-	m_shmq_size = 0;
+	this->max_fd_num = 0;
+	this->is_daemon = false;
+	this->log_level = 0;
+	this->log_save_next_file_interval_min = 0;
+	this->fd_time_out = 0;
+	this->page_size_max = 0;
+	this->log_save_next_file_interval_min = 0;
+	this->core_size = 0;
+	this->shmq_size = 0;
 }
 
 std::string bench_conf_t::get_strval(std::string& key, std::string& name) const

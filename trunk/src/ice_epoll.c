@@ -167,14 +167,14 @@ namespace {
 		if (NULL == g_epi.m_fds[fd].cb.recvptr) {
 			g_epi.m_fds[fd].cb.rcvprotlen = 0;
 			g_epi.m_fds[fd].cb.recvlen = 0;
-			g_epi.m_fds[fd].cb.recvptr = (uint8_t*)mmap (0, g_bench_conf.get_m_page_size_max(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+			g_epi.m_fds[fd].cb.recvptr = (uint8_t*)mmap (0, g_bench_conf.get_page_size_max(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 			if (MAP_FAILED == g_epi.m_fds[fd].cb.recvptr){ 
 				ERROR_LOG("MMAP FAILED");
 				return -1;
 			}
 		}
 
-		if (g_bench_conf.get_m_page_size_max() == g_epi.m_fds[fd].cb.recvlen) {
+		if (g_bench_conf.get_page_size_max() == g_epi.m_fds[fd].cb.recvlen) {
 			TRACE_LOG ("recv buffer is full, fd=%d", fd);
 			return 0;
 		}
@@ -204,7 +204,7 @@ namespace {
 	int net_recv(int fd, uint32_t max, int is_conn)
 	{
 		int cnt = 0;
-		assert (max <= g_bench_conf.get_m_page_size_max());
+		assert (max <= g_bench_conf.get_page_size_max());
 		if (g_epi.m_fds[fd].type == fd_type_pipe) {
 			read (fd, g_epi.m_fds[fd].cb.recvptr, max);
 			return 0;
@@ -364,7 +364,7 @@ inline void free_cb(struct conn_buf_t *p)
 		p->sendptr = NULL;
 	}
 	if (p->recvptr) {
-		munmap (p->recvptr, g_bench_conf.get_m_page_size_max());
+		munmap (p->recvptr, g_bench_conf.get_page_size_max());
 		p->recvptr = NULL;
 	}
 
@@ -654,10 +654,10 @@ int ep_info_t::loop( int max_len )
 		}
 	}
 
-	if (g_is_parent && g_bench_conf.get_m_fd_time_out()) {
+	if (g_is_parent && g_bench_conf.get_fd_time_out()) {
 		for (int i = 0; i <= g_epi.m_max_fd; ++i) {
 			if ((g_epi.m_fds[i].type == fd_type_remote)
-				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= g_bench_conf.get_m_fd_time_out())) {
+				&& ((time(0) - g_epi.m_fds[i].sk.last_tm) >= g_bench_conf.get_fd_time_out())) {
 					do_del_conn(i, g_is_parent);
 			}
 		}

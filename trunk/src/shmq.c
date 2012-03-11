@@ -92,7 +92,7 @@ int shmq_pop(struct shm_queue_t* q, struct shm_block_t** mb)
 		exit(-1);
 	}
 #endif
-	if (cur_mb->length > g_bench_conf.get_m_page_size_max()){
+	if (cur_mb->length > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("large packet, len=%d", cur_mb->length);
 		return -1;
 	}
@@ -160,7 +160,7 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 
 	assert(mb->length >= sizeof(shm_block_t));
 
-	if (mb->length > g_bench_conf.get_m_page_size_max()) {
+	if (mb->length > g_bench_conf.get_page_size_max()) {
 		ERROR_LOG("too large packet, len=%d", mb->length);
 		return -1;
 	}
@@ -173,7 +173,7 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 	for (cnt = 0; cnt != 10; ++cnt) {
 		//queue is full, (page_size): prevent overwriting the buffer which shmq_pop refers to
 		if ( unlikely((q->addr->tail > q->addr->head)
-			&& (q->addr->tail < q->addr->head + (int)mb->length + (int)g_bench_conf.get_m_page_size_max())) ) {
+			&& (q->addr->tail < q->addr->head + (int)mb->length + (int)g_bench_conf.get_page_size_max())) ) {
 				ALERT_LOG("queue [%p] is full, wait 5 microsecs: [cnt=%d]", q, cnt);
 				usleep(5);
 		} else {
@@ -274,8 +274,8 @@ void epi2shm( int fd, struct shm_block_t *mb )
 
 int shmq_t::create( struct bind_config_elem_t* p )
 {
-	p->sendq.length = g_bench_conf.get_m_shmq_size();
-	p->recvq.length = g_bench_conf.get_m_shmq_size();
+	p->sendq.length = g_bench_conf.get_shmq_size();
+	p->recvq.length = g_bench_conf.get_shmq_size();
 
 	int err = create_shmq(&(p->sendq)) | create_shmq(&(p->recvq));
 	BOOT_LOG(err, "Create shared memory queue: %dMB, err:%d", p->recvq.length / 1024 / 512, err);

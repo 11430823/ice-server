@@ -227,8 +227,8 @@ int net_send(int fd, const void* data, uint32_t len)
 			
 		memcpy(g_epi.m_fds[fd].cb.sendptr + g_epi.m_fds[fd].cb.sendlen, (char*)data + send_bytes, len - send_bytes);
 		g_epi.m_fds[fd].cb.sendlen += len - send_bytes;
-		if (g_is_parent && (g_bench_conf.get_m_page_size_max() > 0)
-				&& (g_epi.m_fds[fd].cb.sendlen > g_bench_conf.get_m_page_size_max())) {
+		if (g_is_parent && (g_bench_conf.get_page_size_max() > 0)
+				&& (g_epi.m_fds[fd].cb.sendlen > g_bench_conf.get_page_size_max())) {
 // 			ERROR_LOG("send buf limit exceeded: fd=%d buflen=%u limit=%u",
 // 						fd, epi.fds[fd].cb.sendlen, g_send_buf_limit_size);
 			do_del_conn(fd, g_is_parent);
@@ -254,8 +254,8 @@ int send_pkg_to_client(fdsession_t* fdsess, const void* pkg, const int pkglen)
 
 	int send_bytes, cur_len;
 	for (send_bytes = 0; send_bytes < pkglen; send_bytes += cur_len) {
-		if ((pkglen - send_bytes) > (int32_t)(g_bench_conf.get_m_page_size_max() - sizeof(shm_block_t))) {
-			cur_len = g_bench_conf.get_m_page_size_max() - sizeof(shm_block_t);
+		if ((pkglen - send_bytes) > (int32_t)(g_bench_conf.get_page_size_max() - sizeof(shm_block_t))) {
+			cur_len = g_bench_conf.get_page_size_max() - sizeof(shm_block_t);
 		} else {
 			cur_len = pkglen - send_bytes;
 		}

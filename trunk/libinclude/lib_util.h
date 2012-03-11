@@ -68,15 +68,13 @@ namespace ice{
 	}
 
 	template<typename T>
-	inline void safe_delete(T p)
-	{
+	inline void safe_delete(T p){
 		delete p;
 		p = NULL;
 	};
 
 	template<typename T>
-	inline void safe_delete_arr(T p)
-	{
+	inline void safe_delete_arr(T p){
 		delete []p;
 		p = NULL;
 	};
@@ -87,8 +85,7 @@ namespace ice{
 	// Parameter: const T & name 数组名称
 	//************************************
 	template<typename T>
-	inline uint32_t get_arr_num(const T& name)
-	{
+	inline uint32_t get_arr_num(const T& name){
 		return sizeof(name)/sizeof(name[0]);
 	};
 
@@ -100,8 +97,7 @@ namespace ice{
 	// Parameter: char tag	切割依据符号
 	//************************************
 	template <typename T>
-	inline void cat_string(std::vector<T>& dst_result, std::string& src_str, char tag)
-	{
+	inline void cat_string(std::vector<T>& dst_result, std::string& src_str, char tag){
 		std::stringstream ss(src_str);        
 		std::string sub_str;        
 		while(std::getline(ss, sub_str, tag)){
