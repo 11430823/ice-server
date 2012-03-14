@@ -12,7 +12,7 @@
 #include <lib_util.h>
 
 namespace ice{
-	class lib_tcp_t
+	class lib_tcp_t : public lib_net
 	{
 	public:
 		lib_tcp_t();
@@ -68,8 +68,21 @@ namespace ice{
 		* @return 0 on success, -1 on error and errno is set appropriately.
 		*/
 		static int set_sock_rcv_timeo(int sockfd, int millisec);
+		//************************************
+		// Brief:	  Set the given fd recv buffer
+		// Returns:   int (0 on success, -1 on error)
+		// Parameter: int s (fd)
+		// Parameter: uint32_t len (recv buffer len)
+		//************************************
+		static int set_recvbuf(int s, uint32_t len);
+		static int set_sendbuf(int s, uint32_t len);
+		//************************************
+		// Brief:	  Set the given fd SO_REUSEADDR
+		// Returns:   int (0 on success, -1 on error)
+		// Parameter: int s (fd)
+		//************************************
+		static int set_reuse_addr(int s);
 	protected:
-		int fd;
 		
 	private:
 		lib_tcp_t(const lib_tcp_t& cr);
@@ -124,14 +137,13 @@ namespace ice{
 		*
 		* @param host 监听的地址。可以是IP地址，也可以是域名。如果传递参数为“0.0.0.0”，则监听INADDR_ANY。
 		* @param serv 监听的端口。可以是数字端口，也可以是端口对应的服务名，如dns、time、ftp等。
-		* @param socktype socket的类型，可以是SOCK_STREAM（TCP）或者SOCK_DGRAM（UDP）。
 		* @param backlog 未完成连接队列的大小。一般用1024足矣。
 		* @param bufsize socket接收/发送缓冲大小（字节），必须小于10 * 1024 * 1024。
 		*
 		* @return 成功返回新创建的fd，失败返回-1。fd不用时必须使用close关闭。
 		* @see safe_socket_listen
 		*/
-		static int create_passive_endpoint(const char* host, const char* serv, int socktype, int backlog, int bufsize);
+		static int create_passive_endpoint(const char* host, const char* serv, int backlog, int bufsize);
 		/**
 		* @brief Accept a TCP connection
 		*
