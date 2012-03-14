@@ -12,7 +12,6 @@
 
 ice::lib_tcp_t::lib_tcp_t()
 {
-	this->fd = -1;
 }
 
 int ice::lib_tcp_t::set_sock_send_timeo( int sockfd, int millisec )
@@ -93,6 +92,22 @@ int ice::lib_tcp_t::safe_tcp_recv_n( int sockfd, void* buf, int total )
 	return recv_bytes;
 }
 
+int ice::lib_tcp_t::set_recvbuf( int s, uint32_t len )
+{
+	return  setsockopt(s, SOL_SOCKET, SO_RCVBUF, &len, sizeof(len));
+}
+
+int ice::lib_tcp_t::set_sendbuf( int s, uint32_t len )
+{
+	return setsockopt(s, SOL_SOCKET, SO_SNDBUF, &len, sizeof(len));
+}
+
+int ice::lib_tcp_t::set_reuse_addr( int s )
+{
+	const int flag = 1;
+	return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+}
+
 int ice::lib_tcp_cli_t::safe_tcp_connect( const char* ipaddr, in_port_t port, int timeout, bool block )
 {
 	struct sockaddr_in peer;
@@ -171,26 +186,23 @@ int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port
 		return -1;
 	}
 
-	int err;
-
-		int reuse_addr = 1;	
-		err = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
-		if (err == -1) {
-			goto ret;
-		}
-
-
-	err = setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(int));
-	if (err == -1) {
+	int err = lib_tcp_t::set_reuse_addr(listenfd);
+	if (-1 == err) {
 		goto ret;
 	}
-	err = setsockopt(listenfd, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(int));
-	if (err == -1) {
+
+	err = lib_tcp_t::set_recvbuf(listenfd, bufsize);
+	if (-1 == err) {
+		goto ret;
+	}
+
+	err = lib_tcp_t::set_sendbuf(listenfd, bufsize);
+	if (-1 == err) {
 		goto ret;
 	}
 
 	err = bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-	if (err == -1) {
+	if (-1 == err) {
 		goto ret;
 	}
 
@@ -210,7 +222,7 @@ ret:
 	return listenfd;
 }
 
-int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char* serv, int socktype, int backlog, int bufsize )
+int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char* serv, int backlog, int bufsize )
 {
 	assert((backlog > 0) && (bufsize > 0) && (bufsize <= (10 * 1024 * 1024)));
 
@@ -220,11 +232,11 @@ int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char*
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags    = AI_PASSIVE;
 	hints.ai_family   = AF_UNSPEC;
-	hints.ai_socktype = socktype;
+	hints.ai_socktype = SOCK_STREAM;
 
 	int err = getaddrinfo(host, serv, &hints, &res);
 	if (err != 0) {
-		errno = eai_to_errno(err);
+		errno = lib_net_util::eai_to_errno(err);
 		return -1;
 	}
 
@@ -234,13 +246,11 @@ int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char*
 		return -1;
 	}
 
-	if (socktype != SOCK_DGRAM) {
-		int reuse_addr = 1;	
-		err = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
-		if (err == -1) {
-			goto ret;
-		}
+	err = lib_tcp_t::set_reuse_addr(listenfd);
+	if (err == -1) {
+		goto ret;
 	}
+
 	err = setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(int));
 	if (err == -1) {
 		goto ret;
@@ -255,7 +265,7 @@ int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char*
 		goto ret;
 	}
 
-	if ((socktype == SOCK_STREAM) && (listen(listenfd, backlog) == -1)) {
+	if (-1 == listen(listenfd, backlog)) {
 		err = -1;
 		goto ret;
 	}

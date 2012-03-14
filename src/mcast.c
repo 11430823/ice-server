@@ -144,8 +144,7 @@ int create_addr_mcast_socket()
 //  [9/12/2011 meng]	inet_pton(AF_INET, config_get_strval("addr_mcast_ip"), &(addr_mcast_addr.sin_addr));
 //  [9/12/2011 meng]	addr_mcast_addr.sin_port = htons(config_get_intval("addr_mcast_port", 54321));
 
-	int on = 1;
-	setsockopt(addr_mcast_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on);
+	lib_tcp_t::set_reuse_addr(addr_mcast_fd);
 
 	// Set Default Interface For Outgoing Multicasts
 	in_addr_t ipaddr;
@@ -285,8 +284,7 @@ int create_mcast_socket()
 	//  [9/12/2011 meng]inet_pton(AF_INET, config_get_strval("mcast_ip"), &(mcast_addr.sin_addr));
 	//  [9/12/2011 meng]mcast_addr.sin_port = htons(config_get_intval("mcast_port", 54321));
 
-	int on = 1;
-	setsockopt(mcast_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on);
+	lib_tcp_t::set_reuse_addr(mcast_fd);
 
 	// Set Default Interface For Outgoing Multicasts
 	in_addr_t ipaddr;
