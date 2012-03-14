@@ -17,7 +17,6 @@ namespace ice{
 	class lib_byte_swap_t
 	{
 	public:
-		lib_byte_swap_t(){}
 		static inline int8_t bswap(int8_t x){
 			return x;
 		}

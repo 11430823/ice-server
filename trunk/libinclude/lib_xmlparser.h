@@ -5,7 +5,7 @@
 	purpose:	utilities for parsing xml files\n
 				使用方法：请参阅test/xml.cpp和xml.xml
 				g++ xml.cpp -I/usr/include/libxml2 -lxml2 -lice
-	brief:
+	brief:		ok	
 *********************************************************************/
 
 #pragma once
@@ -17,21 +17,21 @@
 
 #include "lib_util.h"
 
-
 namespace ice{
-	typedef std::ios_base& (&manip_t)(std::ios_base&);
 
 	class lib_xmlparser
 	{
+	public:
+		typedef std::ios_base& (&manip_t)(std::ios_base&);
 		PROPERTY_READONLY_BY_REF_DEFAULT(xmlDocPtr, doc_ptr);//定义解析文档指针
 		PROPERTY_READONLY_BY_REF_DEFAULT(xmlNodePtr, node_ptr);//定义结点指针(你需要它为了在各个结点间移动)
 	public:
 		lib_xmlparser();
 		virtual ~lib_xmlparser();
 		int open(const char* name);
-		void move2children_node();
-		void move2next_node();
-		bool strcmp(const char* name);
+		inline void move2children_node();
+		inline void move2next_node();
+		inline bool strcmp(const char* name);
 		/**
 		* @brief 把某个xml属性的值读取出来
 		* @param val xml的属性值将被读取到val中
@@ -42,7 +42,7 @@ namespace ice{
 		* @see get_xml_prop_raw_str, get_xml_prop_def
 		*/
 		template <typename T>
-		void get_xml_prop(T& val, const void* prop, manip_t manip = std::dec){
+		inline void get_xml_prop(T& val, const void* prop, manip_t manip = std::dec){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
@@ -60,7 +60,7 @@ namespace ice{
 		* @see get_xml_prop
 		*/
 		template <typename T1, typename T2>
-		void get_xml_prop_def(T1& val, const void* prop, const T2& def, manip_t manip = std::dec){
+		inline void get_xml_prop_def(T1& val, const void* prop, const T2& def, manip_t manip = std::dec){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
 				val = def;
@@ -81,7 +81,7 @@ namespace ice{
 		* @see get_xml_prop_raw_str_def
 		*/
 		template <size_t len>
-		void get_xml_prop_raw_str(char (&val)[len], const void* prop){
+		inline void get_xml_prop_raw_str(char (&val)[len], const void* prop){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
@@ -96,7 +96,7 @@ namespace ice{
 		* @see get_xml_prop_raw_str
 		*/
 		template <size_t len>
-		void get_xml_prop_raw_str_def(char (&val)[len], const void* prop, const char* def){
+		inline void get_xml_prop_raw_str_def(char (&val)[len], const void* prop, const char* def){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
 				strncpy(val, def, len - 1);
@@ -109,7 +109,7 @@ namespace ice{
 		}
 		//得到一个节点的内容
 		template <typename T>
-		void get_xml_content(T& val){
+		inline void get_xml_content(T& val){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlNodeGetContent(this->node_ptr))) {
 				assert(0);
@@ -129,7 +129,7 @@ namespace ice{
 		* @see get_xml_prop_arr_def
 		*/
 		template <typename T1, size_t len>
-		size_t get_xml_prop_arr(T1 (&arr)[len], const void* prop, manip_t manip = std::dec){
+		inline size_t get_xml_prop_arr(T1 (&arr)[len], const void* prop, manip_t manip = std::dec){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
@@ -151,7 +151,7 @@ namespace ice{
 		* @see get_xml_prop_arr
 		*/
 		template <typename T1, typename T2, size_t len>
-		size_t get_xml_prop_arr_def(T1 (&arr)[len], const void* prop, const T2& def, manip_t manip = std::dec){
+		inline size_t get_xml_prop_arr_def(T1 (&arr)[len], const void* prop, const T2& def, manip_t manip = std::dec){
 			xmlChar* str;
 			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
 				for (size_t i = 0; i != len; ++i) {

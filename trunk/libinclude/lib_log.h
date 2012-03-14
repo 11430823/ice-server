@@ -95,9 +95,9 @@ namespace ice{
 		static void set_dest(E_DEST dest);
 
 		#ifdef __GNUC__
-		#define LOG_CHECK_FMT(a,b) __attribute__((format(printf, a, b)))
+			#define LOG_CHECK_FMT(a,b) __attribute__((format(printf, a, b)))
 		#else
-		#define LOG_CHECK_FMT(a,b)
+			#define LOG_CHECK_FMT(a,b)
 		#endif
 
 		static void write(int lvl,uint32_t key, const char* fmt, ...) LOG_CHECK_FMT(3, 4);

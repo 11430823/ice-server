@@ -14,9 +14,7 @@
 namespace ice{
 	class lib_file_t
 	{
-	public:
-		lib_file_t(){}
-		//virtual ~lib_file_t();	
+	public:	
 		//************************************
 		// Brief:     Set the given fd to be blocking or noblocking
 		// Returns:   int	0 on success, -1 on error.

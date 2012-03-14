@@ -5,9 +5,8 @@
 #include <assert.h>
 #include <netdb.h>
 
-#include <lib_file.h>
-#include <lib_net_util.h>
-
+#include "lib_file.h"
+#include "lib_net_util.h"
 #include "lib_tcp.h"
 
 ice::lib_tcp_t::lib_tcp_t()
@@ -284,11 +283,13 @@ ret:
 
 int ice::lib_tcp_server_epoll_t::run()
 {
-	if (0 == max_events_num){
+	if (0 == this->max_events_num){
 		return -1;
 	}
-	return 0;
+	while (this->is_run){
+	}
 	
+	return 0;
 }
 
 
@@ -299,5 +300,6 @@ void ice::lib_tcp_server_epoll_t::init( uint32_t maxevents )
 
 ice::lib_tcp_server_epoll_t::lib_tcp_server_epoll_t()
 {
-	max_events_num = 0;
+	this->max_events_num = 0;
+	this->is_run = true;
 }

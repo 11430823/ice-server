@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <lib_byte_swap.h>
-#include <lib_packer.h>
+#include "lib_byte_swap.h"
+#include "lib_packer.h"
 
 namespace ice{
 	//////////////////////////////////////////////////////////////////////////
@@ -17,47 +17,22 @@ namespace ice{
 	class lib_send_data_t
 	{
 	public:
-		lib_send_data_t(int writepos, uint8_t* senddata)
-			:this->write_pos(writepos),this->send_data(senddata){}
-		uint8_t* data(){
-			return this->send_data;
-		}
-		uint32_t len(){
-			return this->write_pos;
-		}
+		lib_send_data_t(int writepos, uint8_t* senddata);
+		inline uint8_t* data();
+		inline uint32_t len();
 		//打包数据
-		lib_send_data_t& operator<<(uint32_t value) {
-			lib_packer_t::pack(this->send_data, value, this->write_pos);
-			return *this;      
-		}                      
-		lib_send_data_t& operator<<(uint16_t value) {
-			lib_packer_t::pack(this->send_data, value, this->write_pos);
-			return *this;      
-		}                      
-		lib_send_data_t& operator<<(uint8_t value) {
-			lib_packer_t::pack(this->send_data, value, this->write_pos);
-			return *this;      
-		}                      
-		lib_send_data_t& operator<<(char value) {
-			lib_packer_t::pack(this->send_data, value, this->write_pos);
-			return *this;      
-		}                      
-		lib_send_data_t& operator<<(int value) {
-			lib_packer_t::pack(this->send_data, value, this->write_pos);
-			return *this;      
-		}                      
-		lib_send_data_t& operator<<(uint64_t value) {
-			lib_packer_t::pack(this->send_data, value, this->write_pos);
-			return *this;      
-		}
+		inline lib_send_data_t& operator<<(uint32_t value);                      
+		inline lib_send_data_t& operator<<(uint16_t value);                      
+		inline lib_send_data_t& operator<<(uint8_t value);                      
+		inline lib_send_data_t& operator<<(char value);                      
+		inline lib_send_data_t& operator<<(int value);                      
+		inline lib_send_data_t& operator<<(uint64_t value);
 		// 优化为插入数组时,不需要处理数组长度 [3/10/2012 meng]
 		template <typename T>
-		void set_count(T value, int pos) {
+		inline void set_count(T value, int pos) {
 			lib_packer_t::pack(this->send_data, value, pos);
 		}
-		void pack_str(char* mstring, size_t length) {
-			lib_packer_t::pack(this->send_data, mstring, length, this->write_pos);
-		}
+		inline void pack_str(char* mstring, size_t length);
 	protected:
 		int write_pos;//数据写到的位置
 	private:
@@ -72,47 +47,19 @@ namespace ice{
 	class lib_recv_data_t
 	{
 	public:
-		lib_recv_data_t(const void* recvdata, int readpos)
-			:this->recv_data(recvdata),this->read_pos(readpos){
-		}
-		const void* data(){
-			return this->recv_data;
-		}
-		uint32_t get_read_pos(){
-			return this->read_pos;
-		}
+		lib_recv_data_t(const void* recvdata, int readpos);
+		inline const void* data();
+		inline uint32_t get_read_pos();
 		//////////////////////////////////////////////////////////////////////////
 		//解包数据
-		lib_recv_data_t& operator>>(uint32_t& value) {
-			lib_packer_t::unpack(this->recv_data, value, this->read_pos);
-			return *this;      
-		}                      
-		lib_recv_data_t& operator>>(uint16_t& value) {
-			lib_packer_t::unpack(this->recv_data, value, this->read_pos);
-			return *this;      
-		}                      
-		lib_recv_data_t& operator>>(uint8_t& value) {
-			lib_packer_t::unpack(this->recv_data, value, this->read_pos);
-			return *this;      
-		}                      
-		lib_recv_data_t& operator>>(char& value) {
-			lib_packer_t::unpack(this->recv_data, value, this->read_pos);
-			return *this;      
-		}                      
-		lib_recv_data_t& operator>>(int& value) {
-			lib_packer_t::unpack(this->recv_data, value, this->read_pos);
-			return *this;      
-		}                      
-		lib_recv_data_t &operator>>(uint64_t& value) {
-			lib_packer_t::unpack(this->recv_data, value, this->read_pos);
-			return *this;      
-		}
-		void unpack_str(void* mstring, size_t length) {
-			lib_packer_t::unpack(this->recv_data, mstring, length, this->read_pos);
-		}
-		void* read_pos_data(){
-			return ((char*)this->recv_data + this->read_pos);
-		}
+		inline lib_recv_data_t& operator>>(uint32_t& value);                      
+		inline lib_recv_data_t& operator>>(uint16_t& value);                      
+		inline lib_recv_data_t& operator>>(uint8_t& value);                      
+		inline lib_recv_data_t& operator>>(char& value);                      
+		inline lib_recv_data_t& operator>>(int& value);                      
+		inline lib_recv_data_t &operator>>(uint64_t& value);
+		inline void unpack_str(void* mstring, size_t length);
+		inline void* read_pos_data();
 	protected:
 		const void* recv_data;
 		int read_pos;
