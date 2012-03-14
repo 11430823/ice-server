@@ -19,7 +19,6 @@
 
 #include "ice_epoll.h"
 #include "service.h"
-#include "tcp.h"
 #include "shmq.h"
 #include "bind_conf.h"
 #include "ice_dll.h"
@@ -345,7 +344,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, bind_config_elem_t* 
 {
 	int ret_code = -1;
 
-	int listenfd = ice::lib_tcp_sever_t::safe_socket_listen(listen_ip, listen_port, SOCK_STREAM, 1024, 32 * 1024);
+	int listenfd = ice::lib_tcp_sever_t::safe_socket_listen(listen_ip, listen_port, 1024, 32 * 1024);
 	if (-1 != listenfd) {
 		ice::lib_file_t::set_io_block(listenfd, false);
 
@@ -418,14 +417,15 @@ inline void del_from_close_queue (int fd)
 		list_del_init (&g_epi.m_fds[fd].list);
 	}
 }
-void do_del_conn(int fd, bool is_conn)
+
+void do_del_conn(int fd, uint8_t is_conn)
 {
 	if (g_epi.m_fds[fd].type == fd_type_unused)
 		return ;
 
-	if (!is_conn) {
+	if (0 == is_conn) {
 		g_dll.on_fd_closed(fd);
-	} else if (is_conn){
+	} else if (1 == is_conn){
 		shm_block_t mb;
 		mb.id = g_epi.m_fds[fd].id;
 		mb.fd = fd;

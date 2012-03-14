@@ -32,7 +32,6 @@ namespace ice{
 		//************************************
 		static int get_dir_file(const char *path, std::vector<std::string>& file_names);
 	protected:
-		
 	private:
 		lib_file_t(const lib_file_t& cr);
 		lib_file_t& operator=(const lib_file_t& cr);

@@ -23,33 +23,51 @@
 #endif
 #define unlikely(x)  __builtin_expect(!!(x), 0)
 
-#define FOREACH(container, it) \
-	for(typeof((container).begin()) it = (container).begin(); (it) != (container).end(); ++(it))
-
-#define FOREACH_PREV(container, it) \
-	for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
-
 //////////////////////////////////////////////////////////////////////////
 //使用宏管理成员变量
 #define PROPERTY_READONLY_DEFAULT(varType, varName)\
-		private:	varType varName;\
-		public:		varType get_##varName(void) { return varName; }
+	private:	varType varName;\
+	public:		varType get_##varName(void) { return varName; }
 
 #define PROPERTY_READONLY_BY_REF_DEFAULT(varType, varName)\
-		private:	varType varName;\
-		public:		const varType& get_##varName(void) { return varName; }
+	private:	varType varName;\
+	public:		const varType& get_##varName(void) { return varName; }
 
 #define PROPERTY_RW_DEFAULT(varType, varName)\
-		private:	varType varName;\
-		public:		varType get_##varName(void) { return varName; } \
-		public:		void set_##varName(varType var) { varName = var; }
+	private:	varType varName;\
+	public:		varType get_##varName(void) { return varName; } \
+	public:		void set_##varName(varType var) { varName = var; }
 
 #define PROPERTY_RW_BY_REF_DEFAULT(varType, varName)\
-		private:	varType varName;\
-		public:		const varType& get_##varName(void) { return varName; } \
-		public:		void set_##varName(const varType& var) { varName = var; }
+	private:	varType varName;\
+	public:		const varType& get_##varName(void) { return varName; } \
+	public:		void set_##varName(const varType& var) { varName = var; }
 
 namespace ice{
+	#define SUCC 0
+	#define ERR  -1
+
+		//协助
+	#define NOTE//需要注意
+	#define TODO//需要完成
+	#define FOR_DEBUG//为了调试
+	#define OUT//输出参数
+	#define IN//输入参数
+	//判断
+	#define	IS_NULL(p_)	(NULL == (p_))
+	#define	NO_NULL(p_)	(NULL != (p_))
+	#define	IS_ZERO(n_)	(0 == (n_))
+	#define	NO_ZERO(n_)	(0 != (n_))
+	#define IS_SUCC(n_) (SUCC == (n_))
+	#define IS_ERR(n_) (SUCC != (n_))
+
+	#define FOREACH(container, it) \
+		for(typeof((container).begin()) it = (container).begin(); (it) != (container).end(); ++(it))
+
+	#define FOREACH_PREV(container, it) \
+		for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
+
+
 	//************************************
 	// Brief:     由字符串转换为所需类型
 	// Returns:   void
@@ -130,6 +148,24 @@ namespace ice{
 				safe_delete(ptr.second);
 			}		
 		}
+	};
+
+	//sort,降序
+	struct desc_sort{
+		uint32_t level;
+		bool operator<(const desc_sort& r) const {
+			return level > r.level;
+		}
+	};
+
+	//////////////////////////////////////////////////////////////////////////
+	//不可拷贝,基类
+	class non_copyable{
+	protected:
+		non_copyable() {}
+	private:
+		non_copyable( const non_copyable& );
+		const non_copyable& operator=( const non_copyable& );
 	};
 
 }//end namespace ice

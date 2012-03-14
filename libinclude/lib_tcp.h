@@ -14,7 +14,6 @@
 namespace ice{
 	class lib_tcp_t
 	{
-		PROPERTY_READONLY_DEFAULT(int, fd);
 	public:
 		lib_tcp_t();
 		//virtual ~lib_tcp_t();
@@ -70,6 +69,7 @@ namespace ice{
 		*/
 		static int set_sock_rcv_timeo(int sockfd, int millisec);
 	protected:
+		int fd;
 		
 	private:
 		lib_tcp_t(const lib_tcp_t& cr);
@@ -112,14 +112,13 @@ namespace ice{
 		* @param ipaddr the binding ip address. If this argument is assigned with 0,
 		*                                           then INADDR_ANY will be used as the binding address.
 		* @param port the binding port.
-		* @param type type of socket (SOCK_STREAM or SOCK_DGRAM).
 		* @param backlog the maximum length to which the queue of pending connections for sockfd may grow.
 		* @param bufsize maximum socket send and receive buffer in bytes, should be less than 10 * 1024 * 1024
 		*
 		* @return the newly created listening fd on success, -1 on error.
 		* @see create_passive_endpoint
 		*/
-		static int safe_socket_listen(const char* ipaddr, in_port_t port, int type, int backlog, int bufsize);
+		static int safe_socket_listen(const char* ipaddr, in_port_t port, int backlog, int bufsize);
 		/**
 		* @brief 创建一个TCP listen socket或者UDP socket，用于接收客户端数据。支持IPv4和IPv6。
 		*
@@ -149,6 +148,22 @@ namespace ice{
 		lib_tcp_sever_t(const lib_tcp_sever_t& cr);
 		lib_tcp_sever_t& operator=(const lib_tcp_sever_t& cr);
 	};
+
+	class lib_tcp_server_epoll_t : public lib_tcp_sever_t
+	{
+	public:
+		lib_tcp_server_epoll_t();
+		//virtual ~lib_tcp_server_epoll_t(){}
+		void init(uint32_t maxevents);
+		int run();
+	protected:
+		PROPERTY_READONLY_DEFAULT(uint32_t, max_events_num);
+		
+	private:
+		lib_tcp_server_epoll_t(const lib_tcp_server_epoll_t& cr);
+		lib_tcp_server_epoll_t& operator=(const lib_tcp_server_epoll_t& cr);
+	};
+	
 	
 	
 }//end namespace ice

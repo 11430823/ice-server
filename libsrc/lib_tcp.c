@@ -37,17 +37,16 @@ int ice::lib_tcp_t::set_sock_rcv_timeo( int sockfd, int millisec )
 
 int ice::lib_tcp_t::safe_tcp_send_n( int sockfd, const void* buf, int total )
 {
-	assert(total > 0);
-
-	int send_bytes, cur_len;
-
-	for (send_bytes = 0; send_bytes < total; send_bytes += cur_len) {
-		cur_len = send(sockfd, (char*)buf + send_bytes, total - send_bytes, 0);
+	int send_bytes = 0;
+	for (int cur_len = 0; send_bytes < total; send_bytes += cur_len) {
+		//send函数最后一个参数,windows下一般设置为0,linux下最好设置为MSG_NOSIGNAL，
+		//如果不设置，在发送出错后有可 能会导致程序退出。
+		cur_len = send(sockfd, (char*)buf + send_bytes, total - send_bytes, MSG_NOSIGNAL);
 		if (-1 == cur_len) {
 			if (errno == EINTR) {
 				cur_len = 0;
 			} else if (errno == EAGAIN) {
-				return send_bytes;
+				break;
 			} else {
 				return -1;
 			}
@@ -59,29 +58,23 @@ int ice::lib_tcp_t::safe_tcp_send_n( int sockfd, const void* buf, int total )
 
 int ice::lib_tcp_t::safe_tcp_recv( int sockfd, void* buf, int bufsize )
 {
-	int cur_len;
-
-recv_again:
-	cur_len = recv(sockfd, buf, bufsize, 0);
-	if (0 == cur_len) {
-		//connection closed by client
-		return 0;
-	} else if (-1 == cur_len) {
-		if (errno == EINTR) {
-			goto recv_again;
+	int cur_len = 0;
+	while(1){
+		cur_len = recv(sockfd, buf, bufsize, 0);
+		if (-1 == cur_len && errno == EINTR) {
+			continue;
+		}else{
+			break;
 		}
 	}
-
 	return cur_len;
 }
 
 int ice::lib_tcp_t::safe_tcp_recv_n( int sockfd, void* buf, int total )
 {
-	assert(total > 0);
+	int recv_bytes = 0;
 
-	int recv_bytes, cur_len;
-
-	for (recv_bytes = 0; recv_bytes < total; recv_bytes += cur_len)	{
+	for (int cur_len = 0; recv_bytes < total; recv_bytes += cur_len)	{
 		cur_len = recv(sockfd, (char*)buf + recv_bytes, total - recv_bytes, 0);
 		if (0 == cur_len) {
 			// connection closed by client
@@ -139,9 +132,8 @@ int ice::lib_tcp_sever_t::safe_tcp_accept( int sockfd, struct sockaddr_in* peer,
 {
 	int err;
 	int newfd;
-
+	socklen_t peer_size = sizeof(*peer);
 	while(1) {
-		socklen_t peer_size = sizeof(*peer);
 		newfd = accept(sockfd, (struct sockaddr*)peer, &peer_size);
 		if (newfd >= 0) {
 			break;
@@ -160,7 +152,7 @@ int ice::lib_tcp_sever_t::safe_tcp_accept( int sockfd, struct sockaddr_in* peer,
 	return newfd;
 }
 
-int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port, int type, int backlog, int bufsize )
+int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port, int backlog, int bufsize )
 {
 	assert((backlog > 0) && (bufsize > 0) && (bufsize <= (10 * 1024 * 1024)));
 
@@ -175,18 +167,18 @@ int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port
 	}
 
 	int listenfd;
-	if (-1 == (listenfd = socket(AF_INET, type, 0))) {
+	if (-1 == (listenfd = socket(AF_INET, SOCK_STREAM, 0))) {
 		return -1;
 	}
 
 	int err;
-	if (type != SOCK_DGRAM) {
+
 		int reuse_addr = 1;	
 		err = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
 		if (err == -1) {
 			goto ret;
 		}
-	}
+
 
 	err = setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(int));
 	if (err == -1) {
@@ -202,7 +194,7 @@ int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port
 		goto ret;
 	}
 
-	if ((type == SOCK_STREAM) && (listen(listenfd, backlog) == -1)) {
+	if (-1 == listen(listenfd, backlog)) {
 		err = -1;
 		goto ret;
 	}
@@ -278,4 +270,24 @@ ret:
 	errno = err;
 
 	return listenfd;
+}
+
+int ice::lib_tcp_server_epoll_t::run()
+{
+	if (0 == max_events_num){
+		return -1;
+	}
+	return 0;
+	
+}
+
+
+void ice::lib_tcp_server_epoll_t::init( uint32_t maxevents )
+{
+	this->max_events_num = maxevents;
+}
+
+ice::lib_tcp_server_epoll_t::lib_tcp_server_epoll_t()
+{
+	max_events_num = 0;
 }

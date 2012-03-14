@@ -96,7 +96,7 @@ int net_start(const char* listen_ip, in_port_t listen_port, struct bind_config_e
 void net_exit ();
 
 inline void del_from_etin_queue (int fd);
-void do_del_conn(int fd, bool is_conn);
+void do_del_conn(int fd, uint8_t is_conn);
 int do_write_conn(int fd);
 int mod_events(int epfd, int fd, uint32_t flag);
 inline void add_to_etin_queue (int fd);
