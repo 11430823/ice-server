@@ -5,18 +5,6 @@
 
 #include "lib_net_util.h"
 
-int ice::lib_net::close_socket( int& s )
-{
-	int nRes = 0;
-	if (-1 != s){
-		nRes = close(s);
-		if(-1 == nRes){
-		}
-		s = -1;
-	}
-	return nRes;
-}
-
 int ice::lib_net_multicast::join_multicast( int s )
 {
 	ip_mreq_source mreq;
@@ -43,6 +31,12 @@ int ice::lib_net_multicast::refuse_multicast( int s )
 	return 0;
 }
 
+ice::lib_net_multicast::lib_net_multicast()
+{
+
+}
+
+
 int ice::lib_net_util::eai_to_errno( int eai )
 {
 	switch (eai) {
@@ -59,4 +53,26 @@ int ice::lib_net_util::eai_to_errno( int eai )
 				return errno;
 	}
 	return EADDRNOTAVAIL;
+}
+
+int ice::lib_net_util::close_socket( int& s )
+{
+	int nRes = 0;
+	if (-1 != s){
+		nRes = close(s);
+		if(-1 == nRes){
+		}
+		s = -1;
+	}
+	return nRes;
+}
+
+ice::lib_net::lib_net()
+{
+	this->fd = -1;
+}
+
+ice::lib_net::~lib_net()
+{
+	lib_net_util::close_socket(this->fd);
 }

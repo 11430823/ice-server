@@ -16,8 +16,6 @@ namespace ice{
 	class lib_packer_t
 	{
 	public:
-		lib_packer_t(){}
-		//virtual ~lib_packer_t();
 		/**
 		* @brief 把val转换字节序，并且打包到(uint8_t*)pkg + idx，然后增加idx的值，idx的增量为val变量占用的字节数。\n
 		*        比如val的类型是uint32_t，则idx的值增加4。

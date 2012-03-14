@@ -3,16 +3,18 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	各种内存类型
-	brief:		
+	brief:		OK
 *********************************************************************/
 
 #pragma once
 
 #include <stdint.h>
 
-#include <lib_util.h>
+#include "lib_util.h"
 
 namespace ice{
+	//////////////////////////////////////////////////////////////////////////
+	//自动无限放大,但是不会自动紧缩.
 	class lib_memory_active_buf
 	{
 	public:
@@ -29,9 +31,9 @@ namespace ice{
 		// Brief:	清理所有数据  
 		// Returns:   void ()
 		//************************************
-		void clean();
+		inline void clean();
 	private:
-		void init_data();
+		inline void init_data();
 		PROPERTY_READONLY_DEFAULT(char*, data);//数据头指针
 		PROPERTY_READONLY_DEFAULT(uint32_t, total_len);//已分配的总长度
 		PROPERTY_READONLY_DEFAULT(uint32_t, write_pos);//已使用到的位置

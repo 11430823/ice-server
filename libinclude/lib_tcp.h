@@ -9,7 +9,8 @@
 #pragma once
 
 #include <netinet/in.h>
-#include <lib_util.h>
+#include "lib_util.h"
+#include "lib_net_util.h"
 
 namespace ice{
 	class lib_tcp_t : public lib_net
@@ -168,8 +169,10 @@ namespace ice{
 		//virtual ~lib_tcp_server_epoll_t(){}
 		void init(uint32_t maxevents);
 		int run();
+		void stop();
 	protected:
 		PROPERTY_READONLY_DEFAULT(uint32_t, max_events_num);
+		PROPERTY_READONLY_DEFAULT(bool, is_run);
 		
 	private:
 		lib_tcp_server_epoll_t(const lib_tcp_server_epoll_t& cr);
