@@ -18,7 +18,6 @@ namespace ice{
 	{
 	public:
 		lib_byte_swap_t(){}
-		//virtual ~lib_byte_swap_t();
 		static inline int8_t bswap(int8_t x){
 			return x;
 		}
@@ -51,13 +50,10 @@ namespace ice{
 			return bswap_32(x);
 		}
 #endif
-		
 	protected:
-		
 	private:
 		lib_byte_swap_t(const lib_byte_swap_t& cr);
 		lib_byte_swap_t& operator=(const lib_byte_swap_t& cr);
 	};
-
 
 }//end namespace ice

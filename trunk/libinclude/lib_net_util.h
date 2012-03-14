@@ -31,4 +31,18 @@ namespace ice{
 		return EADDRNOTAVAIL;
 	}
 
+	class lib_net_util
+	{
+	public:
+		lib_net_util(){}
+		//virtual ~lib_net_util(){}
+
+	protected:
+		
+	private:
+		lib_net_util(const lib_net_util& cr);
+		lib_net_util& operator=(const lib_net_util& cr);
+	};
+	
+
 }//end namespace ice

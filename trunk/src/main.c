@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
 			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			return -1;
 		} else if (pid > 0) {
-			g_shmq.close_pipe(i, false);
+			g_shmq.close_pipe(i, !g_is_parent);
 			g_epi.do_add_conn(bc_elem->sendq.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL, bc_elem);			
 			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
 			atomic_set(&g_daemon.child_pids[i], pid);

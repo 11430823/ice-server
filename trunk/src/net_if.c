@@ -13,7 +13,6 @@
 
 #include "mcast.h"
 #include "service.h"
-#include "tcp.h"
 #include "net_if.h"
 #include "shmq.h"
 #include "bind_conf.h"

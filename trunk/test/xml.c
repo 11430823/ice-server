@@ -1,13 +1,8 @@
 #include <iostream>
-
-using namespace std;
-
-extern "C" {
-	#include <stdint.h>
-}
-
+#include <stdint.h>
 #include "../libinclude/xmlparser.hpp"
 
+using namespace std;
 using namespace ice;
 
 int load_games(xmlNodePtr cur)

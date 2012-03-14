@@ -61,7 +61,6 @@ namespace ice{
 		};
 	public:
 		lib_log_t(){}
-		//virtual ~lib_log_t();
 		/**
 		* @brief 初始化日志记录功能。按时间周期创建新的日志文件。
 		*

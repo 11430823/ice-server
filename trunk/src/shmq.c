@@ -111,49 +111,125 @@ head_mb (const struct shm_queue_t *q)
 {
 	return (struct shm_block_t *) ((char *) q->addr + q->addr->head);
 }
-static int
-align_queue_head (struct shm_queue_t *q, const struct shm_block_t *mb)
-{
-	int tail_pos = q->addr->tail;
-	int head_pos = q->addr->head;
-	struct shm_block_t *pad;
 
-	int surplus = q->length - head_pos;
-
-	if (unlikely (surplus < mb->length))
+namespace {
+	int pipe_create(int pipe_handles[E_PIPE_INDEX_MAX])
 	{
-		//queue is full
-		if (unlikely (tail_pos == sizeof (shm_head_t)))
-// 			ERROR_RETURN (("shm_queue is full,head=%d,tail=%d,mb_len=%d",
-// 			head_pos, tail_pos, mb->length), -1);
- 			return -1;
-		//bug
-		else if (unlikely (q->addr->tail > head_pos))
-		{
-			// should be impossible
-// 			ERROR_LOG("shm_queue bug, head=%d, tail=%d, mb_len=%d, total_len=%u",
-// 				head_pos, tail_pos, mb->length, q->length);
-			q->addr->tail = sizeof (shm_head_t);
-			q->addr->head = sizeof (shm_head_t);
-			//no pad mb
+		if (pipe (pipe_handles) == -1){
+			ALERT_LOG("PIPE CREATE FAILED [err:%s]", strerror(errno));
+			return -1;
 		}
-		else if (unlikely (surplus < (int)sizeof (shm_block_t)))
-		{
-			q->addr->head = sizeof (shm_head_t);
-			//pad mb 
-		}
-		else
-		{
-			pad = head_mb (q);
-			pad->type = PAD_BLOCK;
-			pad->length = surplus;
-			pad->id = 0;
-			q->addr->head = sizeof (shm_head_t);
-		}
+
+		fcntl (pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
+		fcntl (pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFL, O_NONBLOCK | O_WRONLY);
+
+	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
+		fcntl (pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFD, FD_CLOEXEC);
+		fcntl (pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFD, FD_CLOEXEC);
+
+		return 0;
 	}
 
-	return 0;
+	int create_shmq(struct shm_queue_t *q)
+	{
+		q->addr = (shm_head_t *) mmap (NULL, q->length, PROT_READ | PROT_WRITE,
+			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+		if (q->addr == MAP_FAILED){
+			ALERT_LOG("MMAP FAILED [err:%s]", strerror(errno));
+			return -1;
+		}
+
+		q->addr->head = sizeof (shm_head_t);
+		q->addr->tail = sizeof (shm_head_t);
+		atomic_set (&(q->addr->blk_cnt), 0);
+		if (0 != pipe_create (q->pipe_handles)){
+			return -1;
+		}
+		return 0;
+	}
+	int align_queue_head (struct shm_queue_t *q, const struct shm_block_t *mb)
+	{
+		int tail_pos = q->addr->tail;
+		int head_pos = q->addr->head;
+		// 无用 [3/12/2012 meng]
+#if 0
+		struct shm_block_t* pad;
+#endif
+		int surplus = q->length - head_pos;
+
+		if (unlikely (surplus < mb->length))
+		{
+			//queue is full
+			if (unlikely (tail_pos == sizeof (shm_head_t)))
+				// 			ERROR_RETURN (("shm_queue is full,head=%d,tail=%d,mb_len=%d",
+				// 			head_pos, tail_pos, mb->length), -1);
+				return -1;
+			//bug
+			else if (unlikely (q->addr->tail > head_pos))
+			{
+				// should be impossible
+				// 			ERROR_LOG("shm_queue bug, head=%d, tail=%d, mb_len=%d, total_len=%u",
+				// 				head_pos, tail_pos, mb->length, q->length);
+				q->addr->tail = sizeof (shm_head_t);
+				q->addr->head = sizeof (shm_head_t);
+				//no pad mb
+			}
+			else if (unlikely (surplus < (int)sizeof (shm_block_t)))
+			{
+				q->addr->head = sizeof (shm_head_t);
+				//pad mb 
+			}
+			else
+			{
+#if 0
+				pad = head_mb (q);
+				pad->type = PAD_BLOCK;
+				pad->length = surplus;
+				pad->id = 0;
+#endif
+				q->addr->head = sizeof (shm_head_t);
+			}
+		}
+
+		return 0;
+	}
+}//end of namespace
+
+void do_destroy_shmq(bind_config_elem_t* bc_elem)
+{
+	struct shm_queue_t* q = &(bc_elem->sendq);
+	// close send queue
+	if ( q->addr ) {
+		munmap(q->addr, q->length);
+		q->addr = NULL;
+	}
+	// close receive queue
+	q = &(bc_elem->recvq);
+	if ( q->addr ) {
+		munmap(q->addr, q->length);
+		q->addr = NULL;
+	}
 }
+
+void shmq_destroy(const bind_config_elem_t* exclu_bc_elem, int max_shmq_num)
+{
+	int i = 0;
+	for ( ; i != max_shmq_num; ++i ) {
+		if (g_bind_conf.get_elem(i) != exclu_bc_elem) {
+			do_destroy_shmq(g_bind_conf.get_elem(i));
+		}
+	}
+}
+
+void epi2shm( int fd, struct shm_block_t *mb )
+{
+	mb->id      = g_epi.m_fds[fd].id;
+	mb->fd      = fd;
+	mb->type    = DATA_BLOCK;
+	mb->length  = g_epi.m_fds[fd].cb.rcvprotlen + sizeof (struct shm_block_t);
+}
+
+
 int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 {
 	char* next_mb;
@@ -195,83 +271,11 @@ int shmq_push(shm_queue_t* q, shm_block_t* mb, const void* data)
 	q->addr->head += mb->length;
 
 	write(q->pipe_handles[1], q, 1);
- 	TRACE_LOG("push queue: queue=%p,length=%d,tail=%d,head=%d,id=%u,count=%d,fd=%d",
- 		q, mb->length, q->addr->tail, q->addr->head, mb->id,
- 		(atomic_inc(&q->addr->blk_cnt), atomic_read(&q->addr->blk_cnt)), mb->fd);
+	TRACE_LOG("push queue: queue=%p,length=%d,tail=%d,head=%d,id=%u,count=%d,fd=%d",
+		q, mb->length, q->addr->tail, q->addr->head, mb->id,
+		(atomic_inc(&q->addr->blk_cnt), atomic_read(&q->addr->blk_cnt)), mb->fd);
 	return 0;
 }
-namespace {
-	int pipe_create(int pipe_handles[E_PIPE_INDEX_MAX])
-	{
-		if (pipe (pipe_handles) == -1){
-			ALERT_LOG("PIPE CREATE FAILED [err:%s]", strerror(errno));
-			return -1;
-		}
-
-		fcntl (pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
-		fcntl (pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFL, O_NONBLOCK | O_WRONLY);
-
-	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
-		fcntl (pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFD, FD_CLOEXEC);
-		fcntl (pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFD, FD_CLOEXEC);
-
-		return 0;
-	}
-
-	int create_shmq(struct shm_queue_t *q)
-	{
-		q->addr = (shm_head_t *) mmap (NULL, q->length, PROT_READ | PROT_WRITE,
-			MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-		if (q->addr == MAP_FAILED){
-			ALERT_LOG("MMAP FAILED [err:%s]", strerror(errno));
-			return -1;
-		}
-
-		q->addr->head = sizeof (shm_head_t);
-		q->addr->tail = sizeof (shm_head_t);
-		atomic_set (&(q->addr->blk_cnt), 0);
-		if (0 != pipe_create (q->pipe_handles)){
-			return -1;
-		}
-		return 0;
-	}
-}//end of namespace
-
-void do_destroy_shmq(bind_config_elem_t* bc_elem)
-{
-	struct shm_queue_t* q = &(bc_elem->sendq);
-	// close send queue
-	if ( q->addr ) {
-		munmap(q->addr, q->length);
-		q->addr = NULL;
-	}
-	// close receive queue
-	q = &(bc_elem->recvq);
-	if ( q->addr ) {
-		munmap(q->addr, q->length);
-		q->addr = NULL;
-	}
-}
-
-void shmq_destroy(const bind_config_elem_t* exclu_bc_elem, int max_shmq_num)
-{
-	int i = 0;
-	for ( ; i != max_shmq_num; ++i ) {
-		if (g_bind_conf.get_elem(i) != exclu_bc_elem) {
-			do_destroy_shmq(g_bind_conf.get_elem(i));
-		}
-	}
-}
-
-void epi2shm( int fd, struct shm_block_t *mb )
-{
-	mb->id      = g_epi.m_fds[fd].id;
-	mb->fd      = fd;
-	mb->type    = DATA_BLOCK;
-	mb->length  = g_epi.m_fds[fd].cb.rcvprotlen + sizeof (struct shm_block_t);
-}
-
-
 int shmq_t::create( struct bind_config_elem_t* p )
 {
 	p->sendq.length = g_bench_conf.get_shmq_size();
