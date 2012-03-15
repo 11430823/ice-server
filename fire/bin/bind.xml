@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+net_type:[0,tcp][1,udp]
+-->
+<Interface>
+	<Date id="1" net_type="0" name="srv" ip="192.168.0.109" port="9000"/>
+</Interface>
