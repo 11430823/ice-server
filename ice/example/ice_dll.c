@@ -122,9 +122,10 @@ extern "C" int on_get_pkg_len(int fd, const void* avail_data, int avail_len, int
 	if (avail_len < 4) {
 		return 0;
 	}
-
+	uint32_t len = 0;
+/*
 	cli_proto_head_t* head = (cli_proto_head_t *)avail_data;
-	uint32_t len = ice::bswap(head->len);
+	len = ice::bswap(head->len);
 	TRACE_LOG("[len:%u]", len);
 	if (isparent) {
 		if (len > g_bench_conf.get_m_page_size_max() || len < (uint32_t)sizeof(cli_proto_head_t)) {
@@ -134,6 +135,7 @@ extern "C" int on_get_pkg_len(int fd, const void* avail_data, int avail_len, int
 		}
 	}
 
+*/
 	INFO_LOG("[fd:%d, avail_len:%d, isparent:%d, avail_data:%s]", fd, avail_len, isparent, (char*)avail_data);
 	return len;
 }
@@ -146,10 +148,12 @@ extern "C" int on_cli_pkg(void* data, int len, fdsession_t* fdsess)
 {
 	/* 返回非零，断开FD的连接 */ 
 	INFO_LOG("[fd:%d, len:%d, data:%s]", fdsess->fd, len, (char*)data);
+/*
 	cli_proto_head_t* p = (cli_proto_head_t*)data;
 	INFO_LOG("[cmd:%d, id:%d, len:%d, ret:%d, seq_num:%d]", p->cmd, p->id, p->len, p->ret, p->seq_num);
 	
 	send_pkg_to_client(fdsess, data, len);
+*/
 	return 0;
 }
 
