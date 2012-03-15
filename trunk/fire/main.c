@@ -41,10 +41,7 @@ int main(int argc, char* argv[]){
 	if (0 != g_dll.register_plugin()){
 		return -1;
 	}
-
-	if (0 != g_epi.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num())){
-		return -1;
-	}
+	g_epi.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num());
 
 	if (0 != g_dll.on_init(1)) {
 		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
@@ -53,23 +50,26 @@ int main(int argc, char* argv[]){
 
 	for (uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
 		bind_config_elem_t* bc_elem = g_bind_conf.get_elem(i);
-		g_shmq.create(bc_elem);
+		bc_elem->recv_pipe.create();
+		bc_elem->send_pipe.create();
 		pid_t pid;
 		if ( (pid = fork ()) < 0 ) {
 			ALERT_LOG("fork child process err [id:%u]", bc_elem->id);
 			return -1;
 		} else if (pid > 0) {
-			g_shmq.close_pipe(i, !g_is_parent);
-			g_epi.do_add_conn(bc_elem->sendq.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL, bc_elem);			
-			net_start(bc_elem->ip.c_str(), bc_elem->port, bc_elem);
+			//父进程
+			pipe_t::close_pipe(i, g_is_parent);
+			g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL, bc_elem);			
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
+			//子进程
 			g_service.worker_process(i, i + 1);
+			return 0;
 		}
 	}
 	//parent process
 
-//  [9/13/2011 meng]
+	//  [9/13/2011 meng]
 #if 0
 	if (config_get_strval("addr_mcast_ip")) {
 		if (create_addr_mcast_socket() != 0) {
@@ -83,9 +83,7 @@ int main(int argc, char* argv[]){
 		g_epi.loop(g_bench_conf.get_page_size_max());
 	}
 	g_daemon.killall_children();
-	//TODO 下面没有检查
 	net_exit();
-	shmq_destroy(0, g_bind_conf.get_elem_num());
 	ice::lib_log_t::destroy();
 	return 0;
 }
