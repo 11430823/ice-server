@@ -376,7 +376,7 @@ inline void free_cb(struct conn_buf_t *p)
 
 void net_exit ()
 {
-	for (int i = 0; i < g_epi.m_max_fd + 1; i++) {
+	for (int i = 0; i < g_epi.m_max_fd; i++) {
 		if (g_epi.m_fds[i].type == fd_type_unused){
 			continue;
 		}
