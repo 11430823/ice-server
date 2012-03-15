@@ -6,10 +6,10 @@ CC=g++
 FLAG=-Wall -DDEBUG -g -O0 -o
 
 #包含的头文件
-INCLUDES=-I/usr/include/ -I../include/ -I../libinclude/
+INCLUDES=-I/usr/include/ -I../include/ -I../../lib/include/
 GLIB_INCLUDES=-I/usr/local/include/glib-2.0/ -I/usr/local/lib/glib-2.0/include/
 
-LIBS=-L/usr/lib/ -L../lib/
+LIBS=-L/usr/lib/ -L../../lib/
 
 LINK=-ldl -rdynamic -lglib-2.0 -lice
 
