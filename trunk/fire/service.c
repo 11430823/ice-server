@@ -1,0 +1,177 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#include <lib_util.h>
+#include <lib_log.h>
+
+#include "service.h"
+#include "bind_conf.h"
+#include "daemon.h"
+#include "ice_dll.h"
+#include "mcast.h"
+#include "net_if.h"
+#include "bench_conf.h"
+
+service_t g_service;
+bool g_is_parent = true;
+fd_array_session_t	g_fds_session;
+namespace {
+	void add_fdsess(fdsession_t* fdsess)
+	{
+		g_hash_table_insert(g_fds_session.cn, &(fdsess->fd), fdsess);
+		++(g_fds_session.count);
+	}
+	void remove_fdsess(int fd)
+	{
+		g_hash_table_remove(g_fds_session.cn, &fd);
+		--(g_fds_session.count);
+	}
+
+	void free_fdsess(void* fdsess)
+	{
+		g_slice_free1(sizeof(fdsession_t), fdsess);
+	}
+	int handle_init(bind_config_elem_t* bc_elem)
+	{
+		g_fds_session.cn = g_hash_table_new_full(g_int_hash, g_int_equal, 0, free_fdsess);
+		return g_dll.on_init(0);	
+	}
+	int handle_fini()
+	{
+		for (int i = 0; i <= g_epi.m_max_fd; ++i) {
+			if ( (g_epi.m_fds[i].type == fd_type_remote) && (g_epi.m_fds[i].cb.sendlen > 0) ) {
+				return -1;
+			}
+		}
+
+		if (0 != g_dll.on_fini(g_is_parent)) {
+			return -1;
+		}
+
+		g_hash_table_destroy(g_fds_session.cn);
+		return 0;
+	}
+}
+
+fdsession_t* get_fdsess( int fd )
+{
+	return (fdsession_t*)g_hash_table_lookup(g_fds_session.cn, &fd);
+}
+
+static inline void
+handle_process(uint8_t* recvbuf, int rcvlen, int fd)
+{
+	fdsession_t* fdsess = get_fdsess(fd);
+	if (fdsess) {
+		if (g_dll.on_cli_pkg(recvbuf, rcvlen, fdsess)) {
+			close_client_conn(fd);
+		}
+	}
+}
+static inline int
+handle_open(const shm_block_t* mb)
+{
+	fdsession_t* fdsess = get_fdsess(mb->fd);
+	if (fdsess || (mb->length != (sizeof(shm_block_t) + sizeof(skinfo_t)))) {
+//		ERROR_LOG("handle_open OPEN_BLOCK, fd=%d length=%d", mb->fd, mb->length);
+		return -1;
+	} else {
+		fdsess               = (fdsession_t*)g_slice_alloc(sizeof *fdsess);
+		fdsess->fd           = mb->fd;
+		fdsess->id           = mb->id;
+		fdsess->remote_port  = *(uint16_t*)mb->data;
+		fdsess->remote_ip    = *(uint32_t*)&mb->data[2];
+		add_fdsess(fdsess);
+	}
+
+	return 0;
+}
+void handle_recv_queue()
+{
+	struct pipe_t* recvq = &(g_service.m_bind_elem->recv_pipe);
+	struct pipe_t* sendq = &(g_service.m_bind_elem->send_pipe);
+
+	struct shm_block_t* mb;
+
+}
+
+int handle_close(int fd)
+{
+	fdsession_t* fdsess = get_fdsess(fd);
+	if (!fdsess) {
+//		ERROR_RETURN( ("connection %d had already been closed", fd), -1 );
+		return -1;
+	}
+
+	assert(g_fds_session.count > 0);
+
+	g_dll.on_cli_conn_closed(fd);
+
+	remove_fdsess(fd);
+	return 0;
+}
+
+void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
+{
+	g_is_parent = false;
+	EPOLL_TIME_OUT = 100;
+	m_bind_elem = g_bind_conf.get_elem(bc_elem_idx);
+
+	char prefix[10] = { 0 };
+	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
+	prefix[len] = '_';
+	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(), (ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
+		prefix, g_bench_conf.get_log_save_next_file_interval_min());
+
+	//释放资源(从父进程继承来的资源)
+	pipe_t::close_pipe(n_inited_bc, g_is_parent);
+	net_exit();
+
+
+	//初始化子进程
+	g_epi.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num());
+	g_epi.do_add_conn(m_bind_elem->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL, NULL);
+	net_start(m_bind_elem->ip.c_str(), m_bind_elem->port, m_bind_elem);
+
+	if ( 0 != handle_init(m_bind_elem)) {
+		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());
+		goto fail;
+	}
+
+	while ( !g_daemon.m_stop || 0 != handle_fini() ) {
+		g_epi.child_loop(g_bench_conf.get_page_size_max());//mark
+	}
+fail:
+	net_exit();
+	ice::lib_log_t::destroy();
+	exit(0);
+}
+
+uint32_t service_t::get_id()
+{
+	return m_bind_elem->id;
+}
+
+const char* service_t::get_name()
+{
+	return m_bind_elem->name.c_str();
+}
+
+const char* service_t::get_ip()
+{
+	return m_bind_elem->ip.c_str();
+}
+
+in_port_t service_t::get_port()
+{
+	return m_bind_elem->port;
+}
+
+bind_config_elem_t::bind_config_elem_t()
+{
+	id = 0;
+	port = 0;
+	restart_cnt = 0;
+	net_type = 0;
+}
