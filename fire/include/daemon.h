@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <lib_iatomic.h>
+#include <lib_util.h>
 
 enum {
 	E_PIPE_INDEX_RDONLY = 0,
@@ -46,7 +47,7 @@ public:
 	// Returns:   void
 	//************************************
 	void killall_children();
-	void restart_child_process(bind_config_elem_t* bc_elem);
+	void restart_child_process(struct bind_config_elem_t* bc_elem);
 	//true:停止.false:继续(无改变)
 	volatile bool m_stop;
 	//true:重启.false:继续(无改变)
@@ -59,6 +60,7 @@ public:
 	PROPERTY_READONLY_DEFAULT(std::string, m_current_dir);
 };
 
+extern bool	g_is_parent;
 extern daemon_t g_daemon;
 
 

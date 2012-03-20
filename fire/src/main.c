@@ -12,36 +12,30 @@
 #include "bind_conf.h"
 #include "service.h"
 #include "bench_conf.h"
-#include "shmq.h"
 #include "ice_epoll.h"
 
-namespace {
-	int load_config(){
-		if (0 != g_bench_conf.load()){
-			return -1;
-		}
-
-		if (0 != g_bind_conf.load()){
-			return -1;
-		}
-		return 0;
+int main(int argc, char* argv[])
+{
+	if (0 != g_bench_conf.load()){
+		BOOT_LOG(-1, "bench conf load ???");
+		return -1;
 	}
-}
 
-int main(int argc, char* argv[]){
-	if(0 != load_config()){
+	if (0 != g_bind_conf.load()){
+		BOOT_LOG(-1, "bind conf load ???");
+	}
+
+	if (0 != g_dll.register_plugin()){
 		return -1;
 	}
 
 	g_daemon.prase_args(argc, argv);
 
-	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(), (ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
+	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
+		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
 		NULL, g_bench_conf.get_log_save_next_file_interval_min());
 
-	if (0 != g_dll.register_plugin()){
-		return -1;
-	}
-	g_epi.init(g_bench_conf.get_max_fd_num(), g_bench_conf.get_max_fd_num());
+	g_epi.init(g_bench_conf.get_max_fd_num());
 
 	if (0 != g_dll.on_init(1)) {
 		ALERT_LOG("FAILED TO INIT PARENT PROCESS");
@@ -59,7 +53,7 @@ int main(int argc, char* argv[]){
 		} else if (pid > 0) {
 			//父进程
 			pipe_t::close_pipe(i, g_is_parent);
-			g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL, bc_elem);			
+			g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL);			
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
 			//子进程
@@ -69,21 +63,11 @@ int main(int argc, char* argv[]){
 	}
 	//parent process
 
-	//  [9/13/2011 meng]
-#if 0
-	if (config_get_strval("addr_mcast_ip")) {
-		if (create_addr_mcast_socket() != 0) {
-			// return -1 if fail to create mcast socket
-			BOOT_LOG(-1, "PARENT: FAILED TO CREATE MCAST FOR RELOADING SO");
-		}
-	} 
-#endif
-
 	while (!g_daemon.m_stop || g_dll.on_fini(g_is_parent) != 0) {
 		g_epi.loop(g_bench_conf.get_page_size_max());
 	}
 	g_daemon.killall_children();
-	net_exit();
+	g_epi.exit();
 	ice::lib_log_t::destroy();
 	return 0;
 }

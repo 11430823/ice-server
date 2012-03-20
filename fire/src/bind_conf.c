@@ -106,3 +106,31 @@ void bind_config_t::add_elem(const bind_config_elem_t& elem )
 {
 	m_elems.push_back(elem);
 }
+
+uint32_t bind_config_elem_t::get_id()
+{
+	return this->id;
+}
+
+std::string& bind_config_elem_t::get_name()
+{
+	return this->name;
+}
+
+std::string& bind_config_elem_t::get_ip()
+{
+	return this->ip;
+}
+
+in_port_t bind_config_elem_t::get_port()
+{
+	return this->port;
+}
+
+bind_config_elem_t::bind_config_elem_t()
+{
+	id = 0;
+	port = 0;
+	restart_cnt = 0;
+	net_type = 0;
+}

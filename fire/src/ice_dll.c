@@ -50,7 +50,6 @@ int ice_dll_t::register_plugin()
 out:
 	BOOT_LOG(ret_code, "dlopen [file name:%s, state:%s]",
 		g_bench_conf.get_liblogic_path().c_str(), (0 != ret_code ? "FAIL" : "OK"));
-	return ret_code;
 }
 
 ice_dll_t::ice_dll_t()
