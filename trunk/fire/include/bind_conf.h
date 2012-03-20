@@ -12,6 +12,26 @@
 #include <string>
 #include <vector>
 
+#include "daemon.h"
+
+#pragma pack(1)
+struct bind_config_elem_t {
+	uint32_t		id;
+	std::string		name;
+	uint8_t			net_type;
+	std::string		ip;
+	in_port_t		port;
+	uint8_t			restart_cnt;//重启过的次数
+	pipe_t			send_pipe;
+	pipe_t			recv_pipe;
+	bind_config_elem_t();
+	uint32_t get_id();
+	std::string& get_name();
+	std::string& get_ip();
+	in_port_t get_port();
+};
+#pragma pack()
+
 class bind_config_t
 {
 public:

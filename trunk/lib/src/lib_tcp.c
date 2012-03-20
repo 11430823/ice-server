@@ -172,16 +172,16 @@ int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port
 
 	struct sockaddr_in servaddr;
 	memset(&servaddr, 0, sizeof(servaddr));
-	servaddr.sin_family  = AF_INET;
+	servaddr.sin_family  = PF_INET;
 	servaddr.sin_port    = htons(port);
 	if (NULL != ipaddr) {
-		inet_pton(AF_INET, ipaddr, &servaddr.sin_addr);
-	} else {	
+		inet_pton(PF_INET, ipaddr, &servaddr.sin_addr);
+	} else {
 		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	}
 
 	int listenfd;
-	if (-1 == (listenfd = socket(AF_INET, SOCK_STREAM, 0))) {
+	if (-1 == (listenfd = socket(PF_INET, SOCK_STREAM, 0))) {
 		return -1;
 	}
 

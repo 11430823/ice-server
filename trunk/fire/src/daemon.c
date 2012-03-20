@@ -6,16 +6,21 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <errno.h>
+#include <fcntl.h>
 
 #include <lib_util.h>
 #include <lib_log.h>
 
+#include "ice_epoll.h"
 #include "daemon.h"
 #include "bind_conf.h"
 #include "bench_conf.h"
 #include "service.h"
 
 daemon_t g_daemon;
+
+bool g_is_parent = true;
 
 namespace {
 
@@ -181,7 +186,7 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 	}
 
 	close(bc_elem->recv_pipe.pipe_handles[1]);
-	do_del_conn(bc_elem->send_pipe.pipe_handles[0], 2);
+	//do_del_conn(bc_elem->send_pipe.pipe_handles[0], 2);
 
 	bc_elem->send_pipe.create();
 	bc_elem->recv_pipe.create();
@@ -193,7 +198,7 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 		//		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) { //parent process
 		pipe_t::close_pipe(i, g_is_parent);
-		g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[0], fd_type_pipe, 0, bc_elem);
+		g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[0], fd_type_pipe, 0);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
 		g_service.worker_process(i, g_bind_conf.get_elem_num());
