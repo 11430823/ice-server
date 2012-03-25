@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #include <lib_log.h>
 #include <lib_util.h>
@@ -133,4 +134,25 @@ bind_config_elem_t::bind_config_elem_t()
 	port = 0;
 	restart_cnt = 0;
 	net_type = 0;
+}
+
+pipe_t::pipe_t()
+{
+	::memset(this->pipe_handles, 0, ice::get_arr_num(this->pipe_handles));
+}
+
+int pipe_t::create()
+{
+	if (-1 == ::pipe (this->pipe_handles)){
+		ALERT_LOG("PIPE CREATE FAILED [err:%s]", strerror(errno));
+		return -1;
+	}
+
+	::fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
+	::fcntl (this->pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFL, O_NONBLOCK | O_WRONLY);
+
+	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
+	::fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFD, FD_CLOEXEC);
+	::fcntl (this->pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFD, FD_CLOEXEC);
+	return 0;
 }

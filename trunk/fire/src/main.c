@@ -6,6 +6,7 @@
 
 #include <lib_util.h>
 #include <lib_log.h>
+#include <lib_file.h>
 
 #include "daemon.h"
 #include "ice_dll.h"
@@ -52,7 +53,9 @@ int main(int argc, char* argv[])
 			return -1;
 		} else if (pid > 0) {
 			//¸¸½ø³Ì
-			pipe_t::close_pipe(i, g_is_parent);
+			int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
+			ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
+
 			g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL);			
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {

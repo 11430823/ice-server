@@ -13,11 +13,11 @@
 #include "lib_net_util.h"
 
 namespace ice{
-	class lib_tcp_t : public lib_net
+	class lib_tcp_t : public lib_net_t
 	{
 	public:
-		lib_tcp_t();
-		//virtual ~lib_tcp_t();
+		lib_tcp_t(){}
+		virtual ~lib_tcp_t(){}
 		/**
 		* @brief Send `total` bytes of data to `sockfd`
 		*
@@ -94,7 +94,7 @@ namespace ice{
 	{
 	public:
 		lib_tcp_cli_t(){}
-		//virtual ~lib_tcp_cli_t();
+		virtual ~lib_tcp_cli_t(){}
 		/**
 		* @brief Create a TCP connection
 		*

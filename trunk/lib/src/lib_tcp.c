@@ -9,10 +9,6 @@
 #include "lib_net_util.h"
 #include "lib_tcp.h"
 
-ice::lib_tcp_t::lib_tcp_t()
-{
-}
-
 int ice::lib_tcp_t::set_sock_send_timeo( int sockfd, int millisec )
 {
 	struct timeval tv;
@@ -235,7 +231,7 @@ int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char*
 
 	int err = getaddrinfo(host, serv, &hints, &res);
 	if (err != 0) {
-		errno = lib_net_util::eai_to_errno(err);
+		errno = lib_net_util_t::eai_to_errno(err);
 		return -1;
 	}
 

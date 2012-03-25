@@ -2,12 +2,12 @@
 
 #include "lib_random.h"
 
-int ice::lib_random::random( int min, int max )
+int ice::lib_random_t::random( int min, int max )
 {
-	return (rand()%(max-min+1))+min;
+	return (::rand()%(max-min+1))+min;
 }
 
-int ice::lib_random::hash( const char* p )
+int ice::lib_random_t::hash( const char* p )
 {
 	int h = 0;
 	while (*p) {

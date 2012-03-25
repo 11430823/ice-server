@@ -21,10 +21,10 @@ namespace ice{
 
 	class lib_xmlparser
 	{
-	public:
-		typedef std::ios_base& (&manip_t)(std::ios_base&);
 		PROPERTY_READONLY_BY_REF_DEFAULT(xmlDocPtr, doc_ptr);//定义解析文档指针
 		PROPERTY_READONLY_BY_REF_DEFAULT(xmlNodePtr, node_ptr);//定义结点指针(你需要它为了在各个结点间移动)
+	public:
+		typedef std::ios_base& (&manip_t)(std::ios_base&);
 	public:
 		lib_xmlparser();
 		virtual ~lib_xmlparser();

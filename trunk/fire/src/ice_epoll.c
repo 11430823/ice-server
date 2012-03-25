@@ -61,7 +61,7 @@ namespace {
 					}
 				}
 				// prevent child process from being restarted again and again forever
-				if (bc->restart_cnt++ < 20) {
+				if (bc->restart_cnt++ <= g_bench_conf.get_restart_cnt_max()) {
 					g_daemon.restart_child_process(bc);
 				}
 			} else { // Parent Crashed

@@ -100,6 +100,10 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
+	if (0 != get_val(this->restart_cnt_max, key, "core", "restart_cnt_max")){
+		ret = -1;
+		goto ret;
+	}
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -115,8 +119,8 @@ bench_conf_t::bench_conf_t()
 	this->log_save_next_file_interval_min = 0;
 	this->fd_time_out = 0;
 	this->page_size_max = 0;
-	this->log_save_next_file_interval_min = 0;
 	this->core_size = 0;
+	this->restart_cnt_max = 0;
 }
 
 std::string bench_conf_t::get_strval(std::string& key, std::string& name) const

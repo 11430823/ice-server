@@ -3,32 +3,32 @@
 
 #include "lib_memory.h"
 
-void ice::lib_memory_active_buf::init_data()
+void ice::lib_active_buf_t::init_data()
 {
 	this->data = NULL;
 	this->total_len = 0;
 	this->write_pos = 0;
 }
 
-void ice::lib_memory_active_buf::clean()
+void ice::lib_active_buf_t::clean()
 {
 	free(this->data);
 	this->init_data();
 }
 
-uint32_t ice::lib_memory_active_buf::pop_front( uint32_t len )
+uint32_t ice::lib_active_buf_t::pop_front( uint32_t len )
 {
 	if(this->write_pos <= len){
 		//È«²¿µ¯³ö
 		this->clean();
 	}else{
-		memmove(this->data, this->data + len, this->write_pos - len);
+		::memmove(this->data, this->data + len, this->write_pos - len);
 		this->write_pos -= len;
 	}
 	return this->write_pos;
 }
 
-void ice::lib_memory_active_buf::push_back( const char* const pdata, uint32_t len )
+void ice::lib_active_buf_t::push_back( const char* const pdata, uint32_t len )
 {
 	uint32_t remain_len = this->total_len - this->write_pos;
 	if(remain_len >= len){
@@ -49,12 +49,12 @@ void ice::lib_memory_active_buf::push_back( const char* const pdata, uint32_t le
 	}
 }
 
-ice::lib_memory_active_buf::lib_memory_active_buf()
+ice::lib_active_buf_t::lib_active_buf_t()
 {
 	this->init_data();
 }
 
-ice::lib_memory_active_buf::~lib_memory_active_buf()
+ice::lib_active_buf_t::~lib_active_buf_t()
 {
 	this->clean();
 }

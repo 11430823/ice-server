@@ -2,32 +2,32 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	Ëø
+	purpose:	é”
 	brief:		OK
 *********************************************************************/
-/*
-pthread_mutex_t  »¥³âÁ¿µÄÊôĞÔ    ¿ìËÙ»¥³âËø£¨£Ğ£Ô£È£Ò£Å£Á£Ä£ß£Í£Õ£Ô£Å£Ø£ß£É£Î£É£Ô£É£Á£Ì£É£Ú£Å£Ò£© ->     ¶à´Î½øÈëÒ»¸öÁÙ½ç»¥³âÁ¿    £¿¡¡¡¡¡¡£¨Ä¬ÈÏÖ»ÄÜ½øÈëÒ»´Î¡¡¡¡½âËøÒ»´Î¡¡¡¡£®£®£®£®Èç´ËÑ­»·£©
-¡¡¡¡µİ¹é»¥³âËø£¨£Ğ£Ô£È£Ò£Å£Á£Ä£ß£Ò£Å£Ã£Õ£Ò£Ó£É£Ö£Å£ß£Í£Õ£Ô£Å£Ø£ß£É£Î£É£Ô£É£Á£Ì£É£Ú£Å£Ò£ß£Î£Ğ£©
-  ¼ì´í»¥³âËø£¨£Ğ£Ô£È£Ò£Å£Á£Ä£ß£Ğ£Å£Å£Ï£Ò£Ã£È£Å£Ã£Ë£ß£Í£Õ£Ô£Å£Ø£ß£É£Î£É£Ô£É£Á£Ì£É£Ú£Å£Ò£ß£Î£Ğ£©
-  */
+
 #include <pthread.h>
 
 #include "lib_util.h"
 
 namespace ice{
-
-	class lib_lock_mutex
+	//äº’æ–¥é”
+	class lib_lock_mutex_t
 	{
-	public:
-		lib_lock_mutex();
-		virtual ~lib_lock_mutex();
-	public:
-		inline void lock();
-		inline void ulock();
 		PROPERTY_READONLY_DEFAULT(pthread_mutex_t, lock_mutex);
+	public:
+		lib_lock_mutex_t();
+		virtual ~lib_lock_mutex_t();
+	public:
+		inline void lock(){
+			::pthread_mutex_lock(&this->lock_mutex);
+		}
+		inline void ulock(){
+			::pthread_mutex_unlock(&this->lock_mutex);
+		}
 	private:
-		lib_lock_mutex(const lib_lock_mutex& cr);
-		lib_lock_mutex& operator=(const lib_lock_mutex& cr);
+		lib_lock_mutex_t(const lib_lock_mutex_t& cr);
+		lib_lock_mutex_t& operator=(const lib_lock_mutex_t& cr);
 	};
 
 }//end namespace ice
