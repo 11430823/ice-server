@@ -35,8 +35,8 @@ struct bind_config_elem_t {
 	std::string		ip;
 	in_port_t		port;
 	uint8_t			restart_cnt;//重启过的次数(防止不断的重启)
-	pipe_t			send_pipe;
-	pipe_t			recv_pipe;
+	pipe_t			send_pipe;//针对子进程的写
+	pipe_t			recv_pipe;//针对子进程的读
 	bind_config_elem_t();
 	uint32_t get_id();
 	std::string& get_name();

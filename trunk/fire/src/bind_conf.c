@@ -29,20 +29,20 @@ namespace {
 
 		bind_config_elem_t elem;
 		while (*name_cursor) {
-			if (strcmp (*name_cursor, "id") == 0){
-				elem.id = atoi(*value_cursor);
+			if (::strcmp (*name_cursor, "id") == 0){
+				elem.id = ::atoi(*value_cursor);
 			}
-			if (strcmp (*name_cursor, "name") == 0){
+			if (::strcmp (*name_cursor, "name") == 0){
 				elem.name = *value_cursor;
 			}
-			if (strcmp (*name_cursor, "net_type") == 0){
-				elem.net_type = atoi(*value_cursor);
+			if (::strcmp (*name_cursor, "net_type") == 0){
+				elem.net_type = ::atoi(*value_cursor);
 			}
-			if (strcmp (*name_cursor, "ip") == 0){
+			if (::strcmp (*name_cursor, "ip") == 0){
 				elem.ip = *value_cursor;
 			}
-			if (strcmp (*name_cursor, "port") == 0){
-				elem.port = atoi(*value_cursor);
+			if (::strcmp (*name_cursor, "port") == 0){
+				elem.port = ::atoi(*value_cursor);
 				DEBUG_LOG("bind config [id:%d, name:%s, net_type:%d, ip:%s, port:%d]",
 					elem.id, elem.name.c_str(), elem.net_type,
 					elem.ip.c_str(), elem.port);
@@ -81,7 +81,7 @@ int bind_config_t::load()
 
 	atomic_t t;
 	atomic_set(&t, 0);
-	g_daemon.child_pids.resize(get_elem_num(), t);
+	g_daemon.child_pids.resize(this->get_elem_num(), t);
 	return 0;
 }
 
@@ -130,10 +130,10 @@ in_port_t bind_config_elem_t::get_port()
 
 bind_config_elem_t::bind_config_elem_t()
 {
-	id = 0;
-	port = 0;
-	restart_cnt = 0;
-	net_type = 0;
+	this->id = 0;
+	this->port = 0;
+	this->restart_cnt = 0;
+	this->net_type = 0;
 }
 
 pipe_t::pipe_t()
