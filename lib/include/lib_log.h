@@ -4,7 +4,6 @@
 	copyright:	All rights reserved.
 	purpose:	
 	brief:		用于记录日志，一共分9种日志等级。
-	必须先调用log_init/log_init_t来初始化日志功能。
 	注意，每条日志不能超过8000字节。
 	如果编译程序时定义宏LOG_USE_SYSLOG，则会利用syslog来记录日志，使用的facility是LOG_USER。
 *********************************************************************/
@@ -60,7 +59,6 @@ namespace ice{
 			e_dest_both		= 3
 		};
 	public:
-		lib_log_t(){}
 		/**
 		* @brief 初始化日志记录功能。按时间周期创建新的日志文件。
 		*

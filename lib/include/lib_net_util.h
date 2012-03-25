@@ -10,66 +10,62 @@
 
 namespace ice{
 
-	class lib_net_util
+	class lib_net_util_t
 	{
 	public:
 		/**
-		* @brief °Ñgetnameinfo¡¢getaddrinfoµÈº¯Êı·µ»ØµÄEAI_XXX´íÎóÂë×ª»»³ÉÀàËÆµÄEXXX(errno)´íÎóÂë¡£
-		* @param eai EAI_XXX´íÎóÂë
-		* @return ·µ»ØÀàËÆµÄEXXX(errno)´íÎóÂë
+		* @brief æŠŠgetnameinfoã€getaddrinfoç­‰å‡½æ•°è¿”å›çš„EAI_XXXé”™è¯¯ç è½¬æ¢æˆç±»ä¼¼çš„EXXX(errno)é”™è¯¯ç ã€‚
+		* @param eai EAI_XXXé”™è¯¯ç 
+		* @return è¿”å›ç±»ä¼¼çš„EXXX(errno)é”™è¯¯ç 
+		* todo ç”¨é€”?
 		*/
 		static int eai_to_errno(int eai);
-		//************************************
-		// Brief:	  close the given fd(if fd is VALID),and set to be INVALID_SOCKET 
-		// Returns:   int (0 on success, -1 on error)
-		// Parameter: int & s (fd)
-		//************************************
-		static inline int close_socket(int& s);
 		/**
-		* @brief ÓÃÓÚÍ¨¹ıÍø¿¨½Ó¿Ú£¨eth0/eth1/lo...£©»ñÈ¡¶ÔÓ¦µÄIPµØÖ·¡£Ö§³ÖIPv4ºÍIPv6¡£
-		* @param nif Íø¿¨½Ó¿Ú¡£eth0/eth1/lo...
-		* @param af ÍøÂçµØÖ·ÀàĞÍ¡£AF_INET»òÕßAF_INET6¡£
-		* @param ipaddr ÓÃÓÚ·µ»ØnifºÍaf¶ÔÓ¦µÄIPµØÖ·¡£ipaddrµÄ¿Õ¼äÓÉº¯Êıµ÷ÓÃÕß·ÖÅä£¬²¢ÇÒ³¤¶È±ØĞë´óÓÚ»òÕßµÈÓÚIPµØÖ·µÄ³¤¶È£¨16»òÕß46×Ö½Ú£©¡£
-		* @param len ipaddrµÄ³¤¶È£¨×Ö½Ú£©¡£
-		* @return ³É¹¦·µ»Ø0£¬²¢ÇÒipaddrÖĞ±£´æÁËnifºÍaf¶ÔÓ¦µÄIPµØÖ·¡£Ê§°Ü·µ»Ø-1¡£
+		* @brief ç”¨äºé€šè¿‡ç½‘å¡æ¥å£ï¼ˆeth0/eth1/lo...ï¼‰è·å–å¯¹åº”çš„IPåœ°å€ã€‚æ”¯æŒIPv4å’ŒIPv6ã€‚
+		* @param nif ç½‘å¡æ¥å£ã€‚eth0/eth1/lo...
+		* @param af ç½‘ç»œåœ°å€ç±»å‹ã€‚AF_INETæˆ–è€…AF_INET6ã€‚
+		* @param ipaddr ç”¨äºè¿”å›nifå’Œafå¯¹åº”çš„IPåœ°å€ã€‚ipaddrçš„ç©ºé—´ç”±å‡½æ•°è°ƒç”¨è€…åˆ†é…ï¼Œå¹¶ä¸”é•¿åº¦å¿…é¡»å¤§äºæˆ–è€…ç­‰äºIPåœ°å€çš„é•¿åº¦ï¼ˆ16æˆ–è€…46å­—èŠ‚ï¼‰ã€‚
+		* @param len ipaddrçš„é•¿åº¦ï¼ˆå­—èŠ‚ï¼‰ã€‚
+		* @return æˆåŠŸè¿”å›0ï¼Œå¹¶ä¸”ipaddrä¸­ä¿å­˜äº†nifå’Œafå¯¹åº”çš„IPåœ°å€ã€‚å¤±è´¥è¿”å›-1ã€‚
+		* todo ç”¨é€”?
 		*/
 		static int get_ip_addr(const char* nif, int af, void* ipaddr, size_t len);
 	protected:
 		
 	private:
-		lib_net_util(const lib_net_util& cr);
-		lib_net_util& operator=(const lib_net_util& cr);
+		lib_net_util_t(const lib_net_util_t& cr);
+		lib_net_util_t& operator=(const lib_net_util_t& cr);
 	};
 	
 
-	class lib_net
+	class lib_net_t
 	{
 	public:
-		lib_net();
-		virtual ~lib_net();
+		lib_net_t();
+		virtual ~lib_net_t();
 	protected:
 		int fd;
 	private:
-		lib_net(const lib_net& cr);
-		lib_net& operator=(const lib_net& cr);
+		lib_net_t(const lib_net_t& cr);
+		lib_net_t& operator=(const lib_net_t& cr);
 	};
 
-	class lib_net_multicast
+	class lib_net_multicast_t
 	{
 	public:
-		lib_net_multicast();
-		//virtual ~lib_net_mcast(){}
-		//¼ÓÈë¶à²¥//TODO Î´²âÊÔ
+		lib_net_multicast_t();
+		virtual ~lib_net_multicast_t(){}
+		//åŠ å…¥å¤šæ’­//TODO æœªæµ‹è¯•
 		int join_multicast(int s);
-		//ÍË³ö×é²¥//TODO Î´²âÊÔ
+		//é€€å‡ºç»„æ’­//TODO æœªæµ‹è¯•
 		int exit_multicast(int s);
-		//¾Ü¾ø×é²¥//TODO Î´²âÊÔ
+		//æ‹’ç»ç»„æ’­//TODO æœªæµ‹è¯•
 		int refuse_multicast(int s);
 	protected:
 		
 	private:
-		lib_net_multicast(const lib_net_multicast& cr);
-		lib_net_multicast& operator=(const lib_net_multicast& cr);
+		lib_net_multicast_t(const lib_net_multicast_t& cr);
+		lib_net_multicast_t& operator=(const lib_net_multicast_t& cr);
 	};
 
 }//end namespace ice

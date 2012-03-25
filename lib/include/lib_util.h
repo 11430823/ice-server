@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <errno.h>
 
 #ifdef  likely
 #undef  likely
@@ -43,6 +44,8 @@
 	public:		const varType& get_##varName(void) { return varName; } \
 	public:		void set_##varName(const varType& var) { varName = var; }
 
+
+
 namespace ice{
 	#define SUCC 0
 	#define ERR  -1
@@ -67,7 +70,15 @@ namespace ice{
 	#define FOREACH_PREV(container, it) \
 		for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
 
-
+	//处理可被系统中断的函数返回EINTR时循环处理.(函数返回值必须为int)
+	//example:int nRes = HANDLE_EINTR(close(s));
+	#define HANDLE_EINTR(x) ({\
+		typeof(x) __eintr_code__;\
+		do {\
+			__eintr_code__ = x;\
+		} while(__eintr_code__ < 0 && EINTR == errno);\
+		__eintr_code__;\
+		})
 	//************************************
 	// Brief:     由字符串转换为所需类型
 	// Returns:   void

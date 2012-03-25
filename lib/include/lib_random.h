@@ -10,7 +10,7 @@
 
 namespace ice{
 
-	class lib_random
+	class lib_random_t
 	{
 	public:
 		/**
@@ -29,8 +29,8 @@ namespace ice{
 	protected:
 		
 	private:
-		lib_random(const lib_random& cr);
-		lib_random& operator=(const lib_random& cr);
+		lib_random_t(const lib_random_t& cr);
+		lib_random_t& operator=(const lib_random_t& cr);
 	};
 
 }//end namespace ice

@@ -23,10 +23,16 @@ namespace ice{
 		//************************************
 		static int set_io_block(int fd, bool is_block);
 		//************************************
-		// Brief:     µÃµ½Ä¿Â¼ÏÂµÄÎÄ¼ş
-		// Returns:   int	0:OK ÆäËü:Ê§°Ü
-		// Parameter: const char * path Ä¿Â¼µÄÂ·¾¶
-		// Parameter: std::vector<std::string> & file_names  ·µ»ØµÄÎÄ¼şÃû
+		// Brief:	  close the given fd(if fd is VALID),and set to be -1 
+		// Returns:   int (0 on success, -1 on error)
+		// Parameter: int & s (fd)
+		//************************************
+		static int close_fd(int& fd);
+		//************************************
+		// Brief:     å¾—åˆ°ç›®å½•ä¸‹çš„æ–‡ä»¶
+		// Returns:   int	0:OK å…¶å®ƒ:å¤±è´¥
+		// Parameter: const char * path ç›®å½•çš„è·¯å¾„
+		// Parameter: std::vector<std::string> & file_names  è¿”å›çš„æ–‡ä»¶å
 		//************************************
 		static int get_dir_file(const char *path, std::vector<std::string>& file_names);
 	protected:

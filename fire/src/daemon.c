@@ -11,12 +11,14 @@
 
 #include <lib_util.h>
 #include <lib_log.h>
+#include <lib_file.h>
 
 #include "ice_epoll.h"
 #include "daemon.h"
 #include "bind_conf.h"
 #include "bench_conf.h"
 #include "service.h"
+
 
 daemon_t g_daemon;
 
@@ -197,45 +199,11 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 	if ( (pid = fork ()) < 0 ) {
 		//		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) { //parent process
-		pipe_t::close_pipe(i, g_is_parent);
+		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
+		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
 		g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[0], fd_type_pipe, 0);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
 		g_service.worker_process(i, g_bind_conf.get_elem_num());
-	}
-}
-
-pipe_t::pipe_t()
-{
-	memset(pipe_handles, 0, ice::get_arr_num(pipe_handles));
-}
-
-int pipe_t::create()
-{
-	if (-1 == pipe (this->pipe_handles)){
-		ALERT_LOG("PIPE CREATE FAILED [err:%s]", strerror(errno));
-		return -1;
-	}
-
-	fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
-	fcntl (this->pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFL, O_NONBLOCK | O_WRONLY);
-
-	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
-	fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFD, FD_CLOEXEC);
-	fcntl (this->pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFD, FD_CLOEXEC);
-	return 0;
-}
-
-void pipe_t::close_pipe( int idx, bool is_parent )
-{
-	if (is_parent) {
-		close(g_bind_conf.get_elem(idx)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
-		close(g_bind_conf.get_elem(idx)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-	} else {
-		// close fds inherited from parent process
-		for (int i = 0; i != idx; ++i ) {
-			close(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-			close(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
-		}
 	}
 }

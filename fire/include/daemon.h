@@ -13,24 +13,6 @@
 #include <lib_iatomic.h>
 #include <lib_util.h>
 
-enum {
-	E_PIPE_INDEX_RDONLY = 0,
-	E_PIPE_INDEX_WRONLY = 1,
-	E_PIPE_INDEX_MAX,
-};
-
-#pragma pack(1)
-
-//父子进程之间的管道.
-struct pipe_t {
-	int pipe_handles[E_PIPE_INDEX_MAX];
-	pipe_t();
-	int create();
-	static void close_pipe(int idx, bool is_parent );
-};
-
-#pragma pack()
-
 class daemon_t
 {
 public:

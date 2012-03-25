@@ -4,6 +4,7 @@
 
 #include <lib_util.h>
 #include <lib_log.h>
+#include <lib_file.h>
 
 #include "ice_epoll.h"
 #include "service.h"
@@ -27,7 +28,11 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 		prefix, g_bench_conf.get_log_save_next_file_interval_min());
 
 	//释放资源(从父进程继承来的资源)
-	pipe_t::close_pipe(n_inited_bc, g_is_parent);
+	// close fds inherited from parent process
+	for (int i = 0; i != n_inited_bc; ++i ) {
+		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
+		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
+	}
 	g_epi.exit();
 
 	//初始化子进程

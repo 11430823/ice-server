@@ -15,11 +15,14 @@
 namespace ice{
 	//////////////////////////////////////////////////////////////////////////
 	//自动无限放大,但是不会自动紧缩.
-	class lib_memory_active_buf
+	class lib_active_buf_t
 	{
+		PROPERTY_READONLY_DEFAULT(char*, data);//数据头指针
+		PROPERTY_READONLY_DEFAULT(uint32_t, total_len);//已分配的总长度
+		PROPERTY_READONLY_DEFAULT(uint32_t, write_pos);//已使用到的位置
 	public:
-		lib_memory_active_buf();
-		virtual ~lib_memory_active_buf();
+		lib_active_buf_t();
+		virtual ~lib_active_buf_t();
 		void push_back(const char* const pdata, uint32_t len);
 		//************************************
 		// Brief:	  从数据头中弹出长度为len的数据
@@ -34,12 +37,9 @@ namespace ice{
 		inline void clean();
 	private:
 		inline void init_data();
-		PROPERTY_READONLY_DEFAULT(char*, data);//数据头指针
-		PROPERTY_READONLY_DEFAULT(uint32_t, total_len);//已分配的总长度
-		PROPERTY_READONLY_DEFAULT(uint32_t, write_pos);//已使用到的位置
 	private:
-		lib_memory_active_buf(const lib_memory_active_buf& cr);
-		lib_memory_active_buf& operator=(const lib_memory_active_buf& cr);
+		lib_active_buf_t(const lib_active_buf_t& cr);
+		lib_active_buf_t& operator=(const lib_active_buf_t& cr);
 	};
 
 }//end namespace ice

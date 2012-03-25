@@ -12,16 +12,29 @@
 #include <string>
 #include <vector>
 
-#include "daemon.h"
+enum {
+	E_PIPE_INDEX_RDONLY = 0,
+	E_PIPE_INDEX_WRONLY = 1,
+	E_PIPE_INDEX_MAX,
+};
 
 #pragma pack(1)
+
+//父子进程之间的管道.
+struct pipe_t {
+	int pipe_handles[E_PIPE_INDEX_MAX];
+	pipe_t();
+	int create();
+};
+
+//每个进程的数据
 struct bind_config_elem_t {
-	uint32_t		id;
-	std::string		name;
-	uint8_t			net_type;
+	uint32_t		id;//序号
+	std::string		name;//名称
+	uint8_t			net_type;//网络类型
 	std::string		ip;
 	in_port_t		port;
-	uint8_t			restart_cnt;//重启过的次数
+	uint8_t			restart_cnt;//重启过的次数(防止不断的重启)
 	pipe_t			send_pipe;
 	pipe_t			recv_pipe;
 	bind_config_elem_t();
