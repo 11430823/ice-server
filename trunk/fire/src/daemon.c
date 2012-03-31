@@ -54,6 +54,7 @@ namespace {
 			for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
 				if (atomic_read(&g_daemon.child_pids[i]) == pid) {
 					atomic_set(&g_daemon.child_pids[i], 0);
+					//todo g_daemon.restart_child_process(bc);将重启的功能放在这里
 					break;
 				}
 			}
