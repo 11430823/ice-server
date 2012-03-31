@@ -26,6 +26,7 @@ namespace ice{
 		// Brief:	  close the given fd(if fd is VALID),and set to be -1 
 		// Returns:   int (0 on success, -1 on error)
 		// Parameter: int & s (fd)
+		// 其中判定 -1 != fd  时才可关闭
 		//************************************
 		static int close_fd(int& fd);
 		//************************************

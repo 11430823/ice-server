@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include <string.h>
 
+#include "lib_util.h"
 #include "lib_memory.h"
 
 void ice::lib_active_buf_t::init_data()
@@ -12,7 +12,7 @@ void ice::lib_active_buf_t::init_data()
 
 void ice::lib_active_buf_t::clean()
 {
-	free(this->data);
+	safe_free(this->data);
 	this->init_data();
 }
 

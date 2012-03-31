@@ -2,7 +2,6 @@
 #include <fcntl.h>
 
 #include "lib_file.h"
-#include "lib_log.h"
 #include "lib_util.h"
 
 int ice::lib_file_t::set_io_block( int fd, bool is_block )
@@ -19,10 +18,10 @@ int ice::lib_file_t::set_io_block( int fd, bool is_block )
 int ice::lib_file_t::get_dir_file( const char *path, std::vector<std::string>& file_names )
 {
 	DIR* dirp;
-	struct dirent* direntp;
 	dirp = ::opendir(path);
-	if (dirp != NULL) {
+	if (NULL != dirp) {
 		while(1) {
+			struct dirent* direntp;
 			direntp = ::readdir(dirp);
 			if ( NULL == direntp ) {
 				break;
@@ -34,7 +33,6 @@ int ice::lib_file_t::get_dir_file( const char *path, std::vector<std::string>& f
 		}
 		::closedir(dirp);
 	} else {
-		KERROR_LOG(0, "open fail [path:%s]", path);
 		return -1;
 	}	
 	return 0;

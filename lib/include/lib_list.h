@@ -2,7 +2,7 @@
 	platform:	从内核代码里抽取出来
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	读取bench.ini配置文件
+	purpose:	链表操作
 	brief:		ok
 *********************************************************************/
 
