@@ -28,6 +28,9 @@ namespace ice{
 	public:
 		lib_xmlparser();
 		virtual ~lib_xmlparser();
+		//************************************
+		// Brief:     打开文件
+		//************************************
 		int open(const char* name);
 		inline void move2children_node();
 		inline void move2next_node();
@@ -175,9 +178,6 @@ namespace ice{
 		lib_xmlparser(const lib_xmlparser& cr);
 		lib_xmlparser& operator=(const lib_xmlparser& cr);
 	};
-
-}//end namespace ice
-
 //////////////////////////////////////////////////////////////////////////
 //example
 #if 0
@@ -222,4 +222,7 @@ int ex_xml( const char* xml_name )
 }
 
 #endif
+}//end namespace ice
+
+
 

@@ -98,12 +98,4 @@ int ice::lib_net_util_t::get_ip_addr( const char* nif, int af, void* ipaddr, siz
 }
 
 
-ice::lib_net_t::lib_net_t()
-{
-	this->fd = -1;
-}
 
-ice::lib_net_t::~lib_net_t()
-{
-	lib_file_t::close_fd(this->fd);
-}

@@ -38,34 +38,26 @@ namespace ice{
 	};
 	
 
-	class lib_net_t
-	{
-	public:
-		lib_net_t();
-		virtual ~lib_net_t();
-	protected:
-		int fd;
-	private:
-		lib_net_t(const lib_net_t& cr);
-		lib_net_t& operator=(const lib_net_t& cr);
-	};
+
 
 	class lib_net_multicast_t
 	{
 	public:
 		lib_net_multicast_t();
 		virtual ~lib_net_multicast_t(){}
+
+	protected:
+		
+	private:
+		lib_net_multicast_t(const lib_net_multicast_t& cr);
+		lib_net_multicast_t& operator=(const lib_net_multicast_t& cr);
+	private://TODO
 		//加入多播//TODO 未测试
 		int join_multicast(int s);
 		//退出组播//TODO 未测试
 		int exit_multicast(int s);
 		//拒绝组播//TODO 未测试
 		int refuse_multicast(int s);
-	protected:
-		
-	private:
-		lib_net_multicast_t(const lib_net_multicast_t& cr);
-		lib_net_multicast_t& operator=(const lib_net_multicast_t& cr);
 	};
 
 }//end namespace ice

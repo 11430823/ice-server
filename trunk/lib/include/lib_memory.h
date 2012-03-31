@@ -23,6 +23,12 @@ namespace ice{
 	public:
 		lib_active_buf_t();
 		virtual ~lib_active_buf_t();
+		//************************************
+		// Brief:     向后插入数据
+		// Returns:   void
+		// Parameter: const char * const pdata 数据
+		// Parameter: uint32_t len 数据长度
+		//************************************
 		void push_back(const char* const pdata, uint32_t len);
 		//************************************
 		// Brief:	  从数据头中弹出长度为len的数据
@@ -31,7 +37,7 @@ namespace ice{
 		//************************************
 		uint32_t pop_front(uint32_t len);
 		//************************************
-		// Brief:	清理所有数据  
+		// Brief:	清理所有数据/释放内存空间  
 		// Returns:   void ()
 		//************************************
 		inline void clean();
