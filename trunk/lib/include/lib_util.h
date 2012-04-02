@@ -97,19 +97,19 @@ namespace ice{
 		ss >> value;
 	}
 
-	template<typename T>
+	template <typename T>
 	inline void safe_delete(T p){
 		delete p;
 		p = NULL;
 	};
 
-	template<typename T>
+	template <typename T>
 	inline void safe_delete_arr(T p){
 		delete []p;
 		p = NULL;
 	};
 
-	template<typename T>
+	template <typename T>
 	inline void safe_free(T p){
 		free(p);
  		p = NULL;
@@ -120,7 +120,7 @@ namespace ice{
 	// Returns:   uint32_t	数组个数
 	// Parameter: const T & name 数组名称
 	//************************************
-	template<typename T>
+	template <typename T>
 	inline uint32_t get_arr_num(const T& name){
 		return sizeof(name)/sizeof(name[0]);
 	};
@@ -148,7 +148,7 @@ namespace ice{
 	//使用方法://for_each(vector.begin(),vector.end(),DeletePtr());
 	struct DeletePtr
 	{
-		template<typename T>
+		template <typename T>
 		void operator() (const T* ptr) const{
 			if (ptr){
 				safe_delete(ptr);
@@ -160,7 +160,7 @@ namespace ice{
 	//用法://for_each(map.begin(), map.end(), DeletePair());
 	struct DeletePair
 	{
-		template<typename Ty1, typename Ty2>
+		template <typename Ty1, typename Ty2>
 		void operator() (const std::pair<Ty1, Ty2> &ptr) const{
 			if (ptr.second){
 				safe_delete(ptr.second);
@@ -171,7 +171,7 @@ namespace ice{
 	//sort,降序(大->小)
 	struct desc_sort{
 		uint32_t level;
-		bool operator<(const desc_sort& r) const {
+		bool operator < (const desc_sort& r) const {
 			return level > r.level;
 		}
 	};

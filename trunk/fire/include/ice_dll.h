@@ -11,7 +11,18 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-struct fdsession_t;
+#pragma pack(1)
+
+struct fdsession_t {
+	int			fd;
+	in_port_t	remote_port;
+	uint32_t	remote_ip;
+	uint8_t		type;
+	uint8_t		flag;
+	time_t		last_tm;
+};
+
+#pragma pack()
 
 class ice_dll_t
 {

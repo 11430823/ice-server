@@ -33,9 +33,8 @@ int ice::lib_tcp_t::safe_tcp_send_n( int sockfd, const void* buf, int total )
 {
 	int send_bytes = 0;
 	for (int cur_len = 0; send_bytes < total; send_bytes += cur_len) {
-		//send函数最后一个参数,windows下一般设置为0,linux下最好设置为MSG_NOSIGNAL，
-		//如果不设置，在发送出错后有可 能会导致程序退出。
-		cur_len = send(sockfd, (char*)buf + send_bytes, total - send_bytes, MSG_NOSIGNAL);
+		//MSG_NOSIGNAL: linux man send 查看
+		cur_len = ::send(sockfd, (char*)buf + send_bytes, total - send_bytes, MSG_NOSIGNAL);
 		if (-1 == cur_len) {
 			if (errno == EINTR) {
 				cur_len = 0;
@@ -54,7 +53,7 @@ int ice::lib_tcp_t::safe_tcp_recv( int sockfd, void* buf, int bufsize )
 {
 	int cur_len = 0;
 	while(1){
-		cur_len = recv(sockfd, buf, bufsize, 0);
+		cur_len = ::recv(sockfd, buf, bufsize, 0);
 		if (-1 == cur_len && errno == EINTR) {
 			continue;
 		}else{
@@ -69,7 +68,7 @@ int ice::lib_tcp_t::safe_tcp_recv_n( int sockfd, void* buf, int total )
 	int recv_bytes = 0;
 
 	for (int cur_len = 0; recv_bytes < total; recv_bytes += cur_len)	{
-		cur_len = recv(sockfd, (char*)buf + recv_bytes, total - recv_bytes, 0);
+		cur_len = ::recv(sockfd, (char*)buf + recv_bytes, total - recv_bytes, 0);
 		if (0 == cur_len) {
 			// connection closed by client
 			return 0;
@@ -102,6 +101,33 @@ int ice::lib_tcp_t::set_reuse_addr( int s )
 	const int flag = 1;
 	return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 }
+
+int ice::lib_tcp_t::send( const void* buf, int total )
+{
+	int send_bytes = 0;
+	for (int cur_len = 0; send_bytes < total; send_bytes += cur_len) {
+		//MSG_NOSIGNAL: linux man send 查看
+		cur_len = ::send(this->fd, (char*)buf + send_bytes, total - send_bytes, MSG_NOSIGNAL);
+		if (-1 == cur_len) {
+			if (errno == EINTR) {
+				cur_len = 0;
+			} else if (EAGAIN == errno || EWOULDBLOCK == errno) {
+				break;
+			} else {
+				return -1;
+			}
+		}
+	}
+	return send_bytes;
+}
+
+int ice::lib_tcp_t::recv( void* buf, int bufsize )
+{
+	//todo 
+	return 0;
+}
+
+
 
 int ice::lib_tcp_cli_t::safe_tcp_connect( const char* ipaddr, in_port_t port, int timeout, bool block )
 {

@@ -3,15 +3,17 @@ EXE=fire-server.exe
 CC=g++
 
 #编译选项
+ICE_LIB_PATH=../../lib/
+ICE_LIBS_FLAG=-Wl,-rpath,$(ICE_LIB_PATH)
 FLAG=-Wall -DDEBUG -g -O0 -o
 
 #包含的头文件
 INCLUDES=-I/usr/include/ -I../../lib/include/ -I../include/
 GLIB_INCLUDES=-I/usr/include/glib-2.0/ -I/usr/lib/glib-2.0/include/
 
-LIBS=-L/usr/lib/ -L../../lib/
+LIBS=-L/usr/lib/ -L$(ICE_LIB_PATH)
 
-LINK=-ldl -rdynamic -lglib-2.0 -lice
+LINK=-ldl -rdynamic -lglib-2.0 -lice $(ICE_LIBS_FLAG)
 
 #编译的代码文件
 LOCAL_SRCS =$(wildcard ./*.c)

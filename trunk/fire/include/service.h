@@ -6,18 +6,7 @@
 
 #include <glib/ghash.h>
 
-#pragma pack(1)
-
-struct fdsession_t {
-	int			fd;
-	in_port_t	remote_port;
-	uint32_t	remote_ip;
-	uint8_t		type;
-	uint8_t		flag;
-	time_t		last_tm;
-};
-
-#pragma pack()
+#include "ice_dll.h"
 
 class service_t
 {

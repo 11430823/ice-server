@@ -94,7 +94,7 @@ namespace {
 		memset(&sa, 0, sizeof(sa));
 
 		sigset_t sset;
-		signal(SIGPIPE,SIG_IGN);	
+		signal(SIGPIPE,SIG_IGN);
 
 		sa.sa_handler = sigterm_handler;
 		sigaction(SIGINT, &sa, NULL);

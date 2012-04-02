@@ -10,7 +10,7 @@
 
 #include <netinet/in.h>
 #include "lib_util.h"
-#include "lib_net_util.h"
+#include "lib_net.h"
 
 namespace ice{
 	class lib_tcp_t : public lib_net_t
@@ -18,33 +18,29 @@ namespace ice{
 	public:
 		lib_tcp_t(){}
 		virtual ~lib_tcp_t(){}
+		virtual int send(const void* buf, int total);
+		virtual int recv(void* buf, int bufsize);
 		/**
 		* @brief Send `total` bytes of data to `sockfd`
-		*
 		* @param int sockfd,  socket fd to send data to.
 		* @param const void* buf,  data to be sent.
 		* @param int total,  number of bytes in total to be sent.
-		*
 		* @return int, number of bytes sent on success, -1 on error.
 		*/
 		static int safe_tcp_send_n(int sockfd, const void* buf, int total);
 		/**
 		* @brief Receive data from `sockfd`
-		*
 		* @param int sockfd,  socket fd to receive data from.
 		* @param const void* buf,  buffer to hold the receiving data.
 		* @param int bufsize,  size of `buf`.
-		*
 		* @return int, number of bytes receive on success, -1 on error, 0 on connection closed by peer.
 		*/
 		static int safe_tcp_recv(int sockfd, void* buf, int bufsize);
 		/**
 		* @brief Receive `total` bytes of data from `sockfd`
-		*
 		* @param int sockfd,  socket fd to receive data from.
 		* @param const void* buf,  buffer to hold the receiving data. Size of `buf` should be no less than `total`
 		* @param int total,  number of bytes to receive.
-		*
 		* @return int, number of bytes receive on success, -1 on error, 0 on connection closed by peer.
 		*/
 		static int safe_tcp_recv_n(int sockfd, void* buf, int total);

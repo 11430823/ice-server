@@ -3,7 +3,7 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	Ê±¼äº¯Êý
-	brief:		
+	brief:		ok
 *********************************************************************/
 
 #pragma once
@@ -18,10 +18,14 @@ namespace ice{
 		// Brief:     returns the time as the number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
 		// Returns:   time_t
 		//************************************
-		static inline time_t get_now_second();
-
+		static inline time_t get_now_second(){
+			return ::time(NULL);
+		}
+		static inline void get_now_tm(struct tm& rtm){
+			time_t now = get_now_second();
+			::localtime_r(&now, &rtm);
+		}
 	protected:
-		
 	private:
 		lib_time(const lib_time& cr);
 		lib_time& operator=(const lib_time& cr);
