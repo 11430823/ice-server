@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
-
 #include <dirent.h>
 #include <fcntl.h>
 #include <syslog.h>
@@ -13,6 +11,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#include "lib_time.h"
 #include "lib_lock.h"
 #include "lib_log.h"
 #include "lib_util.h"
@@ -20,51 +19,64 @@
 
 namespace{
 
-	#define MAX_LOG_CNT 10000000 //日志文件最大数量
-	#define LOG_BUF_SIZE 8192 //每条日志的最大字节数
-	#define LOG_FILE_NAME_PRE_SIZE 32//日志文件名前缀
+	const uint32_t MAX_LOG_CNT = 10000000; //日志文件最大数量
+	const uint32_t LOG_BUF_SIZE = 8192; //每条日志的最大字节数
 
 	struct log_info_t {
 		ice::lib_log_t::E_LEVEL  level;	  // default log level
-		uint32_t each_file_size_max;//每个日志的最大字节数
-		char dir_name[NAME_MAX];//日志目录
+		std::string dir_name;//日志目录
 		std::string file_pre_name;//文件名前缀
+		bool is_multi_thread;//是否多线程
+		ice::lib_lock_mutex_t shift_fd_mutex;//互斥锁
+		ice::lib_log_t::E_DEST log_dest;//日志输出目的
+		uint32_t logtime_interval_sec;// 每个日志文件记录日志的总时间（秒）
+		bool has_init;//是否初始化了
 		log_info_t(){
-			level = ice::lib_log_t::e_lvl_debug;
-			::memset(dir_name, 0, sizeof(dir_name));
+			this->init();
 		}
-	}log_info;
-
-	ice::lib_log_t::E_DEST s_log_dest = ice::lib_log_t::e_dest_terminal; // write log to terminal by default
-	int s_multi_thread;
-	int  s_logtime_interval; // 每个日志文件记录日志的总时间（秒）
-	int s_has_init;//是否初始化
-	const char* lognames[] = { "emerg", "alert", "crit", 
-		"error", "warn", "notice",
-		"info", "debug", "trace" };
-	const char* log_color[] = {
-		"\e[1m\e[35m", "\e[1m\e[33m", "\e[1m\e[34m", "\e[1m\e[31m",
-		"\e[1m\e[32m", "\e[1m\e[36m", "\e[1m\e[1m", "\e[1m\e[37m",	"\e[1m\e[37m"
+		void init(){
+			this->level = ice::lib_log_t::e_lvl_debug;
+			this->dir_name.clear();
+			this->file_pre_name.clear();
+			this->is_multi_thread = false;
+			this->log_dest = ice::lib_log_t::e_dest_terminal; // write log to terminal by default
+			this->logtime_interval_sec = 0;
+			this->has_init = false;
+		}
+		void lock(){
+			if (this->is_multi_thread){
+				this->shift_fd_mutex.lock();
+			}
+		}
+		void unlock(){
+			if (this->is_multi_thread){
+				this->shift_fd_mutex.ulock();
+			}
+		}
 	};
-	const char* color_end = "\e[m";
-	ice::lib_lock_mutex_t g_shift_fd_mutex;
-	#define SHIFT_FD_LOCK() \
-		if (s_multi_thread){\
-			g_shift_fd_mutex.lock();\
-		}
-	#define SHIFT_FD_UNLOCK() \
-		if (s_multi_thread){\
-			g_shift_fd_mutex.ulock();\
-		}
+	log_info_t s_log_info;
+
+	const char* s_log_color[] = { "\e[1m\e[35m", "\e[1m\e[33m", 
+		"\e[1m\e[34m", "\e[1m\e[31m", "\e[1m\e[32m", "\e[1m\e[36m",
+		"\e[1m\e[1m", "\e[1m\e[37m", "\e[1m\e[37m"};
+	const char* s_color_end = "\e[m";
 
 	struct fds_t {
-		int		seq;
+		int		seq;//顺序号
 		int		opfd;//文件FD
 		int		day;//一年中的天数
-		char	base_filename[64];//基本文件名
-		int		base_filename_len;//基本文件名长度
-		int  	cur_day_seq_count;//当天轮转文件的个数
-	} fds_info[ice::lib_log_t::e_lvl_max];
+		std::string base_file_name;//基本文件名
+		fds_t(){
+			this->init();
+		}
+		void init(){
+			this->seq = 0;
+			this->opfd = -1;
+			this->day = 0;
+			this->base_file_name.clear();
+		}
+	};
+	fds_t s_fds_info[ice::lib_log_t::e_lvl_max];
 
 	//************************************
 	// Brief:     生成日志文件路径
@@ -74,131 +86,119 @@ namespace{
 	// Parameter: char * file_name	产生的日志文件路径
 	// Parameter: const struct tm * tm 时间
 	//************************************
-	inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm* tm)
+	inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm& t_m)
 	{
 		assert((lvl >= ice::lib_log_t::e_lvl_emerg) && (lvl < ice::lib_log_t::e_lvl_max));
 
-		if (s_logtime_interval) {
-			time_t t = ::time(0) / s_logtime_interval * s_logtime_interval;
+		if (s_log_info.logtime_interval_sec) {
+			time_t t = ::time(0) / s_log_info.logtime_interval_sec * s_log_info.logtime_interval_sec;
 			struct tm tmp_tm;
 			localtime_r(&t, &tmp_tm);
 
-			sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", log_info.dir_name, fds_info[lvl].base_filename,
-				tmp_tm.tm_year + 1900, tmp_tm.tm_mon + 1, tmp_tm.tm_mday, tmp_tm.tm_hour, tmp_tm.tm_min);
+			sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", 
+				s_log_info.dir_name.c_str(), s_fds_info[lvl].base_file_name.c_str(),
+				tmp_tm.tm_year + 1900, tmp_tm.tm_mon + 1, 
+				tmp_tm.tm_mday, tmp_tm.tm_hour, tmp_tm.tm_min);
 		} else {
-			sprintf(file_name, "%s/%s%04d%02d%02d%07d", log_info.dir_name, fds_info[lvl].base_filename,
-				tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
+			sprintf(file_name, "%s/%s%04d%02d%02d%07d", 
+				s_log_info.dir_name.c_str(), s_fds_info[lvl].base_file_name.c_str(),
+				t_m.tm_year + 1900, t_m.tm_mon + 1, t_m.tm_mday, seq);
 		}
 	}
 
 	//************************************
-	// Brief:     非轮转模式获取日志序号
+	// Brief:     获取日志序号
 	// Returns:   int	日志序号
 	// Parameter: int lvl	日志等级
 	//************************************
-	int get_log_seq_nonrecycle(int lvl)
+	inline int gen_log_seq(int lvl)
 	{
-		char file_name[FILENAME_MAX];
+		uint32_t seq = 0;
+		if (0 != s_log_info.logtime_interval_sec){
+			seq = ice::lib_time::get_now_second() / s_log_info.logtime_interval_sec;
+		}else{
+			char file_name[FILENAME_MAX];
 
-		struct tm tm;
-		time_t now = ::time(0);
-		::localtime_r(&now, &tm);	
+			struct tm t_m;
+			ice::lib_time::get_now_tm(t_m);
 
-		int seq = 0;
-		for (; seq != MAX_LOG_CNT; ++seq) {
-			gen_log_file_path(lvl, seq, file_name, &tm);
-			if (::access(file_name, F_OK) == -1) {
-				break;
+			for (; seq != MAX_LOG_CNT; ++seq) {
+				gen_log_file_path(lvl, seq, file_name, t_m);
+				if (::access(file_name, F_OK) == -1) {
+					break;
+				}
 			}
+			seq = (seq ? (seq - 1) : 0);
 		}
-
-		return (seq ? (seq - 1) : 0);
+		return seq;
 	}
 
-	inline int get_logfile_seqno(const char* filename, int loglvl)
+	int open_fd(int lvl, const struct tm& t_m)
 	{
-		return ::atoi(&filename[fds_info[loglvl].base_filename_len + 8]);
-	}
-
-	inline void log_file_name(int lvl, int seq, char* file_name, const struct tm* tm)
-	{
-		assert((lvl >= ice::lib_log_t::e_lvl_emerg) && (lvl < ice::lib_log_t::e_lvl_max));
-
-		sprintf(file_name, "%s%04d%02d%02d%07d", fds_info[lvl].base_filename,
-			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, seq);
-	}
-
-	inline int get_log_time()
-	{
-		return ::time(0) / s_logtime_interval;
-	}
-
-	inline int request_log_seq(int lvl)
-	{
-		return  get_log_seq_nonrecycle(lvl);
-	}
-
-	int open_fd(int lvl, const struct tm* tm)
-	{
-		int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
+		//O_APPEND 有该选项,write时是线程安全的.请看本页write函数
+		static int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
 
 		char file_name[FILENAME_MAX];
-		gen_log_file_path(lvl, fds_info[lvl].seq, file_name, tm);
+		gen_log_file_path(lvl, s_fds_info[lvl].seq, file_name, t_m);
 
-		fds_info[lvl].opfd = ::open(file_name, flag, 0644);
-		if (fds_info[lvl].opfd != -1) {
-			if (  fds_info[lvl].day != tm->tm_yday ) {
-				fds_info[lvl].cur_day_seq_count = 1;
-				fds_info[lvl].day = tm->tm_yday;
-			} else {
-				fds_info[lvl].cur_day_seq_count ++ ;
+		s_fds_info[lvl].opfd = ::open(file_name, flag, 0644);
+		if (-1 != s_fds_info[lvl].opfd) {
+			if (s_fds_info[lvl].day != t_m.tm_yday ) {
+
+				s_fds_info[lvl].day = t_m.tm_yday;
 			}
 
-			flag  = ::fcntl(fds_info[lvl].opfd, F_GETFD, 0);
+			flag  = ::fcntl(s_fds_info[lvl].opfd, F_GETFD, 0);
 			flag |= FD_CLOEXEC;
-			::fcntl(fds_info[lvl].opfd, F_SETFD, flag);
+			::fcntl(s_fds_info[lvl].opfd, F_SETFD, flag);
 		}
 
-		return fds_info[lvl].opfd;
+		return s_fds_info[lvl].opfd;
 	}
 
-	int shift_fd(int lvl, const struct tm* tm)
+	//************************************
+	// Brief:     切换打开要写入文件的FD
+	// Returns:   int -1:ERROR >0:返回打开的文件的FD,
+	// Parameter: int lvl
+	// Parameter: const struct tm * tm
+	//************************************
+	int shift_fd(int lvl, const struct tm& t_m)
 	{
-		SHIFT_FD_LOCK();
+		s_log_info.lock();
 
-		if ( unlikely((fds_info[lvl].opfd < 0) && (open_fd(lvl, tm) < 0)) ) {
-			SHIFT_FD_UNLOCK();
+		if ( unlikely((s_fds_info[lvl].opfd < 0) && (open_fd(lvl, t_m) < 0)) ) {
+			s_log_info.unlock();
 			return -1;
 		}
 
 		//off_t length = lseek(fds_info[lvl].opfd, 0, SEEK_END);
-		if (s_logtime_interval) {
-			if (likely(fds_info[lvl].seq == get_log_time())) {//todo 判断文件大于上限是否重新打开一个文件
-				SHIFT_FD_UNLOCK();
+		if (s_log_info.logtime_interval_sec) {
+			if (likely(s_fds_info[lvl].seq == gen_log_seq(lvl))) {//todo 判断文件大于上限是否重新打开一个文件
+				s_log_info.unlock();
 				return 0;
 			}
 		} else {
-			if (likely((fds_info[lvl].day == tm->tm_yday))) {
-				SHIFT_FD_UNLOCK();
+			if (likely((s_fds_info[lvl].day == t_m.tm_yday))) {//todo 判断文件大于上限是否重新打开一个文件
+				s_log_info.unlock();
 				return 0;
 			}
 		}
 
-		ice::lib_file_t::close_fd(fds_info[lvl].opfd);
+		ice::lib_file_t::close_fd(s_fds_info[lvl].opfd);
 
-		if (s_logtime_interval) {
-			fds_info[lvl].seq = get_log_time();
+		if (s_log_info.logtime_interval_sec) {
+			s_fds_info[lvl].seq = gen_log_seq(lvl);
 		} else {
 			// if logfile recycle is not used
-			if (fds_info[lvl].day != tm->tm_yday) {
-				fds_info[lvl].seq = 0;
+			if (s_fds_info[lvl].day != t_m.tm_yday) {
+				s_fds_info[lvl].seq = 0;
 			} else {
-				fds_info[lvl].seq = (fds_info[lvl].seq + 1) % MAX_LOG_CNT;
+				s_fds_info[lvl].seq = (s_fds_info[lvl].seq + 1) % MAX_LOG_CNT;
 			}
 		}
 
-		int ret = open_fd(lvl, tm);
-		SHIFT_FD_UNLOCK();
+		int ret = open_fd(lvl, t_m);
+		s_log_info.unlock();
 		return ret;
 	}
 
@@ -206,50 +206,50 @@ namespace{
 
 int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre_name, uint32_t logtime )
 {
-	assert((logtime > 0) && (logtime <= 30000000));
-
-	s_logtime_interval = logtime * 60;
-
 	int ret_code = -1;
+	assert(logtime <= 30000000);
 
-	if (!dir || (::strlen(dir) == 0)) {
+	s_log_info.logtime_interval_sec = logtime * 60;
+
+	if (NULL == dir || (0 == ::strlen(dir))) {
+		::fprintf(::stderr, "init log dir is NULL!!!\n");
+		ret_code = 0;
 		goto loop_return;
 	}
 
 	if ((lvl < e_lvl_emerg) || (lvl >= e_lvl_max)) {
-		::fprintf(stderr, "init log error, invalid log level=%d\n", lvl);
+		::fprintf(::stderr, "init log error, invalid log level=%d\n", lvl);
 		goto loop_return;
 	}
 
 	//必须可写
 	if (0 != ::access(dir, W_OK)) {
-		::fprintf(stderr, "access log dir %s error, %m\n", dir);
+		::fprintf(stderr, "access log dir %s error\n", dir);
 		goto loop_return;
 	}
 
-	log_info.level = lvl;
-
-	::strncpy(log_info.dir_name, dir, sizeof(log_info.dir_name) - 1);
+	//填写  日志等级/目录/文件名前缀
+	s_log_info.level = lvl;
+	s_log_info.dir_name = dir;
 	if (NULL == pre_name){
-		log_info.file_pre_name.clear();
+		s_log_info.file_pre_name.clear();
 	}else{
-		log_info.file_pre_name = pre_name;
+		s_log_info.file_pre_name = pre_name;
 	}
 
 	for (int i = e_lvl_emerg; i < e_lvl_max; i++) {
-		std::string file_base_name = log_info.file_pre_name + lognames[i];
-		fds_info[i].base_filename_len
-			= ::snprintf(fds_info[i].base_filename, 
-			sizeof(fds_info[i].base_filename), "%s", file_base_name.c_str());
-		fds_info[i].opfd = -1;
-		fds_info[i].seq  = s_logtime_interval ? get_log_time() : request_log_seq(i);
-		if (fds_info[i].seq < 0) {
+		static const char* log_names[] = { "emerg", "alert", "crit", 
+			"error", "warn", "notice", "info", "debug", "trace" };
+		s_fds_info[i].init();
+		s_fds_info[i].base_file_name = s_log_info.file_pre_name + log_names[i];
+		s_fds_info[i].seq  = gen_log_seq(i);
+		if (s_fds_info[i].seq < 0) {
 			goto loop_return;
 		}
 	}
 
-	s_log_dest  = e_dest_file;
-	s_has_init    = 1;
+	s_log_info.log_dest = e_dest_file;
+	s_log_info.has_init = true;
 	ret_code    = 0;
 
 loop_return:
@@ -258,118 +258,115 @@ loop_return:
 
 void ice::lib_log_t::destroy()
 {
-	assert(s_has_init);
+	assert(s_log_info.has_init);
 
-	log_info.level     = e_lvl_debug;
-	s_log_dest    = e_dest_terminal;
-	s_has_init      = 0;
-	s_logtime_interval   = 0;
+	s_log_info.init();
 
-	log_info.file_pre_name.clear();
-	::memset(log_info.dir_name, 0, sizeof(log_info.dir_name));
-
-	for (int i = e_lvl_emerg; i < e_lvl_max; i++) {
-		ice::lib_file_t::close_fd(fds_info[i].opfd);
+	for (uint32_t i = 0; i < get_arr_num(s_fds_info); i++){
+		ice::lib_file_t::close_fd(s_fds_info[i].opfd);
+		s_fds_info[i].init();
 	}
-	::memset(fds_info, 0, sizeof(fds_info));
 }
 
 void ice::lib_log_t::enable_multi_thread()
 {
-	s_multi_thread = 1;
+	s_log_info.is_multi_thread = true;
 }
 
 void ice::lib_log_t::set_dest( E_DEST dest )
 {
-	assert(s_has_init);
-	s_log_dest = dest;
+	assert(s_log_info.has_init);
+	s_log_info.log_dest = dest;
 }
 
 void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 {
-	if (lvl > log_info.level) {
+	if (lvl > s_log_info.level) {
 		return;
 	}
 
 	va_list ap;
-	struct tm tm;
-	time_t now = ::time(0);
-	localtime_r(&now, &tm);	
-	va_start(ap, fmt);
+	struct tm t_m;
+	lib_time::get_now_tm(t_m);
+	::va_start(ap, fmt);
 
-	if (unlikely(!s_has_init || (s_log_dest & e_dest_terminal))) {
+	if (unlikely(!s_log_info.has_init || (e_dest_terminal & s_log_info.log_dest))) {
 		va_list aq;
 		::va_copy(aq, ap);
-		switch (lvl) {
-	case e_lvl_emerg:
-	case e_lvl_alert:
-	case e_lvl_crit:		
-	case e_lvl_error:
-		::fprintf(stderr, "%s%02d:%02d:%02d ", log_color[lvl],
-			tm.tm_hour, tm.tm_min, tm.tm_sec);
-		::vfprintf(stderr, fmt, aq);
-		::fprintf(stderr, "%s", color_end);
-		break;
-	default:
-		::fprintf(stdout, "%s%02d:%02d:%02d ", log_color[lvl],
-			tm.tm_hour, tm.tm_min, tm.tm_sec);
-		::vfprintf(stdout, fmt, aq);
-		::fprintf(stdout, "%s", color_end);
-		break;
-		}
-		va_end(aq);
-	}
-
-	if (unlikely(!(s_log_dest & e_dest_file) || (shift_fd(lvl, &tm) < 0))) {
-		va_end(ap);
-		return;
-	}
-
-	char log_buffer[LOG_BUF_SIZE];
-	int pos = snprintf(log_buffer, ice::get_arr_num(log_buffer), "[%02d:%02d:%02d] %u [%05d]",
-		tm.tm_hour, tm.tm_min, tm.tm_sec, key, ::getpid());
-	int end = ::vsnprintf(log_buffer + pos, ice::get_arr_num(log_buffer) - pos, fmt, ap);
-	va_end(ap);
-
-	::write(fds_info[lvl].opfd, log_buffer, end + pos);
-}
-
-void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
-{
-	if (lvl > log_info.level) {
-		return;
-	}
-
-	va_list ap;
-	struct tm tm;
-	time_t now = time(0);
-	::localtime_r(&now, &tm);
-	va_start(ap, fmt);
-
-	if (unlikely(!s_has_init || (s_log_dest & e_dest_terminal))) {
 		switch (lvl) {
 		case e_lvl_emerg:
 		case e_lvl_alert:
 		case e_lvl_crit:		
 		case e_lvl_error:
-			::fprintf(stderr, "%s%02d:%02d:%02d ", log_color[lvl],
-				tm.tm_hour, tm.tm_min, tm.tm_sec);
-			::vfprintf(stderr, fmt, ap);
-			::fprintf(stderr, "%s", color_end);
+			::fprintf(stderr, "%s%02d:%02d:%02d ", s_log_color[lvl],
+				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+			::vfprintf(stderr, fmt, aq);
+			::fprintf(stderr, "%s", s_color_end);
 			break;
 		default:
-			::fprintf(stdout, "%s%02d:%02d:%02d ", log_color[lvl],
-				tm.tm_hour, tm.tm_min, tm.tm_sec);
-			::vfprintf(stdout, fmt, ap);
-			::fprintf(stdout, "%s", color_end);
+			::fprintf(stdout, "%s%02d:%02d:%02d ", s_log_color[lvl],
+				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+			::vfprintf(::stdout, fmt, aq);
+			::fprintf(::stdout, "%s", s_color_end);
+			break;
+		}
+		::va_end(aq);
+	}
+
+	if (unlikely(!(s_log_info.log_dest & e_dest_file) || (shift_fd(lvl, t_m) < 0))) {
+		::va_end(ap);
+		return;
+	}
+
+	char log_buffer[LOG_BUF_SIZE];
+	int pos = ::snprintf(log_buffer, sizeof(log_buffer), "[%02d:%02d:%02d] %u [%05d]",
+		t_m.tm_hour, t_m.tm_min, t_m.tm_sec, key, ::getpid());
+	int end = ::vsnprintf(log_buffer + pos, sizeof(log_buffer) - pos, fmt, ap);
+	::va_end(ap);
+
+	//todo 判断返回值(会被信号中断等处理方式).. on linux :  man write 
+	//多线程写文件,这里不需要上锁!请 man 2 write 
+	// If the file  was open(2)ed  with  O_APPEND,  
+	// the file offset is first set to the end of the file before writing.
+	// The adjustment of the file offset and the write operation are performed as an atomic step.
+	::write(s_fds_info[lvl].opfd, log_buffer, end + pos);
+}
+
+void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
+{
+	if (lvl > s_log_info.level) {
+		return;
+	}
+
+	va_list ap;
+	struct tm t_m;
+	lib_time::get_now_tm(t_m);
+	::va_start(ap, fmt);
+
+	if (unlikely(!s_log_info.has_init || e_dest_terminal & s_log_info.log_dest)) {
+		switch (lvl) {
+		case e_lvl_emerg:
+		case e_lvl_alert:
+		case e_lvl_crit:		
+		case e_lvl_error:
+			::fprintf(::stderr, "%s%02d:%02d:%02d ", s_log_color[lvl],
+				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+			::vfprintf(::stderr, fmt, ap);
+			::fprintf(::stderr, "%s", s_color_end);
+			break;
+		default:
+			::fprintf(::stdout, "%s%02d:%02d:%02d ", s_log_color[lvl],
+				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+			::vfprintf(::stdout, fmt, ap);
+			::fprintf(::stdout, "%s", s_color_end);
 			break;
 		}
 	}
 
-	if (s_log_dest & e_dest_file) {		
+	if (e_dest_file & s_log_info.log_dest) {		
 		char log_buffer[LOG_BUF_SIZE];
 		int pos = ::snprintf(log_buffer, LOG_BUF_SIZE, "[%02d:%02d:%02d][%05d]",
-			tm.tm_hour, tm.tm_min, tm.tm_sec, ::getpid());
+			t_m.tm_hour, t_m.tm_min, t_m.tm_sec, ::getpid());
 		::vsnprintf(log_buffer + pos, LOG_BUF_SIZE - pos, fmt, ap);
 		::syslog(lvl, "%s", log_buffer);
 	}
@@ -377,30 +374,29 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 	va_end(ap);
 }
 
-void ice::lib_log_t::boot( int ok, int dummy, const char* fmt, ... )
+void ice::lib_log_t::boot( int ok, int space, const char* fmt, ... )
 {
-#define SCREEN_COLS	80
-#define BOOT_OK		"\e[1m\e[32m[ OK ]\e[m"
-#define BOOT_FAIL	"\e[1m\e[31m[ FAILED ]\e[m"
-	int end, i, pos;
+	int end, pos;
 	va_list ap;
 
 	char log_buffer[LOG_BUF_SIZE];
 
-	va_start(ap, fmt);
-	end = vsprintf(log_buffer, fmt, ap);
-	va_end(ap);
-
-	pos = SCREEN_COLS - 10 - (end - dummy) % SCREEN_COLS;
-	for (i = 0; i < pos; i++){
+	::va_start(ap, fmt);
+	end = ::vsprintf(log_buffer, fmt, ap);
+	::va_end(ap);
+	static const int SCREEN_COLS = 80;
+	pos = SCREEN_COLS - 10 - (end - space) % SCREEN_COLS;
+	int i = 0;
+	for (; i < pos; i++){
 		log_buffer[end + i] = ' ';
 	}
 	log_buffer[end + i] = '\0';
-
-	strcat(log_buffer, ok == 0 ? BOOT_OK : BOOT_FAIL);
+	static const char* BOOT_OK = "\e[1m\e[32m[ T O(∩_∩)O ]\e[m";
+	static const char* BOOT_FAIL = "\e[1m\e[31m[ F ╮(╯▽╰)╭ ]\e[m";
+	::strcat(log_buffer, ok == 0 ? BOOT_OK : BOOT_FAIL);
 	::printf("\r%s\n", log_buffer);
 
-	if (ok != 0){
+	if (0 != ok){
 		::exit(ok);
 	}
 }

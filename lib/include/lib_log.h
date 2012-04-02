@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	ok
 	brief:		用于记录日志，一共分9种日志等级。
 	注意，每条日志不能超过8000字节。
 	如果编译程序时定义宏LOG_USE_SYSLOG，则会利用syslog来记录日志，使用的facility是LOG_USER。
@@ -50,7 +50,7 @@ namespace ice{
 		 * @enum  log_dest
 		 * @brief 日志输出方式
 		 */
-		enum E_DEST {
+		enum E_DEST {//使用BIT位来写入数据.
 			/*! 仅输出到屏幕  */
 			e_dest_terminal	= 1,
 			/*! 仅输出到文件 */
@@ -61,12 +61,11 @@ namespace ice{
 	public:
 		/**
 		* @brief 初始化日志记录功能。按时间周期创建新的日志文件。
-		*
 		* @param dir 日志保存目录。如果填0，则在屏幕中输出日志。
 		* @param lvl 日志输出等级。如果设置为e_lvl_notice，则e_lvl_notice以上等级的日志都不输出。
 		* @param pre_name 日志文件名前缀。
-		* @param logtime 每个日志文件保存logtime分钟的日志，最大不能超过30000000分钟。假设logtime为15，则每小时产生4个日志文件，每个文件保存15分钟日志。
-		*
+		* @param logtime 每个日志文件保存logtime分钟的日志，最大不能超过30000000分钟。
+		*				假设logtime为15，则每小时产生4个日志文件，每个文件保存15分钟日志。
 		* @see set_dest, enable_multi_thread
 		*
 		* @return 成功返回0，失败返回-1。
@@ -83,9 +82,9 @@ namespace ice{
 		*/
 		static void enable_multi_thread();
 		/**
-		* @brief 调用log_init初始化日志功能后，可以调用该函数动态调整日志的输出方式。如果不调用set_dest的话，
-		*        则输出方式为setup_by_time时确定的方式。注意：必须在setup_by_time时指定了日志保存目录，才可以调用该函数。
-		*
+		* @brief 调用log_init初始化日志功能后，可以调用该函数动态调整日志的输出方式。
+		*		如果不调用set_dest的话，则输出方式为setup_by_time时确定的方式。
+		*		注意：必须在setup_by_time时指定了日志保存目录，才可以调用该函数。
 		* @param dest 日志输出方式
 		*
 		* @see setup_by_time
@@ -100,7 +99,7 @@ namespace ice{
 
 		static void write(int lvl,uint32_t key, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 		static void write_sys(int lvl, const char* fmt, ...) LOG_CHECK_FMT(2, 3);
-		static void boot(int ok, int dummy, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
+		static void boot(int ok, int space, const char* fmt, ...) LOG_CHECK_FMT(3, 4);
 	protected:
 		
 	private:
@@ -247,7 +246,7 @@ namespace ice{
 #endif
 
 #ifndef DISABLE_INFO_LOG
-#/**
+/**
  * @def INFO_LOG
  * @brief 输出log_lvl_info等级日志。如果定义宏DISABLE_INFO_LOG，则可以在编译期把INFO_LOG去除。\n
  *        用法示例：INFO_LOG("dlopen error, %s", error);
@@ -320,11 +319,11 @@ namespace ice{
 		} while (0)
 
 /**
- * @def BOOT_LOG2
+ * @def BOOT_LOG_SPACE
  * @brief 输出程序启动日志到屏幕。如果OK非0，则退出程序；如果OK为0，则返回上一级函数。n是空格填充个数。\n
- *        用法示例：BOOT_LOG2(0, 8, "dlopen ok");
+ *        用法示例：BOOT_LOG_SPACE(0, 8, "dlopen ok");
  */
-#define BOOT_LOG2(OK, n, fmt, args...) \
+#define BOOT_LOG_SPACE(OK, n, fmt, args...) \
 		do { \
 			ice::lib_log_t::boot(OK, n, fmt, ##args); \
 			return OK; \
@@ -333,9 +332,9 @@ namespace ice{
 /**
  * @def ERROR_RETURN
  * @brief 输出log_lvl_error等级的日志，并且返回Y到上一级函数。\n
- *        用法示例：ERROR_RETURN(("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)), -1);
+ *        用法示例：ERROR_RETURN(-1, ("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)));
  */
-#define ERROR_RETURN(msg_, ret_) \
+#define ERROR_RETURN(ret_, msg_) \
 		do { \
 			ERROR_LOG msg_; \
 			return ret_; \
@@ -355,9 +354,9 @@ namespace ice{
 /**
  * @def WARN_RETURN
  * @brief 输出log_lvl_warning等级的日志，并且返回ret_到上一级函数。\n
- *        用法示例：WARN_RETURN(("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)), -1);
+ *        用法示例：WARN_RETURN(-1, ("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)));
  */
-#define WARN_RETURN(msg_, ret_) \
+#define WARN_RETURN(ret_, msg_) \
 		do { \
 			WARN_LOG msg_; \
 			return (ret_); \
@@ -377,9 +376,9 @@ namespace ice{
 /**
  * @def DEBUG_RETURN
  * @brief 输出log_lvl_debug等级的日志，并且返回ret_到上一级函数。\n
- *        用法示例：DEBUG_RETURN(("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)), -1);
+ *        用法示例：DEBUG_RETURN(-1, ("Failed to Create `mcast_fd`: err=%d %s", errno, strerror(errno)));
  */
-#define DEBUG_RETURN(msg_, ret_) \
+#define DEBUG_RETURN(ret_, msg_) \
 		do { \
 			DEBUG_LOG msg_; \
 			return (ret_); \

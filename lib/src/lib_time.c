@@ -1,12 +1,5 @@
 #include "lib_time.h"
 
-time_t ice::lib_time::get_now_second()
-{
-	time_t t;
-	time(&t);
-	return t;
-}
-
 time_t ice::lib_time::get_integral_tm_hour( tm* tm_cur )
 {
 	tm_cur->tm_min  = 0;
