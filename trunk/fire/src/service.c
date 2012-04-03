@@ -7,11 +7,12 @@
 #include <lib_file.h>
 
 #include "net_tcp.h"
-#include "service.h"
+#include "util.h"
 #include "bind_conf.h"
 #include "daemon.h"
 #include "dll.h"
 #include "bench_conf.h"
+#include "service.h"
 
 service_t g_service;
 
@@ -41,9 +42,9 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	int ret = 0;
 	ret = g_net_server.create(g_bench_conf.get_max_fd_num());
 	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
-	g_net_server.get_server_epoll()->set_epoll_wait_time_out(100);
+	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
 	ret = g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
-	ret = g_net_server.get_server_epoll()->listen(100);//todo 参数是否合适
+	ret = g_net_server.get_server_epoll()->listen(LISTEN_NUM);
 
 	if ( 0 != g_dll.functions.on_init(g_is_parent)) {
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", this->bind_elem->id, this->bind_elem->name.c_str());
