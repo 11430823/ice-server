@@ -76,6 +76,7 @@ int bench_conf_t::load()
 	get_val(this->restart_cnt_max, key, "core", "restart_cnt_max");
 	get_val(this->daemon_tcp_ip, key, "net", "daemon_tcp_ip");
 	get_val(this->daemon_tcp_port, key, "net", "daemon_tcp_port");
+	get_val(this->daemon_tcp_max_fd_num, key, "net", "daemon_tcp_max_fd_num");
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -94,6 +95,7 @@ bench_conf_t::bench_conf_t()
 	this->core_size = 0;
 	this->restart_cnt_max = 1073741824;
 	this->daemon_tcp_port = 0;
+	this->daemon_tcp_max_fd_num = 20000;
 }
 
 std::string bench_conf_t::get_strval(const char* key, const char* name) const

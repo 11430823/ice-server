@@ -1,10 +1,8 @@
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+//#include <stddef.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <unistd.h>
 
-#include <lib_util.h>
 #include <lib_log.h>
 #include <lib_file.h>
 
@@ -14,6 +12,7 @@
 #include "service.h"
 #include "bench_conf.h"
 #include "net_tcp.h"
+#include "util.h"
 
 int main(int argc, char* argv[])
 {
@@ -29,17 +28,18 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if (0 != g_net_server.create(10000)){
+	if (0 != g_net_server.create(g_bench_conf.get_daemon_tcp_max_fd_num())){
 		BOOT_LOG(-1, "net_server_t::init ???");
 	}
+
+	g_daemon.prase_args(argc, argv);
+
 	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
 	g_net_server.get_server_epoll()->register_pipe_event_fn(dll_t::on_pipe_event);
 
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
 		NULL, g_bench_conf.get_log_save_next_file_interval_min());
-
-	g_daemon.prase_args(argc, argv);
 
 	if (0 != g_dll.functions.on_init(g_is_parent)) {
 		BOOT_LOG(-1, "FAILED TO INIT PARENT PROCESS");
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 	}
 
 	//parent process
-	g_net_server.get_server_epoll()->listen(100);
+	g_net_server.get_server_epoll()->listen(LISTEN_NUM);
 	g_daemon.run();
 
 	g_daemon.killall_children();
