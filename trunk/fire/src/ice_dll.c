@@ -30,21 +30,20 @@ int ice_dll_t::register_plugin()
 	char* error; 
 	int   ret_code = -1;
 
-	m_handle = dlopen(g_bench_conf.get_liblogic_path().c_str(), RTLD_NOW);
+	this->m_handle = dlopen(g_bench_conf.get_liblogic_path().c_str(), RTLD_NOW);
 	if ((error = dlerror()) != NULL) {
 		ALERT_LOG("DLOPEN ERROR [error:%s]", error);
 		goto out;
 	}
 
- 	DLFUNC(m_handle, on_get_pkg_len, "on_get_pkg_len", int(*)(int, const void*, int, int));
- 	DLFUNC(m_handle, on_cli_pkg, "on_cli_pkg", int(*)(void*, int, fdsession_t*));
- 	DLFUNC(m_handle, on_srv_pkg, "on_srv_pkg", void(*)(int, void*, int));
- 	DLFUNC(m_handle, on_cli_conn_closed, "on_cli_conn_closed", void(*)(int));
- 	DLFUNC(m_handle, on_fd_closed, "on_fd_closed", void(*)(int));
- 
-   	DLFUNC(m_handle, on_init, "on_init", int(*)(int));
-  	DLFUNC(m_handle, on_fini, "on_fini", int(*)(int));
-  	DLFUNC(m_handle, on_events, "on_events", void(*)());
+ 	DLFUNC(m_handle, functions.on_get_pkg_len, "on_get_pkg_len", int(*)(int, const void*, int, int));
+ 	DLFUNC(m_handle, functions.on_cli_pkg, "on_cli_pkg", int(*)(void*, int, fdsession_t*));
+ 	DLFUNC(m_handle, functions.on_srv_pkg, "on_srv_pkg", void(*)(int, void*, int));
+ 	DLFUNC(m_handle, functions.on_cli_conn_closed, "on_cli_conn_closed", void(*)(int));
+ 	DLFUNC(m_handle, functions.on_fd_closed, "on_fd_closed", void(*)(int));
+   	DLFUNC(m_handle, functions.on_init, "on_init", int(*)(int));
+  	DLFUNC(m_handle, functions.on_fini, "on_fini", int(*)(int));
+  	DLFUNC(m_handle, functions.on_events, "on_events", void(*)());
 	ret_code = 0;
 
 out:

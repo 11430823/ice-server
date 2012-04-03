@@ -15,7 +15,7 @@ bind_config_t g_bind_conf;
 
 namespace {
 
-	const char* bind_config_path =  "./bind.xml";
+	const char* s_bind_config_path =  "./bind.xml";
 
 	void start(GMarkupParseContext *context,
 		const gchar *element_name,
@@ -60,7 +60,7 @@ int bind_config_t::load()
 	gchar * buf = NULL; 
 	gsize length = 0; 
 
-	g_file_get_contents( bind_config_path , &buf, &length, NULL ); 
+	g_file_get_contents( s_bind_config_path , &buf, &length, NULL ); 
 
 	GMarkupParser parser;
 	parser.start_element = start;
@@ -72,8 +72,7 @@ int bind_config_t::load()
 	GMarkupParseContext * context; 
 	context = g_markup_parse_context_new(&parser, (GMarkupParseFlags)0, NULL, NULL);
 	if (!g_markup_parse_context_parse(context, buf, length, NULL)){
-		ALERT_LOG("COULDN'T LOAD BIND CONFIG");
-		return -1;
+		BOOT_LOG(-1, "COULDN'T LOAD BIND CONFIG");
 	}
 
 	g_markup_parse_context_free(context);
@@ -88,7 +87,7 @@ int bind_config_t::load()
 int bind_config_t::get_elem_idx( const bind_config_elem_t* bc_elem )
 {
 	uint32_t i = 0;
-	FOREACH(m_elems, it){
+	FOREACH(this->elems, it){
 		bind_config_elem_t& elem = *it;
 		if (bc_elem->id == elem.id){
 			return i;
@@ -100,12 +99,12 @@ int bind_config_t::get_elem_idx( const bind_config_elem_t* bc_elem )
 
 bind_config_elem_t* bind_config_t::get_elem( uint32_t index )
 {
-	return &m_elems[index];
+	return &this->elems[index];
 }
 
 void bind_config_t::add_elem(const bind_config_elem_t& elem )
 {
-	m_elems.push_back(elem);
+	this->elems.push_back(elem);
 }
 
 uint32_t bind_config_elem_t::get_id()
@@ -113,14 +112,14 @@ uint32_t bind_config_elem_t::get_id()
 	return this->id;
 }
 
-std::string& bind_config_elem_t::get_name()
+const char* bind_config_elem_t::get_name()
 {
-	return this->name;
+	return this->name.c_str();
 }
 
-std::string& bind_config_elem_t::get_ip()
+const char* bind_config_elem_t::get_ip()
 {
-	return this->ip;
+	return this->ip.c_str();
 }
 
 in_port_t bind_config_elem_t::get_port()
@@ -144,8 +143,7 @@ pipe_t::pipe_t()
 int pipe_t::create()
 {
 	if (-1 == ::pipe (this->pipe_handles)){
-		ALERT_LOG("PIPE CREATE FAILED [err:%s]", strerror(errno));
-		return -1;
+		BOOT_LOG(-1, "PIPE CREATE FAILED [err:%s]", strerror(errno));
 	}
 
 	::fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
