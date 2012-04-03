@@ -33,16 +33,16 @@ namespace {
 	{
 		//停止服务（不重启）
 		ALERT_LOG("SIG_TERM FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
-		g_daemon.m_stop     = true;
-		g_daemon.m_restart  = false;
+		g_daemon.stop     = true;
+		g_daemon.restart  = false;
 	}
 
 	void sighup_handler(int signo) 
 	{
 		//停止&&重启服务
 		ALERT_LOG("SIGHUP FROM [pid=%d]", getpid());
-		g_daemon.m_restart  = true;
-		g_daemon.m_stop     = true;
+		g_daemon.restart  = true;
+		g_daemon.stop     = true;
 	}
 
 	void sigchld_handler(int signo, siginfo_t *si, void * p) 
@@ -122,15 +122,15 @@ namespace {
 
 daemon_t::daemon_t()
 {
-	m_stop = false;
-	m_restart = false;
+	this->stop = false;
+	this->restart = false;
 }
 
 void daemon_t::prase_args( int argc, char** argv )
 {
-	m_prog_name = argv[0];
+	this->prog_name = argv[0];
 	char* dir = get_current_dir_name();
-	m_current_dir = dir;
+	this->current_dir = dir;
 	free(dir);
 
 	rlimit_reset();
@@ -143,11 +143,11 @@ void daemon_t::prase_args( int argc, char** argv )
 
 daemon_t::~daemon_t()
 {
-	if (m_restart && !m_prog_name.empty()) {
+	if (this->restart && !this->prog_name.empty()) {
 		killall_children();
 
 		ALERT_LOG("SERVER RESTARTING...");
-		chdir(m_current_dir.c_str());
+		chdir(this->current_dir.c_str());
 		char* argvs[200];
 		int i = 0;
 		FOREACH(g_argvs, it){
@@ -155,7 +155,7 @@ daemon_t::~daemon_t()
 			i++;
 		}
 
-		execv(m_prog_name.c_str(), argvs);
+		execv(this->prog_name.c_str(), argvs);
 		ALERT_LOG("RESTART FAILED...");
 	}
 }
@@ -183,7 +183,7 @@ WAIT_AGAIN:
 
 void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 {
-	if (g_is_parent && g_daemon.m_stop && !g_daemon.m_restart){
+	if (g_is_parent && g_daemon.stop && !g_daemon.restart){
 		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
 		return;
 	}
@@ -202,9 +202,9 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 	} else if (pid > 0) { //parent process
 		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
 		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-		g_epi.do_add_conn(bc_elem->send_pipe.pipe_handles[0], fd_type_pipe, 0);
+		g_net_server.get_server_epoll->add_connect(bc_elem->send_pipe.pipe_handles[0], fd_type_pipe, 0);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
-		g_service.worker_process(i, g_bind_conf.get_elem_num());
+		g_service.run(i, g_bind_conf.get_elem_num());
 	}
 }

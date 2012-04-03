@@ -11,7 +11,7 @@ bench_conf_t g_bench_conf;
 
 namespace {
 
-	const char* bench_config_path = "./bench.ini";
+	const char* s_bench_config_path = "./bench.ini";
 
 	//************************************
 	// Brief:     获取指定组中key的值
@@ -47,14 +47,14 @@ int bench_conf_t::load()
 	int ret = 0;
 	GKeyFile *key = NULL;
 	
-	if (!g_file_test (bench_config_path, G_FILE_TEST_EXISTS)){	
+	if (!g_file_test (s_bench_config_path, G_FILE_TEST_EXISTS)){	
 		ALERT_LOG("READ BENCH CONFIG FILE EXISTS ERR");
 		ret = -1;
 		goto ret;
 	}
 
 	key = g_key_file_new();
-	if (!g_key_file_load_from_file (key, bench_config_path, G_KEY_FILE_NONE, NULL)){
+	if (!g_key_file_load_from_file (key, s_bench_config_path, G_KEY_FILE_NONE, NULL)){
 		ALERT_LOG("READ BENCH CONFIG FILE ERR");
 		ret = -1;
 		goto ret;
@@ -104,6 +104,14 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
+	if (0 != get_val(this->daemon_tcp_ip, key, "net", "daemon_tcp_ip")){
+		ret = -1;
+		goto ret;
+	}
+	if (0 != get_val(this->daemon_tcp_port, key, "net", "daemon_tcp_port")){
+		ret = -1;
+		goto ret;
+	}
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -121,25 +129,25 @@ bench_conf_t::bench_conf_t()
 	this->page_size_max = 0;
 	this->core_size = 0;
 	this->restart_cnt_max = 0;
+	this->daemon_tcp_port = 0;
 }
 
-std::string bench_conf_t::get_strval(std::string& key, std::string& name) const
+std::string bench_conf_t::get_strval(const char* key, const char* name) const
 {
 	GKeyFile *file_key = NULL;
 
-	std::string str;
-	if (!g_file_test (bench_config_path, G_FILE_TEST_EXISTS)){	
+	if (!g_file_test (s_bench_config_path, G_FILE_TEST_EXISTS)){	
 		ALERT_LOG("READ BENCH CONFIG FILE EXISTS ERR");
 		goto ret_return;
 	}
 
 	file_key = g_key_file_new();
-	if (!g_key_file_load_from_file (file_key, bench_config_path, G_KEY_FILE_NONE, NULL)){
+	if (!g_key_file_load_from_file (file_key, s_bench_config_path, G_KEY_FILE_NONE, NULL)){
 		ALERT_LOG("READ BENCH CONFIG FILE ERR");
 		goto ret_return;
 	}
-	
-	if (0 != get_val(str, file_key, key.c_str(), name.c_str())){
+	std::string str;
+	if (0 != get_val(str, file_key, key, name)){
 		str.clear();
 		goto ret_return;
 	}

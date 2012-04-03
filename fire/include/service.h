@@ -12,7 +12,7 @@ class service_t
 {
 public:
 	service_t();
-	void worker_process(int bc_elem_idx, int n_inited_bc);
+	void run(int bc_elem_idx, int n_inited_bc);
 	fdsession_t* get_fdsess(int fd);
 	struct bind_config_elem_t*	m_bind_elem;
 protected:

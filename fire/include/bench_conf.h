@@ -23,10 +23,12 @@ class bench_conf_t
 	PROPERTY_READONLY_DEFAULT(uint32_t, log_save_next_file_interval_min);//每多少时间(分钟)重新保存文件中(新文件)
 	PROPERTY_READONLY_DEFAULT(uint32_t, core_size);//core文件的大小，字节
 	PROPERTY_READONLY_DEFAULT(uint32_t, restart_cnt_max);//最大重启次数
+	PROPERTY_READONLY_DEFAULT(std::string, daemon_tcp_ip);//守护进程地址//默认为0
+	PROPERTY_READONLY_DEFAULT(uint16_t, daemon_tcp_port);//守护进程端口//默认为0
 public:
 	//so调用获取配置项bench.ini中的数据(自行配置)
 	//获取配置项数据
-	std::string get_strval(std::string& key, std::string& name) const;
+	std::string get_strval(const char* key, const char* name) const;
 public:
 	bench_conf_t();
 	//************************************

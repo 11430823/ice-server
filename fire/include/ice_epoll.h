@@ -23,58 +23,36 @@ struct fdinfo_t {
 };
 #pragma pack()
 
-class ep_info_t
+class net_server_t
 {
 public:
-	fdinfo_t*	m_fds;//连接的FD信息
-	int			m_max_ev_num;//is the maximum number of events to be returned
 	struct bind_config_elem_t* bc_elem;
 	//************************************
 	// Brief:     
 	// Returns:   int 0:success,-1:error
-	// Parameter: int maxevents
 	//************************************
-	int init(int maxevents);
-	int start(const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem);
+	int create(uint32_t max_fd_num);
+	int listen(const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem);
+	int daemon_run();
 
-	int exit();
-	int loop(int max_len);
-	int child_loop(int max_len);
-	int do_add_conn(int fd, uint8_t type, struct sockaddr_in *peer);
-	PROPERTY_READONLY_DEFAULT(int, fd);
-	PROPERTY_READONLY_DEFAULT(int, max_fd);//所有FD里最大的FD的值.
-	PROPERTY_READONLY_DEFAULT(int, max_ev_num);//is the maximum number of events to be returned
+	int destroy();
+
+	PROPERTY_READONLY_DEFAULT(lib_tcp_server_epoll_t*, server_epoll);
 public:
-	ep_info_t(void){
-		this->EPOLL_TIME_OUT = -1;
+	net_server_t(void){
 		this->bc_elem = NULL;
-		this->m_fds = NULL;
-		this->m_max_ev_num = 0;
-		this->fd = 0;
-		this->max_fd = 0;
-		this->max_ev_num = 0;
+		this->server_epoll = NULL;
 	}
-	//virtual ~ep_info_t(){}
-	int32_t EPOLL_TIME_OUT;
+	virtual ~net_server_t(){
+		
+	}
 protected:
 	
 private:
-	ep_info_t(const ep_info_t &cr);
-	ep_info_t & operator=( const ep_info_t &cr);
-	int add_events(int fd, uint32_t flag);
-};
-
-enum E_FD_TYPE{
-	fd_type_unused = 0,
-	fd_type_listen = 1,
-	fd_type_pipe = 2,
-	fd_type_remote = 3,
-	fd_type_mcast = 4,
-	fd_type_addr_mcast = 5,
-	fd_type_udp = 6,
-	fd_type_asyn_connect = 7,
+	net_server_t(const net_server_t &cr);
+	net_server_t & operator=( const net_server_t &cr);
 };
 
 int mod_events(int epfd, int fd, uint32_t flag);
 
-extern ep_info_t g_epi;
+extern net_server_t g_net_server;

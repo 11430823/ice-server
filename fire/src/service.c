@@ -15,12 +15,15 @@
 
 service_t g_service;
 
-void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
+void service_t::run( int bc_elem_idx, int n_inited_bc )
 {
 	g_is_parent = false;
-	g_epi.EPOLL_TIME_OUT = 100;
-	m_bind_elem = g_bind_conf.get_elem(bc_elem_idx);
 
+	g_net_server.destroy();
+
+	g_net_server.get_server_epoll()->set_epoll_wait_time_out(100);
+
+	m_bind_elem = g_bind_conf.get_elem(bc_elem_idx);
 	char prefix[10] = { 0 };
 	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
 	prefix[len] = '_';
@@ -34,22 +37,23 @@ void service_t::worker_process( int bc_elem_idx, int n_inited_bc )
 		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
 		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
 	}
-	g_epi.exit();
 
 	//初始化子进程
-	g_epi.init(g_bench_conf.get_max_fd_num());
-	g_epi.do_add_conn(m_bind_elem->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL);
-	g_epi.start(m_bind_elem->ip.c_str(), m_bind_elem->port, m_bind_elem);
+	g_net_server.create(g_bench_conf.get_max_fd_num());
+	g_net_server.get_server_epoll->add_connect(m_bind_elem->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL);
+	g_net_server.listen(m_bind_elem->ip.c_str(), m_bind_elem->port, m_bind_elem);
 
 	if ( 0 != g_dll.on_init(g_is_parent)) {
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());
 		goto fail;
 	}
 
-	g_epi.child_loop(g_bench_conf.get_page_size_max());//mark
+	while (1){
+		g_net_server.get_server_epoll()->run();
+	}
 
 fail:
-	g_epi.exit();
+	g_net_server.destroy();
 	ice::lib_log_t::destroy();
 	exit(0);
 }

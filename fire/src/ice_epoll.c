@@ -24,7 +24,7 @@
 #include "daemon.h"
 #include "bench_conf.h"
 
-ep_info_t g_epi;
+net_server_t g_net_server;
 
 enum {
 	trash_size		= 4096,
@@ -44,7 +44,7 @@ namespace {
 		if (r_evs.events & EPOLLHUP) {
 			if (g_is_parent) { // Child Crashed
 				//int pfd = r_evs.data.fd;
-				bind_config_elem_t* bc = g_epi.bc_elem;
+				bind_config_elem_t* bc = g_net_server.bc_elem;
 				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->id, bc->name.c_str());
 				char buf[100];
 				snprintf(buf, sizeof(buf), "%s.%s", bc->name.c_str(), "child.core");
@@ -53,8 +53,8 @@ namespace {
 				asynsvr_send_warning(buf, bc->online_id, bc->bind_ip);
 #endif
 				// close all connections that are related to the crashed child process
-				for (int i = 0; i <= g_epi.get_max_fd(); ++i) {
-					if ((g_epi.bc_elem == bc) && (g_epi.m_fds[i].fd_type != fd_type_listen)) {
+				for (int i = 0; i <= g_net_server.get_max_fd(); ++i) {
+					if ((g_net_server.bc_elem == bc) && (g_net_server.m_fds[i].fd_type != fd_type_listen)) {
 						//todo 
 						//do_del_conn(i, g_is_parent);
 						//todo end
@@ -73,7 +73,7 @@ namespace {
 #if 0
 				asynsvr_send_warning(buf, 0, get_server_ip());
 #endif
-				g_daemon.m_stop = true;
+				g_daemon.stop = true;
 				return -1;
 			}
 		} else {
@@ -104,72 +104,61 @@ epoll_mod_again:
 	return 0;
 }
 
-int ep_info_t::do_add_conn(int fd, uint8_t fd_type, struct sockaddr_in *peer)
+int net_server_t::create(uint32_t max_fd_num)
 {
-	static uint32_t seq = 0;
-	uint32_t flag;
-
-	switch (fd_type) {
-	case fd_type_asyn_connect:
-		flag = EPOLLOUT;
-		break;
-	default:
-		flag = EPOLLIN;
-		break;
+	this->server_epoll = new ice::lib_tcp_server_epoll_t(max_fd_num);
+	if (NULL == this->server_epoll){
+		ALERT_LOG("new tcp_server_epoll err [maxevents:%u]", max_fd_num);
+		return -1;
 	}
-
-	if (0 != this->add_events(fd, flag)) {
+	int ret = 0;
+	if (0 != (ret = this->server_epoll->create())){
+		ALERT_LOG("new tcp_server_epoll create err [ret:%d]", ret);
 		return -1;
 	}
 
-	memset(&this->m_fds[fd], 0, sizeof(struct fdinfo_t));
-	this->m_fds[fd].fd = fd;
-	this->m_fds[fd].fd_type = fd_type;
-	this->m_fds[fd].id = ++seq;
-	if (0 == seq) {
-		m_fds[fd].id = ++seq;//mark 有可能和前面的ID重复
-	}
-	if (NULL != peer) {
-		this->m_fds[fd].remote_ip = peer->sin_addr.s_addr;
-		this->m_fds[fd].remote_port = peer->sin_port;
-	}
-	this->m_fds[fd].last_tm = ice::get_now_tv()->tv_sec;
-	this->max_fd = this->max_fd > fd ? this->max_fd : fd;
-	KDEBUG_LOG(0, "time now:%ld, fd:%d, fd type:%d, id%u", ice::get_now_tv()->tv_sec, fd, fd_type, this->m_fds[fd].id);
 	return 0;
 }
 
-int ep_info_t::loop( int max_len )
+int net_server_t::destroy()
 {
+	ice::safe_delete(this->server_epoll);
 	return 0;
 }
 
-int ep_info_t::init(int maxevents )
+int net_server_t::listen( const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem )
 {
-	if ((this->fd = epoll_create(maxevents)) < 0) {
-		ALERT_LOG("EPOLL_CREATE FAILED [error:%s]", strerror (errno));
-		return -1;
+	int ret_code = -1;
+
+	this->bc_elem = bc_elem;
+
+	int listenfd = ice::lib_tcp_sever_t::safe_socket_listen(listen_ip, listen_port, 1024, 32 * 1024);
+	if (-1 != listenfd) {
+		ice::lib_file_t::set_io_block(listenfd, false);
+
+		this->server_epoll->add_connect(listenfd, fd_type_listen, 0);
+		ret_code = 0;
 	}
 
-	m_fds = (struct fdinfo_t*) calloc (maxevents, sizeof (struct fdinfo_t));
-	if (NULL == m_fds){
-		close (this->fd);
-		ALERT_LOG ("CALLOC FDINFO_T FAILED [maxevents=%d]", maxevents);
-		return -1;
-	}
-
-	this->max_ev_num = maxevents;
-	this->max_fd = 0;
-	return 0;
+	BOOT_LOG(ret_code, "Listen on %s:%u,ret_code:%d,listenfd:%d",
+		listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code, listenfd);
 }
 
-int ep_info_t::child_loop( int max_len )
+int net_server_t::daemon_run()
 {
-	epoll_event evs[this->max_ev_num];
+	while (!g_daemon.stop || g_dll.on_fini(g_is_parent) != 0) {
+		g_net_server.get_server_epoll()->run();
+	}
+}
+
+int net_server_t::service_run()
+{
+	int max_len = 0;
+		epoll_event evs[this->max_ev_num];
 	int nr = 0;
 	int pos = 0;
 	epoll_event ev;
-	while ( !g_daemon.m_stop || 0 != g_dll.on_fini(g_is_parent) ) {
+	while ( !g_daemon.stop || 0 != g_dll.on_fini(g_is_parent) ) {
 		nr = epoll_wait(this->fd , evs, this->max_ev_num, EPOLL_TIME_OUT);
 
 		if (unlikely(-1 == nr && errno != EINTR)){
@@ -207,7 +196,7 @@ int ep_info_t::child_loop( int max_len )
 
 					newfd = ice::lib_tcp_sever_t::safe_tcp_accept(fd, &peer, false);
 					if (-1 != newfd) {
-						do_add_conn(newfd, fd_type_remote, &peer);
+						get_server_epoll()->add_connect(newfd, fd_type_remote, &peer);
 						//todo 后面的错误处理
 					} else if ((errno == EMFILE) || (errno == ENFILE)) {
 						//add_to_etin_queue(fd);
@@ -280,8 +269,8 @@ int ep_info_t::child_loop( int max_len )
 
 		if (g_bench_conf.get_fd_time_out()) {
 			for (int i = 0; i <= this->max_fd; ++i) {
-				if ((g_epi.m_fds[i].fd_type == fd_type_remote)
-					&& ((time(0) - (int32_t)g_epi.m_fds[i].last_tm) >= g_bench_conf.get_fd_time_out())) {
+				if ((g_net_server.m_fds[i].fd_type == fd_type_remote)
+					&& ((time(0) - (int32_t)g_net_server.m_fds[i].last_tm) >= g_bench_conf.get_fd_time_out())) {
 						//do_del_conn(i, g_is_parent);
 				}
 			}
@@ -290,58 +279,4 @@ int ep_info_t::child_loop( int max_len )
 		g_dll.on_events();
 	}
 	return 0;
-}
-
-int ep_info_t::exit()
-{
-	for (int i = 0; i < this->max_fd; i++) {
-		if (this->m_fds[i].fd_type == fd_type_unused){
-			continue;
-		}
-		close (i);
-	}
-
-	free (this->m_fds);
-	close (this->fd);
-	return 0;
-}
-
-int ep_info_t::start( const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem )
-{
-	int ret_code = -1;
-
-	this->bc_elem = bc_elem;
-
-	int listenfd = ice::lib_tcp_sever_t::safe_socket_listen(listen_ip, listen_port, 1024, 32 * 1024);
-	if (-1 != listenfd) {
-		ice::lib_file_t::set_io_block(listenfd, false);
-
-		do_add_conn(listenfd, fd_type_listen, 0);
-		ret_code = 0;
-	}
-
-	BOOT_LOG(ret_code, "Listen on %s:%u,ret_code:%d,listenfd:%d",
-		listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code, listenfd);
-}
-
-int ep_info_t::add_events( int fd, uint32_t flag )
-{
-	struct epoll_event ev;
-
-	ev.events = flag;
-	ev.data.fd = fd;
-epoll_add_again:
-	if (unlikely (0 != epoll_ctl(this->fd, EPOLL_CTL_ADD, fd, &ev))) {
-		switch (errno)
-		{
-		case EINTR:
-			goto epoll_add_again;
-			break;
-		default:
-			ERROR_LOG ("epoll_ctl add fd:%d error:%s", fd, strerror(errno));
-			return -1;
-			break;
-		}
-	}
-	return 0; 
 }

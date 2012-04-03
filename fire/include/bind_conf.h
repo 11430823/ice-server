@@ -39,8 +39,8 @@ struct bind_config_elem_t {
 	pipe_t			recv_pipe;//针对子进程的读
 	bind_config_elem_t();
 	uint32_t get_id();
-	std::string& get_name();
-	std::string& get_ip();
+	const char* get_name();
+	const char* get_ip();
 	in_port_t get_port();
 };
 #pragma pack()
@@ -58,14 +58,14 @@ public:
 	// Returns:   uint32_t
 	//************************************
 	inline uint32_t get_elem_num() const{
-		return m_elems.size();
+		return this->elems.size();
 	}
 	bind_config_elem_t* get_elem(uint32_t index);
 	int get_elem_idx(const bind_config_elem_t* bc_elem);
 	void add_elem(const bind_config_elem_t& elem);
 protected:
 private:
-	std::vector<bind_config_elem_t> m_elems;
+	std::vector<bind_config_elem_t> elems;
 };
 
 extern bind_config_t g_bind_conf;
