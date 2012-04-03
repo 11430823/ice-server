@@ -115,12 +115,12 @@ namespace{
 	{
 		uint32_t seq = 0;
 		if (0 != s_log_info.logtime_interval_sec){
-			seq = ice::lib_time::get_now_second() / s_log_info.logtime_interval_sec;
+			seq = ice::lib_time_t::get_now_second() / s_log_info.logtime_interval_sec;
 		}else{
 			char file_name[FILENAME_MAX];
 
 			struct tm t_m;
-			ice::lib_time::get_now_tm(t_m);
+			ice::lib_time_t::get_now_tm(t_m);
 
 			for (; seq != MAX_LOG_CNT; ++seq) {
 				gen_log_file_path(lvl, seq, file_name, t_m);
@@ -287,7 +287,7 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 
 	va_list ap;
 	struct tm t_m;
-	lib_time::get_now_tm(t_m);
+	lib_time_t::get_now_tm(t_m);
 	::va_start(ap, fmt);
 
 	if (unlikely(!s_log_info.has_init || (e_dest_terminal & s_log_info.log_dest))) {
@@ -340,7 +340,7 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 
 	va_list ap;
 	struct tm t_m;
-	lib_time::get_now_tm(t_m);
+	lib_time_t::get_now_tm(t_m);
 	::va_start(ap, fmt);
 
 	if (unlikely(!s_log_info.has_init || e_dest_terminal & s_log_info.log_dest)) {

@@ -2,15 +2,18 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	ok
 	brief:		ÍøÂç
 *********************************************************************/
 
 #pragma once
 
+#include "lib_util.h"
+
 namespace ice{
 	class lib_net_t
 	{
+		PROTECTED_READONLY_DEFAULT(int, fd);
 	public:
 		lib_net_t();
 		virtual ~lib_net_t();
@@ -30,7 +33,6 @@ namespace ice{
 		*/
 		virtual int recv(void* buf, int bufsize) = 0;
 	protected:
-		int fd;
 	private:
 		lib_net_t(const lib_net_t& cr);
 		lib_net_t& operator=(const lib_net_t& cr);

@@ -11,7 +11,7 @@
 #include <time.h>
 
 namespace ice{
-	class lib_time
+	class lib_time_t
 	{
 	public:
 		//************************************
@@ -27,8 +27,8 @@ namespace ice{
 		}
 	protected:
 	private:
-		lib_time(const lib_time& cr);
-		lib_time& operator=(const lib_time& cr);
+		lib_time_t(const lib_time_t& cr);
+		lib_time_t& operator=(const lib_time_t& cr);
 	private://TODO
 		/**
 		* @brief 把`tm_cur`按小时取整点时间。比如`tm_cur`的时间是20081216-16:10:25，则返回的时间是20081216-16:00:00。
