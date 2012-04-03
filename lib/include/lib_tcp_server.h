@@ -70,7 +70,7 @@ namespace ice{
 		//************************************
 		// Brief:	Called each time on close of the FDs opened by the child.
 		//************************************
-		typedef void (*ON_FD_CLOSED)(int fd);ON_FD_CLOSED on_fd_closed;
+		typedef void (*ON_SVR_CONN_CLOSED)(int fd);ON_SVR_CONN_CLOSED on_svr_conn_closed;
 
 	//The following interfaces are called both by the parent and child process
 		//************************************
@@ -103,7 +103,7 @@ namespace ice{
 			this->on_cli_pkg = 0;
 			this->on_srv_pkg = 0;
 			this->on_cli_conn_closed = 0;
-			this->on_fd_closed = 0;
+			this->on_svr_conn_closed = 0;
 			this->on_init = 0;
 			this->on_fini = 0;
 			this->on_get_pkg_len = 0;

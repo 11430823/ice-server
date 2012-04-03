@@ -14,12 +14,12 @@
 #include <lib_file.h>
 #include <lib_tcp_server.h>
 
-#include "net_tcp.h"
-#include "daemon.h"
 #include "bind_conf.h"
 #include "bench_conf.h"
 #include "service.h"
-
+#include "dll.h"
+#include "net_tcp.h"
+#include "daemon.h"
 
 daemon_t g_daemon;
 
@@ -52,7 +52,7 @@ namespace {
 		pid_t pid;
 		static int	status;
 		while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {
-			for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
+			for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
 				if (atomic_read(&g_daemon.child_pids[i]) == pid) {
 					atomic_set(&g_daemon.child_pids[i], 0);
 					//todo g_daemon.restart_child_process(bc);将重启的功能放在这里
@@ -163,7 +163,7 @@ daemon_t::~daemon_t()
 
 void daemon_t::killall_children()
 {
-	for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
+	for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
 		if (0 != atomic_read(&child_pids[i])) {
 			kill(atomic_read(&child_pids[i]), SIGKILL);
 		}
@@ -172,7 +172,7 @@ void daemon_t::killall_children()
 	/* wait for all child exit*/
 WAIT_AGAIN:
 	while (1) {
-		for (uint32_t i = 0; i < g_bind_conf.get_elem_num(); ++i) {
+		for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
 			if (0 != atomic_read(&child_pids[i])) {
 				usleep(100);
 				goto WAIT_AGAIN;
@@ -189,7 +189,7 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 		return;
 	}
 
-	close(bc_elem->recv_pipe.pipe_handles[1]);
+	close(bc_elem->recv_pipe.handles[1]);
 	//do_del_conn(bc_elem->send_pipe.pipe_handles[0], 2);
 
 	bc_elem->send_pipe.create();
@@ -201,12 +201,12 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 	if ( (pid = fork ()) < 0 ) {
 		//		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) { //parent process
-		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
-		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-		g_net_server.get_server_epoll()->add_connect(bc_elem->send_pipe.pipe_handles[0], ice::FD_TYPE_PIPE, 0);
+		int ret = ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
+		ret = ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
+		g_net_server.get_server_epoll()->add_connect(bc_elem->send_pipe.handles[0], ice::FD_TYPE_PIPE, 0);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
-		g_service.run(i, g_bind_conf.get_elem_num());
+		g_service.run(&g_bind_conf.elems[i], g_bind_conf.elems.size());
 	}
 }
 

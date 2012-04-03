@@ -15,17 +15,15 @@
 
 service_t g_service;
 
-void service_t::run( int bc_elem_idx, int n_inited_bc )
+void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 {
 	g_is_parent = false;
 
 	g_net_server.destroy();
 
-	g_net_server.get_server_epoll()->set_epoll_wait_time_out(100);
-
-	m_bind_elem = g_bind_conf.get_elem(bc_elem_idx);
+	this->bind_elem = bind_elem;
 	char prefix[10] = { 0 };
-	int  len = snprintf(prefix, 8, "%u", m_bind_elem->id);
+	int  len = snprintf(prefix, 8, "%u", this->bind_elem->id);
 	prefix[len] = '_';
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
@@ -34,21 +32,25 @@ void service_t::run( int bc_elem_idx, int n_inited_bc )
 	//释放资源(从父进程继承来的资源)
 	// close fds inherited from parent process
 	for (int i = 0; i != n_inited_bc; ++i ) {
-		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
+		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
+		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_RDONLY]);
 	}
 
 	//初始化子进程
-	g_net_server.create(g_bench_conf.get_max_fd_num());
-	g_net_server.get_server_epoll()->add_connect(m_bind_elem->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
-	g_net_server.get_server_epoll()->listen(100);
+	//todo 处理返回值
+	int ret = 0;
+	ret = g_net_server.create(g_bench_conf.get_max_fd_num());
+	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
+	g_net_server.get_server_epoll()->set_epoll_wait_time_out(100);
+	ret = g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
+	ret = g_net_server.get_server_epoll()->listen(100);//todo 参数是否合适
 
 	if ( 0 != g_dll.functions.on_init(g_is_parent)) {
-		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", m_bind_elem->id, m_bind_elem->name.c_str());
+		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", this->bind_elem->id, this->bind_elem->name.c_str());
 		goto fail;
 	}
 
-	while (1){
+	while (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent)){//todo 考虑这样判断是否正确
 		g_net_server.get_server_epoll()->run();
 	}
 
@@ -56,9 +58,4 @@ fail:
 	g_net_server.destroy();
 	ice::lib_log_t::destroy();
 	exit(0);
-}
-
-service_t::service_t()
-{
-
 }

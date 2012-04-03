@@ -1,15 +1,12 @@
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <fcntl.h>
 
 #include <lib_log.h>
 #include <lib_util.h>
 
-#include "bind_conf.h"
 #include "daemon.h"
+#include "bind_conf.h"
 
 bind_config_t g_bind_conf;
 
@@ -46,7 +43,7 @@ namespace {
 				DEBUG_LOG("bind config [id:%d, name:%s, net_type:%d, ip:%s, port:%d]",
 					elem.id, elem.name.c_str(), elem.net_type,
 					elem.ip.c_str(), elem.port);
-				g_bind_conf.add_elem(elem);
+				g_bind_conf.elems.push_back(elem);
 			}
 			name_cursor++;
 			value_cursor++;
@@ -54,6 +51,15 @@ namespace {
 	}
 
 }//end of namespace
+
+bind_config_elem_t::bind_config_elem_t()
+{
+	this->id = 0;
+	this->port = 0;
+	this->restart_cnt = 0;
+	this->net_type = 0;
+}
+
 
 int bind_config_t::load()
 {
@@ -80,7 +86,7 @@ int bind_config_t::load()
 
 	atomic_t t;
 	atomic_set(&t, 0);
-	g_daemon.child_pids.resize(this->get_elem_num(), t);
+	g_daemon.child_pids.resize(this->elems.size(), t);
 	return 0;
 }
 
@@ -95,62 +101,4 @@ int bind_config_t::get_elem_idx( const bind_config_elem_t* bc_elem )
 		i++;		
 	}
 	return -1;
-}
-
-bind_config_elem_t* bind_config_t::get_elem( uint32_t index )
-{
-	return &this->elems[index];
-}
-
-void bind_config_t::add_elem(const bind_config_elem_t& elem )
-{
-	this->elems.push_back(elem);
-}
-
-uint32_t bind_config_elem_t::get_id()
-{
-	return this->id;
-}
-
-const char* bind_config_elem_t::get_name()
-{
-	return this->name.c_str();
-}
-
-const char* bind_config_elem_t::get_ip()
-{
-	return this->ip.c_str();
-}
-
-in_port_t bind_config_elem_t::get_port()
-{
-	return this->port;
-}
-
-bind_config_elem_t::bind_config_elem_t()
-{
-	this->id = 0;
-	this->port = 0;
-	this->restart_cnt = 0;
-	this->net_type = 0;
-}
-
-pipe_t::pipe_t()
-{
-	::memset(this->pipe_handles, 0, ice::get_arr_num(this->pipe_handles));
-}
-
-int pipe_t::create()
-{
-	if (-1 == ::pipe (this->pipe_handles)){
-		BOOT_LOG(-1, "PIPE CREATE FAILED [err:%s]", strerror(errno));
-	}
-
-	::fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFL, O_NONBLOCK | O_RDONLY);
-	::fcntl (this->pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFL, O_NONBLOCK | O_WRONLY);
-
-	// 这里设置为FD_CLOEXEC表示当程序执行exec函数时本fd将被系统自动关闭,表示不传递给exec创建的新进程
-	::fcntl (this->pipe_handles[E_PIPE_INDEX_RDONLY], F_SETFD, FD_CLOEXEC);
-	::fcntl (this->pipe_handles[E_PIPE_INDEX_WRONLY], F_SETFD, FD_CLOEXEC);
-	return 0;
 }
