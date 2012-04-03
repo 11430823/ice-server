@@ -1,6 +1,6 @@
 #include "lib_time.h"
 
-time_t ice::lib_time::get_integral_tm_hour( tm* tm_cur )
+time_t ice::lib_time_t::get_integral_tm_hour( tm* tm_cur )
 {
 	tm_cur->tm_min  = 0;
 	tm_cur->tm_sec  = 0;
@@ -8,7 +8,7 @@ time_t ice::lib_time::get_integral_tm_hour( tm* tm_cur )
 	return mktime(tm_cur);
 }
 
-int ice::lib_time::get_zodiac( int mon, int mon_day )
+int ice::lib_time_t::get_zodiac( int mon, int mon_day )
 {
 	int zodiac = 0;
 	static const int zodiac_day[12][2] = {

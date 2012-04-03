@@ -11,7 +11,7 @@ bench_conf_t g_bench_conf;
 
 namespace {
 
-	const char* bench_config_path = "./bench.ini";
+	const char* s_bench_config_path = "./bench.ini";
 
 	//************************************
 	// Brief:     获取指定组中key的值
@@ -47,14 +47,14 @@ int bench_conf_t::load()
 	int ret = 0;
 	GKeyFile *key = NULL;
 	
-	if (!g_file_test (bench_config_path, G_FILE_TEST_EXISTS)){	
+	if (!g_file_test (s_bench_config_path, G_FILE_TEST_EXISTS)){	
 		ALERT_LOG("READ BENCH CONFIG FILE EXISTS ERR");
 		ret = -1;
 		goto ret;
 	}
 
 	key = g_key_file_new();
-	if (!g_key_file_load_from_file (key, bench_config_path, G_KEY_FILE_NONE, NULL)){
+	if (!g_key_file_load_from_file (key, s_bench_config_path, G_KEY_FILE_NONE, NULL)){
 		ALERT_LOG("READ BENCH CONFIG FILE ERR");
 		ret = -1;
 		goto ret;
@@ -129,13 +129,13 @@ std::string bench_conf_t::get_strval(std::string& key, std::string& name) const
 	GKeyFile *file_key = NULL;
 
 	std::string str;
-	if (!g_file_test (bench_config_path, G_FILE_TEST_EXISTS)){	
+	if (!g_file_test (s_bench_config_path, G_FILE_TEST_EXISTS)){	
 		ALERT_LOG("READ BENCH CONFIG FILE EXISTS ERR");
 		goto ret_return;
 	}
 
 	file_key = g_key_file_new();
-	if (!g_key_file_load_from_file (file_key, bench_config_path, G_KEY_FILE_NONE, NULL)){
+	if (!g_key_file_load_from_file (file_key, s_bench_config_path, G_KEY_FILE_NONE, NULL)){
 		ALERT_LOG("READ BENCH CONFIG FILE ERR");
 		goto ret_return;
 	}

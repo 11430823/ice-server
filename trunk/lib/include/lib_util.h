@@ -27,6 +27,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //使用宏管理成员变量
+#define PROTECTED_READONLY_DEFAULT(varType, varName)\
+	protected:	varType varName;\
+	public:		varType get_##varName(void) { return varName; }
+
 #define PROPERTY_READONLY_DEFAULT(varType, varName)\
 	private:	varType varName;\
 	public:		varType get_##varName(void) { return varName; }
@@ -77,7 +81,7 @@ namespace ice{
 		typeof(x) __eintr_code__;\
 		do {\
 			__eintr_code__ = x;\
-		} while(__eintr_code__ < 0 && EINTR == errno);\
+		} while(unlikely(__eintr_code__ < 0 && EINTR == errno));\
 		__eintr_code__;\
 	})
 	//************************************
@@ -97,23 +101,20 @@ namespace ice{
 		ss >> value;
 	}
 
-	template <typename T>
-	inline void safe_delete(T p){
-		delete p;
-		p = NULL;
-	};
+#define safe_delete(p__){\
+		delete (p__);\
+		(p__) = NULL;\
+	}
 
-	template <typename T>
-	inline void safe_delete_arr(T p){
-		delete []p;
-		p = NULL;
-	};
+#define safe_delete_arr(p__){\
+		delete [](p__);\
+		(p__) = NULL;\
+	}
 
-	template <typename T>
-	inline void safe_free(T p){
-		free(p);
- 		p = NULL;
-	};
+#define safe_free(p__){\
+		free (p__);\
+		(p__) = NULL;\
+	}
 
 	//************************************
 	// Brief:     由数组名,获取数组个数
@@ -145,8 +146,8 @@ namespace ice{
 	};
 
 	//删除(非空)指针并置空
-	//使用方法://for_each(vector.begin(),vector.end(),DeletePtr());
-	struct DeletePtr
+	//使用方法://for_each(vector.begin(),vector.end(),lib_delete_ptr());
+	struct lib_delete_ptr
 	{
 		template <typename T>
 		void operator() (const T* ptr) const{
@@ -157,8 +158,8 @@ namespace ice{
 	};
 
 	//删除(非空)map中val位置上的指针并置空
-	//用法://for_each(map.begin(), map.end(), DeletePair());
-	struct DeletePair
+	//用法://for_each(map.begin(), map.end(), lib_delete_pair());
+	struct lib_delete_pair
 	{
 		template <typename Ty1, typename Ty2>
 		void operator() (const std::pair<Ty1, Ty2> &ptr) const{
@@ -178,12 +179,12 @@ namespace ice{
 
 	//////////////////////////////////////////////////////////////////////////
 	//不可拷贝,基类
-	class non_copyable{
+	class lib_non_copyable{
 	protected:
-		non_copyable() {}
+		lib_non_copyable() {}
 	private:
-		non_copyable( const non_copyable& );
-		const non_copyable& operator=( const non_copyable& );
+		lib_non_copyable( const lib_non_copyable& );
+		const lib_non_copyable& operator=( const lib_non_copyable& );
 	};
 
 }//end namespace ice
