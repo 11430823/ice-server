@@ -37,7 +37,7 @@ public:
 
 	int destroy();
 
-	PROPERTY_READONLY_DEFAULT(lib_tcp_server_epoll_t*, server_epoll);
+	PRIVATE_READONLY_DEFAULT(lib_tcp_server_epoll_t*, server_epoll);
 public:
 	net_server_t(void){
 		this->bc_elem = NULL;
