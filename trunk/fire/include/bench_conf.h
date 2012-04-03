@@ -11,7 +11,7 @@
 
 #include <lib_util.h>
 
-class bench_conf_t 
+class bench_conf_t
 {
 	PRIVATE_READONLY_DEFAULT(uint32_t, max_fd_num);//打开文件的最大数量
 	PRIVATE_READONLY_DEFAULT(bool, is_daemon);//是否后台运行
@@ -26,18 +26,17 @@ class bench_conf_t
 	PRIVATE_READONLY_DEFAULT(std::string, daemon_tcp_ip);//守护进程地址//默认为0
 	PRIVATE_READONLY_DEFAULT(uint16_t, daemon_tcp_port);//守护进程端口//默认为0
 public:
+	bench_conf_t();
+public:
 	//so调用获取配置项bench.ini中的数据(自行配置)
 	//获取配置项数据
 	std::string get_strval(const char* key, const char* name) const;
-public:
-	bench_conf_t();
 	//************************************
 	// Brief:     加载配置文件bench.ini
 	// Returns:   int(0:正确,其它:错误)
 	//************************************
 	int load();
 private:
-	//std::string libdata_path;//数据段SO路径//mark 增加在线加载功能
 };
 
 extern bench_conf_t g_bench_conf;

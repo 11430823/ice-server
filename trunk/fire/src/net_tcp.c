@@ -69,7 +69,7 @@ namespace {
 				CRIT_LOG("PARENT PROCESS CRASHED!");
 
 				char buf[100];
-				snprintf(buf, sizeof(buf), "%s.%s", g_service.m_bind_elem->get_name().c_str(), "parent.core");
+				snprintf(buf, sizeof(buf), "%s.%s", g_service.bind_elem->get_name().c_str(), "parent.core");
 				//  [9/12/2011 meng]	
 #if 0
 				asynsvr_send_warning(buf, 0, get_server_ip());

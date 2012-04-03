@@ -32,6 +32,8 @@ int main(int argc, char* argv[])
 	if (0 != g_net_server.create(10000)){
 		BOOT_LOG(-1, "net_server_t::init ???");
 	}
+	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
+	g_net_server.get_server_epoll()->register_pipe_event_fn(dll_t::on_pipe_event);
 
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
@@ -43,22 +45,22 @@ int main(int argc, char* argv[])
 		BOOT_LOG(-1, "FAILED TO INIT PARENT PROCESS");
 	}
 
-	for (uint32_t i = 0; i != g_bind_conf.get_elem_num(); ++i ) {
-		bind_config_elem_t* bc_elem = g_bind_conf.get_elem(i);
-		bc_elem->recv_pipe.create();
-		bc_elem->send_pipe.create();
+	for (uint32_t i = 0; i != g_bind_conf.elems.size(); ++i ) {
+		bind_config_elem_t& bc_elem = g_bind_conf.elems[i];
+		bc_elem.recv_pipe.create();
+		bc_elem.send_pipe.create();
 		pid_t pid;
 		if ( (pid = fork ()) < 0 ) {
-			BOOT_LOG(-1, "fork child process err [id:%u]", bc_elem->id);
+			BOOT_LOG(-1, "fork child process err [id:%u]", bc_elem.id);
 		} else if (pid > 0) {
 			//父进程
-			int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
-			ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-			g_net_server.get_server_epoll()->add_connect(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
+			int ret = ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
+			ret = ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
+			g_net_server.get_server_epoll()->add_connect(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
 			//子进程
-			g_service.run(i, i + 1);
+			g_service.run(&bc_elem, i + 1);
 			return 0;
 		}
 	}

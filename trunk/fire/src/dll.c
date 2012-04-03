@@ -1,15 +1,11 @@
-#include <stddef.h>
 #include <dlfcn.h>
 
 #include <lib_log.h>
-#include <lib_tcp_server.h>
 
-#include "dll.h"
-#include "service.h"
-#include "bind_conf.h"
 #include "bench_conf.h"
+#include "dll.h"
 
-ice_dll_t g_dll;
+dll_t g_dll;
 
 namespace {
 
@@ -26,7 +22,7 @@ namespace {
 
 }//end of namespace
 
-int ice_dll_t::register_plugin()
+int dll_t::register_plugin()
 {
 	char* error; 
 	int   ret_code = -1;
@@ -37,14 +33,22 @@ int ice_dll_t::register_plugin()
 		goto out;
 	}
 
- 	DLFUNC(this->handle, functions.on_get_pkg_len, "on_get_pkg_len", int(*)(int, const void*, int, int));
-	DLFUNC(this->handle, functions.on_cli_pkg, "on_cli_pkg", int(*)(void*, int, ice::cli_fd_info_t*));
- 	DLFUNC(this->handle, functions.on_srv_pkg, "on_srv_pkg", void(*)(int, void*, int));
- 	DLFUNC(this->handle, functions.on_cli_conn_closed, "on_cli_conn_closed", void(*)(int));
- 	DLFUNC(this->handle, functions.on_fd_closed, "on_fd_closed", void(*)(int));
-   	DLFUNC(this->handle, functions.on_init, "on_init", int(*)(int));
-  	DLFUNC(this->handle, functions.on_fini, "on_fini", int(*)(int));
-  	DLFUNC(this->handle, functions.on_events, "on_events", void(*)());
+	DLFUNC(this->handle, this->functions.on_get_pkg_len, "on_get_pkg_len",
+		ice::on_functions_tcp_server_epoll::ON_GET_PKG_LEN);
+	DLFUNC(this->handle, this->functions.on_cli_pkg, "on_cli_pkg",
+		ice::on_functions_tcp_server_epoll::ON_CLI_PKG);
+ 	DLFUNC(this->handle, this->functions.on_srv_pkg, "on_srv_pkg",
+		ice::on_functions_tcp_server_epoll::ON_SRV_PKG);
+ 	DLFUNC(this->handle, this->functions.on_cli_conn_closed, "on_cli_conn_closed",
+		ice::on_functions_tcp_server_epoll::ON_CLI_CONN_CLOSED);
+ 	DLFUNC(this->handle, this->functions.on_svr_conn_closed, "on_svr_conn_closed",
+		ice::on_functions_tcp_server_epoll::ON_SVR_CONN_CLOSED);
+   	DLFUNC(this->handle, this->functions.on_init, "on_init",
+		ice::on_functions_tcp_server_epoll::ON_INIT);
+  	DLFUNC(this->handle, this->functions.on_fini, "on_fini",
+		ice::on_functions_tcp_server_epoll::ON_FINI);
+  	DLFUNC(this->handle, this->functions.on_events, "on_events",
+		ice::on_functions_tcp_server_epoll::ON_EVENTS);
 	ret_code = 0;
 
 out:
@@ -52,15 +56,20 @@ out:
 		g_bench_conf.get_liblogic_path().c_str(), (0 != ret_code ? "FAIL" : "OK"));
 }
 
-ice_dll_t::ice_dll_t()
+dll_t::dll_t()
 {
 	this->handle = NULL;
 }
 
-ice_dll_t::~ice_dll_t()
+dll_t::~dll_t()
 {
 	if (NULL != this->handle){
 		dlclose(this->handle);
 		this->handle = NULL;
 	}
+}
+
+int dll_t::on_pipe_event( int fd )
+{
+	return 0;
 }

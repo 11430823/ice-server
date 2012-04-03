@@ -21,6 +21,7 @@ ice::lib_tcp_server_epoll_t::lib_tcp_server_epoll_t(uint32_t max_events_num)
 {
 	this->max_events_num = max_events_num;
 	this->epoll_wait_time_out = -1;
+	this->on_pipe_event = NULL;
 }
 
 int ice::lib_tcp_server_epoll_t::listen(uint32_t listen_num)
@@ -101,4 +102,9 @@ int ice::lib_tcp_server_epoll_t::destroy()
 
 	lib_file_t::close_fd(this->fd);
 	return 0;
+}
+
+void ice::lib_tcp_server_epoll_t::register_pipe_event_fn( ON_PIPE_EVENT fn )
+{
+	this->on_pipe_event = fn;
 }

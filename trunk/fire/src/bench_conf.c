@@ -26,8 +26,6 @@ namespace {
 		gsize len = 0;
 		if (NULL == (a = g_key_file_get_string_list (keyfile, 
 			group_name, key_name, &len, NULL))){
-			ALERT_LOG("READ BENCH CONFIG FILE KEY ERR [GROUP_NAME:%s, KEY_NAME:%s]",
-				group_name, key_name);
 			return -1;  
 		}else{
 			std::string val;
@@ -64,54 +62,20 @@ int bench_conf_t::load()
 		ret = -1;
 		goto ret;
 	}
-
-	if (0 != get_val(this->max_fd_num, key, "common", "max_fd_num")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(this->is_daemon, key, "common", "is_daemon")){
-		ret = -1;
-		goto ret;
-	}
-
-	if (0 != get_val(this->fd_time_out, key, "common", "fd_time_out")){
-		ret = -1;
-		goto ret;
-	}
-	
-	if (0 != get_val(this->page_size_max, key, "common", "page_size_max")){
-		ret = -1;
-		goto ret;
-	}
-
+	get_val(this->max_fd_num, key, "common", "max_fd_num");
+	get_val(this->is_daemon, key, "common", "is_daemon");
+	get_val(this->fd_time_out, key, "common", "fd_time_out");
+	get_val(this->page_size_max, key, "common", "page_size_max");
 	if (0 != get_val(this->log_dir, key, "log", "dir")){
 		ret = -1;
 		goto ret;
 	}
-	if (0 != get_val(this->log_level, key, "log", "level")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(this->log_save_next_file_interval_min, key, "log", "save_next_file_interval_min")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(this->core_size, key, "core", "size")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(this->restart_cnt_max, key, "core", "restart_cnt_max")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(this->daemon_tcp_ip, key, "net", "daemon_tcp_ip")){
-		ret = -1;
-		goto ret;
-	}
-	if (0 != get_val(this->daemon_tcp_port, key, "net", "daemon_tcp_port")){
-		ret = -1;
-		goto ret;
-	}
+	get_val(this->log_level, key, "log", "level");
+	get_val(this->log_save_next_file_interval_min, key, "log", "save_next_file_interval_min");
+	get_val(this->core_size, key, "core", "size");
+	get_val(this->restart_cnt_max, key, "core", "restart_cnt_max");
+	get_val(this->daemon_tcp_ip, key, "net", "daemon_tcp_ip");
+	get_val(this->daemon_tcp_port, key, "net", "daemon_tcp_port");
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -121,14 +85,14 @@ ret:
 
 bench_conf_t::bench_conf_t()
 {
-	this->max_fd_num = 0;
-	this->is_daemon = false;
-	this->log_level = 0;
+	this->max_fd_num = 20000;
+	this->is_daemon = true;
+	this->log_level = 8;
 	this->log_save_next_file_interval_min = 0;
 	this->fd_time_out = 0;
-	this->page_size_max = 0;
+	this->page_size_max = 8192;
 	this->core_size = 0;
-	this->restart_cnt_max = 0;
+	this->restart_cnt_max = 1073741824;
 	this->daemon_tcp_port = 0;
 }
 
