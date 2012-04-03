@@ -39,9 +39,9 @@ public:
 	//子进程ID
 	std::vector<atomic_t> child_pids;
 	//程序名称
-	PROPERTY_READONLY_DEFAULT(std::string, prog_name);
+	PRIVATE_READONLY_DEFAULT(std::string, prog_name);
 	//当前目录
-	PROPERTY_READONLY_DEFAULT(std::string, current_dir);
+	PRIVATE_READONLY_DEFAULT(std::string, current_dir);
 private:
 };
 
