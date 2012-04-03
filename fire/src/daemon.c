@@ -12,8 +12,9 @@
 #include <lib_util.h>
 #include <lib_log.h>
 #include <lib_file.h>
+#include <lib_tcp_server.h>
 
-#include "ice_epoll.h"
+#include "net_tcp.h"
 #include "daemon.h"
 #include "bind_conf.h"
 #include "bench_conf.h"
@@ -202,9 +203,17 @@ void daemon_t::restart_child_process( bind_config_elem_t* bc_elem )
 	} else if (pid > 0) { //parent process
 		int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
 		ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-		g_net_server.get_server_epoll->add_connect(bc_elem->send_pipe.pipe_handles[0], fd_type_pipe, 0);
+		g_net_server.get_server_epoll()->add_connect(bc_elem->send_pipe.pipe_handles[0], ice::FD_TYPE_PIPE, 0);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { //child process
 		g_service.run(i, g_bind_conf.get_elem_num());
 	}
+}
+
+int daemon_t::run()
+{
+	while (!this->stop || g_dll.functions.on_fini(g_is_parent) != 0) {
+		g_net_server.get_server_epoll()->run();
+	}
+	return 0;
 }

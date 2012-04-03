@@ -9,11 +9,11 @@
 #include <lib_file.h>
 
 #include "daemon.h"
-#include "ice_dll.h"
+#include "dll.h"
 #include "bind_conf.h"
 #include "service.h"
 #include "bench_conf.h"
-#include "ice_epoll.h"
+#include "net_tcp.h"
 
 int main(int argc, char* argv[])
 {
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 			//父进程
 			int ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->recv_pipe.pipe_handles[E_PIPE_INDEX_RDONLY]);
 			ret = ice::lib_file_t::close_fd(g_bind_conf.get_elem(i)->send_pipe.pipe_handles[E_PIPE_INDEX_WRONLY]);
-			g_net_server.get_server_epoll()->add_connect(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], fd_type_pipe, NULL);
+			g_net_server.get_server_epoll()->add_connect(bc_elem->send_pipe.pipe_handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
 			//子进程
@@ -64,8 +64,8 @@ int main(int argc, char* argv[])
 	}
 
 	//parent process
-	g_net_server.listen(g_bench_conf.get_daemon_tcp_ip.c_str(), g_bench_conf.get_daemon_tcp_port(), NULL);
-	g_net_server.daemon_run();
+	g_net_server.get_server_epoll()->listen(100);
+	g_daemon.run();
 
 	g_daemon.killall_children();
 	g_net_server.destroy();

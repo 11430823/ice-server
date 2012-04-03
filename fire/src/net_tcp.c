@@ -17,10 +17,10 @@
 #include <lib_file.h>
 #include <lib_tcp.h>
 
-#include "ice_epoll.h"
+#include "net_tcp.h"
 #include "service.h"
 #include "bind_conf.h"
-#include "ice_dll.h"
+#include "dll.h"
 #include "daemon.h"
 #include "bench_conf.h"
 
@@ -33,6 +33,7 @@ enum {
 };
 
 namespace {
+#if 0
 		//************************************
 	// Brief:     处理管道事件(父/子进程crashed)
 	// Returns:   int
@@ -83,26 +84,9 @@ namespace {
 
 		return 0;
 	}
+#endif
 
 }//end namespace
-
-int mod_events(int epfd, int fd, uint32_t flag)
-{
-	struct epoll_event ev;
-
-	ev.events = EPOLLET | flag;
-	ev.data.fd = fd;
-
-epoll_mod_again:
-	if (unlikely (epoll_ctl (epfd, EPOLL_CTL_MOD, fd, &ev) != 0)) {
-		//		ERROR_LOG ("epoll_ctl mod %d error: %m", fd);
-		if (errno == EINTR)
-			goto epoll_mod_again;
-		return -1;
-	}
-
-	return 0;
-}
 
 int net_server_t::create(uint32_t max_fd_num)
 {
@@ -122,38 +106,15 @@ int net_server_t::create(uint32_t max_fd_num)
 
 int net_server_t::destroy()
 {
-	ice::safe_delete(this->server_epoll);
+	safe_delete(this->server_epoll);
 	return 0;
 }
 
-int net_server_t::listen( const char* listen_ip, in_port_t listen_port, struct bind_config_elem_t* bc_elem )
+int service_run()
 {
-	int ret_code = -1;
-
-	this->bc_elem = bc_elem;
-
-	int listenfd = ice::lib_tcp_sever_t::safe_socket_listen(listen_ip, listen_port, 1024, 32 * 1024);
-	if (-1 != listenfd) {
-		ice::lib_file_t::set_io_block(listenfd, false);
-
-		this->server_epoll->add_connect(listenfd, fd_type_listen, 0);
-		ret_code = 0;
-	}
-
-	BOOT_LOG(ret_code, "Listen on %s:%u,ret_code:%d,listenfd:%d",
-		listen_ip ? listen_ip : "ANYADDR", listen_port, ret_code, listenfd);
-}
-
-int net_server_t::daemon_run()
-{
-	while (!g_daemon.stop || g_dll.on_fini(g_is_parent) != 0) {
-		g_net_server.get_server_epoll()->run();
-	}
-}
-
-int net_server_t::service_run()
-{
+#if 0
 	int max_len = 0;
+
 		epoll_event evs[this->max_ev_num];
 	int nr = 0;
 	int pos = 0;
@@ -278,5 +239,6 @@ int net_server_t::service_run()
 
 		g_dll.on_events();
 	}
+#endif
 	return 0;
 }

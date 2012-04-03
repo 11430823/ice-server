@@ -134,6 +134,7 @@ bench_conf_t::bench_conf_t()
 
 std::string bench_conf_t::get_strval(const char* key, const char* name) const
 {
+	std::string str;
 	GKeyFile *file_key = NULL;
 
 	if (!g_file_test (s_bench_config_path, G_FILE_TEST_EXISTS)){	
@@ -146,7 +147,7 @@ std::string bench_conf_t::get_strval(const char* key, const char* name) const
 		ALERT_LOG("READ BENCH CONFIG FILE ERR");
 		goto ret_return;
 	}
-	std::string str;
+
 	if (0 != get_val(str, file_key, key, name)){
 		str.clear();
 		goto ret_return;
