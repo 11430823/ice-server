@@ -16,8 +16,8 @@ namespace ice{
 	};
 	class lib_tcp_server_epoll_t : public lib_tcp_sever_t
 	{
-		PROPERTY_READONLY_DEFAULT(uint32_t, max_events_num);
-		PROPERTY_RW_DEFAULT(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
+		PRIVATE_READONLY_DEFAULT(uint32_t, max_events_num);
+		PRIVATE_RW_DEFAULT(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
 	public:
 		lib_tcp_server_epoll_t(uint32_t max_events_num);
 		virtual ~lib_tcp_server_epoll_t(){
