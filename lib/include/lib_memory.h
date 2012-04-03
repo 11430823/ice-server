@@ -17,9 +17,9 @@ namespace ice{
 	//自动无限放大,但是不会自动紧缩.
 	class lib_active_buf_t
 	{
-		PROPERTY_READONLY_DEFAULT(char*, data);//数据头指针
-		PROPERTY_READONLY_DEFAULT(uint32_t, total_len);//已分配的总长度
-		PROPERTY_READONLY_DEFAULT(uint32_t, write_pos);//已使用到的位置
+		PRIVATE_READONLY_DEFAULT(char*, data);//数据头指针
+		PRIVATE_READONLY_DEFAULT(uint32_t, total_len);//已分配的总长度
+		PRIVATE_READONLY_DEFAULT(uint32_t, write_pos);//已使用到的位置
 	public:
 		lib_active_buf_t();
 		virtual ~lib_active_buf_t();

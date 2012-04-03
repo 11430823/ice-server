@@ -14,7 +14,7 @@ namespace ice{
 	//互斥锁
 	class lib_lock_mutex_t
 	{
-		PROPERTY_READONLY_DEFAULT(pthread_mutex_t, lock_mutex);
+		PRIVATE_READONLY_DEFAULT(pthread_mutex_t, lock_mutex);
 	public:
 		lib_lock_mutex_t();
 		virtual ~lib_lock_mutex_t();
