@@ -49,7 +49,20 @@
 	public:		const varType& get_##varName(void) { return varName; } \
 	public:		void set_##varName(const varType& var) { varName = var; }
 
+#define safe_delete(p__){\
+		delete p__;\
+		p__ = NULL;\
+	}
 
+#define safe_delete_arr(p__){\
+		delete [](p__);\
+		(p__) = NULL;\
+	}
+
+#define safe_free(p__){\
+		free (p__);\
+		(p__) = NULL;\
+	}
 
 namespace ice{
 	#define SUCC 0
@@ -99,21 +112,6 @@ namespace ice{
 	inline void convert_from_string(T &value, const std::string &s) {
 		std::stringstream ss(s);
 		ss >> value;
-	}
-
-#define safe_delete(p__){\
-		delete (p__);\
-		(p__) = NULL;\
-	}
-
-#define safe_delete_arr(p__){\
-		delete [](p__);\
-		(p__) = NULL;\
-	}
-
-#define safe_free(p__){\
-		free (p__);\
-		(p__) = NULL;\
 	}
 
 	//************************************

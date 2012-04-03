@@ -12,7 +12,10 @@
 // #include <netinet/in.h>
 
 #include <lib_util.h>
-
+#include <lib_tcp_server_epoll.h>
+#if 0 //todo 增加一个处理PIPE管道消息的回调函数
+int handle_pipe_event(int fd, epoll_event& r_evs);
+#endif
 class ice_dll_t
 {
 	PRIVATE_READONLY_DEFAULT(void*, handle);

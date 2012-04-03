@@ -23,11 +23,15 @@ namespace ice{
 		virtual ~lib_tcp_server_epoll_t(){
 			destroy();
 		}
-		virtual int register_on_functions(const on_functions_tcp_server* functions);
+		virtual int register_on_functions(const on_functions_tcp_server* functions){
+			return 0;
+		}
 		virtual int create();
 		virtual int listen(uint32_t listen_num);
 		virtual int run();
-		virtual int stop();
+		virtual int stop(){
+			return 0;
+		}
 		virtual int add_connect(int fd, E_FD_TYPE fd_type, struct sockaddr_in* peer);
 		int add_events(int fd, uint32_t flag);
 	private:

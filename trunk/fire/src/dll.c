@@ -2,8 +2,9 @@
 #include <dlfcn.h>
 
 #include <lib_log.h>
+#include <lib_tcp_server.h>
 
-#include "ice_dll.h"
+#include "dll.h"
 #include "service.h"
 #include "bind_conf.h"
 #include "bench_conf.h"
@@ -30,14 +31,14 @@ int ice_dll_t::register_plugin()
 	char* error; 
 	int   ret_code = -1;
 
-	this->this->handle = dlopen(g_bench_conf.get_liblogic_path().c_str(), RTLD_NOW);
+	this->handle = dlopen(g_bench_conf.get_liblogic_path().c_str(), RTLD_NOW);
 	if ((error = dlerror()) != NULL) {
 		ALERT_LOG("DLOPEN ERROR [error:%s]", error);
 		goto out;
 	}
 
  	DLFUNC(this->handle, functions.on_get_pkg_len, "on_get_pkg_len", int(*)(int, const void*, int, int));
- 	DLFUNC(this->handle, functions.on_cli_pkg, "on_cli_pkg", int(*)(void*, int, fdsession_t*));
+	DLFUNC(this->handle, functions.on_cli_pkg, "on_cli_pkg", int(*)(void*, int, ice::cli_fd_info_t*));
  	DLFUNC(this->handle, functions.on_srv_pkg, "on_srv_pkg", void(*)(int, void*, int));
  	DLFUNC(this->handle, functions.on_cli_conn_closed, "on_cli_conn_closed", void(*)(int));
  	DLFUNC(this->handle, functions.on_fd_closed, "on_fd_closed", void(*)(int));
