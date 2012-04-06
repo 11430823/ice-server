@@ -112,13 +112,11 @@ namespace ice{
 
 	class lib_tcp_sever_t : public lib_tcp_t
 	{
-		PROTECTED_READONLY_DEFAULT(bool, is_run);
 		PROTECTED_READONLY_DEFAULT(bool, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
 		PROTECTED_READONLY_DEFAULT(cli_fd_info_t*, cli_fd_infos);//连接用户的信息
 		PROTECTED_READONLY_DEFAULT(int, cli_fd_value_max);//连接上的FD中的最大值
 	public:
 		lib_tcp_sever_t(){
-			this->is_run = true;
 			this->cli_time_out_sec = 0;
 			this->cli_fd_infos = NULL;
 		}

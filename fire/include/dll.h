@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <sys/epoll.h>
+
 #include <lib_util.h>
 #include <lib_tcp_server_epoll.h>
 
@@ -28,7 +30,7 @@ public:
 	 * @param	int fd
 	 * @return	int
 	 */
-	static int on_pipe_event(int fd);
+	static int on_pipe_event(int fd, epoll_event& r_evs);
 protected:
 private:
 };

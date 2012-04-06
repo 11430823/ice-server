@@ -1,8 +1,3 @@
-//#include <stddef.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <unistd.h>
-
 #include <lib_log.h>
 #include <lib_file.h>
 
@@ -54,8 +49,9 @@ int main(int argc, char* argv[])
 			BOOT_LOG(-1, "fork child process err [id:%u]", bc_elem.id);
 		} else if (pid > 0) {
 			//¸¸½ø³Ì
-			int ret = ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
-			ret = ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
+			ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
+			ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
+			g_pipe_fd_elems.insert(std::make_pair(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], &bc_elem));
 			g_net_server.get_server_epoll()->add_connect(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
