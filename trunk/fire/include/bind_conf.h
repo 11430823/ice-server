@@ -33,6 +33,7 @@ class bind_config_t
 {
 public:
 	std::vector<bind_config_elem_t> elems;
+
 public:
 	//************************************
 	// Brief:     加载配置文件

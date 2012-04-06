@@ -3,6 +3,8 @@
 #include <lib_log.h>
 
 #include "bench_conf.h"
+#include "bind_conf.h"
+#include "daemon.h"
 #include "dll.h"
 
 dll_t g_dll;
@@ -69,7 +71,40 @@ dll_t::~dll_t()
 	}
 }
 
-int dll_t::on_pipe_event( int fd )
+int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 {
+	if (r_evs.events & EPOLLHUP) {
+		if (g_is_parent) {
+			// Child Crashed
+			bind_config_elem_t* bc = NULL;
+			PIPE_FD_ELEMS_MAP::iterator it = g_pipe_fd_elems.find(fd);
+			if (g_pipe_fd_elems.end() != it){
+				bc = it->second;
+				g_pipe_fd_elems.erase(fd);
+				CRIT_LOG("CHILD PROCESS CRASHED![olid=%u olname=%s]", bc->id, bc->name.c_str());
+
+				// prevent child process from being restarted again and again forever
+				if (bc->restart_cnt++ <= g_bench_conf.get_restart_cnt_max()) {
+					g_daemon.restart_child_process(bc);
+				}
+			}else{
+				CRIT_LOG("CHILD PROCESS CRASHED![olid=??? olname=???]");
+			}
+		} else {
+			// Parent Crashed
+			CRIT_LOG("PARENT PROCESS CRASHED!");
+			g_daemon.stop = true;
+			g_daemon.restart = false;
+			return -1;
+		}
+	} else {
+		//read
+		if (g_is_parent){
+		}else{
+		}
+// 		char trash[trash_size];
+// 		while (trash_size == read(fd, trash, trash_size)) ;
+	}
+
 	return 0;
 }

@@ -11,8 +11,7 @@ int ice::lib_tcp_server_epoll_t::run()
 	if (0 == this->max_events_num){
 		return -1;
 	}
-	while (this->is_run){
-	}
+	
 
 	return 0;
 }
@@ -107,4 +106,143 @@ int ice::lib_tcp_server_epoll_t::destroy()
 void ice::lib_tcp_server_epoll_t::register_pipe_event_fn( ON_PIPE_EVENT fn )
 {
 	this->on_pipe_event = fn;
+}
+
+
+int service_run()
+{
+#if 0
+	enum {
+		trash_size		= 4096,
+		mcast_pkg_size	= 8192,
+		udp_pkg_size	= 8192
+	};
+	int max_len = 0;
+
+		epoll_event evs[this->max_ev_num];
+	int nr = 0;
+	int pos = 0;
+	epoll_event ev;
+	while ( !g_daemon.stop || 0 != g_dll.on_fini(g_is_parent) ) {
+		nr = epoll_wait(this->fd , evs, this->max_ev_num, EPOLL_TIME_OUT);
+
+		if (unlikely(-1 == nr && errno != EINTR)){
+			ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d, error:%s]",
+				this->max_fd, this->fd, strerror(errno));
+			return -1;
+		}
+
+		ice::renew_now();
+
+		for (pos = 0; pos < nr; pos++) {
+			int fd = evs[pos].data.fd;
+			fdinfo_t& fdinfo = this->m_fds[fd];
+			if (fd > this->max_fd || fdinfo.fd != fd || fdinfo.fd_type == fd_type_unused) {
+				ERROR_LOG("DELAYED EPOLL EVENTS [event fd=%d, cache fd=%d, maxfd=%d, type=%d]", 
+					fd, fdinfo.fd, this->max_fd, fdinfo.fd_type);
+				continue;
+			}
+
+			if ( unlikely(fd_type_pipe == fdinfo.fd_type ) ) {
+				if (0 == handle_pipe_event(fd, evs[pos])) {
+					continue;
+				} else {
+					return -1;
+				}
+			}
+
+			if (evs[pos].events & EPOLLIN) {
+				switch (fdinfo.fd_type) {
+				case fd_type_listen:
+					//accept
+					//////////////////////////////////////////////////////////////////////////
+					struct sockaddr_in peer;
+					int newfd;
+
+					newfd = ice::lib_tcp_sever_t::safe_tcp_accept(fd, &peer, false);
+					if (-1 != newfd) {
+						get_server_epoll()->add_connect(newfd, fd_type_remote, &peer);
+						//todo 后面的错误处理
+					} else if ((errno == EMFILE) || (errno == ENFILE)) {
+						//add_to_etin_queue(fd);
+					} else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+						//del_from_etin_queue(fd);
+					}else{
+						ERROR_LOG("ACCEPT ERROR:%s", strerror(errno));
+					}
+					break;
+				case fd_type_remote:
+					{
+						char buf[1500 + 1] = {0};
+						int len;
+						/* 开始处理每个新连接上的数据收发 */
+						/* 接收客户端的消息 */
+						len = recv(fd, buf, sizeof(buf)-1, 0);
+						switch(len)
+						{
+    						case 0:
+								{
+									//todo 删除
+									int e = epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, &ev);
+									if(-1 == e)
+									{
+										//m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
+									}
+									close(fd);
+								}
+    						break;
+    						case -1:
+								if(EAGAIN != errno){// 断开
+									//m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
+									perror("11 != errno:");
+									epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, &ev);
+								}	
+    							break;
+    						default:
+    							{
+    								buf[len] = '\0';
+    								std::cout << buf << std::endl;
+										int i = send(fd, buf, len, 0);
+										std::cout << "send : " << i << std::endl;
+								}
+    							break;
+						}
+					}
+					break;
+				default:
+					ALERT_LOG("FDINFO TYPE[TYPE=%u]", fdinfo.fd_type);
+					break;
+				}
+			}
+
+			if (evs[pos].events & EPOLLOUT) {
+				//该套接字可写
+				/*
+				if (fdinfo.cb.sendlen > 0 && do_write_conn(fd) == -1) {
+					//do_del_conn(fd, g_is_parent);
+				}
+				if (fdinfo.cb.sendlen == 0) {
+					mod_events(this->fd, fd, EPOLLIN);
+				}
+				}*/
+			}
+
+			if (evs[pos].events & EPOLLHUP) {
+				//do_del_conn(fd, g_is_parent);
+			}
+		}
+
+		if (g_bench_conf.get_fd_time_out()) {
+			for (int i = 0; i <= this->max_fd; ++i) {
+				if ((g_net_server.m_fds[i].fd_type == fd_type_remote)
+					&& ((time(0) - (int32_t)g_net_server.m_fds[i].last_tm) >= g_bench_conf.get_fd_time_out())) {
+						//do_del_conn(i, g_is_parent);
+				}
+			}
+		}
+
+		g_dll.on_events();
+	}
+#endif
+	return 0;
 }

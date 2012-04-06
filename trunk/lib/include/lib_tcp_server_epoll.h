@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <sys/epoll.h>
+
 #include "lib_tcp_server.h"
 
 namespace ice{
@@ -17,7 +19,7 @@ namespace ice{
 	class lib_tcp_server_epoll_t : public lib_tcp_sever_t
 	{
 	public:
-		typedef int (*ON_PIPE_EVENT)(int fd);
+		typedef int (*ON_PIPE_EVENT)(int fd, epoll_event& r_evs);
 	private:
 		ON_PIPE_EVENT on_pipe_event;
 		PRIVATE_READONLY_DEFAULT(uint32_t, max_events_num);

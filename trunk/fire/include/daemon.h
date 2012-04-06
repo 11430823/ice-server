@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <lib_iatomic.h>
 #include <lib_util.h>
@@ -31,7 +32,7 @@ public:
 	// Returns:   void
 	//************************************
 	void killall_children();
-	void restart_child_process(struct bind_config_elem_t* bc_elem);
+	void restart_child_process(struct bind_config_elem_t* elem);
 	//true:停止.false:继续(无改变)
 	volatile bool stop;
 	//true:重启.false:继续(无改变)
@@ -45,6 +46,8 @@ public:
 private:
 };
 
+typedef std::map<int, struct bind_config_elem_t*> PIPE_FD_ELEMS_MAP;
+extern PIPE_FD_ELEMS_MAP g_pipe_fd_elems;//管道绑定的子进程
 extern bool	g_is_parent;
 extern daemon_t g_daemon;
 

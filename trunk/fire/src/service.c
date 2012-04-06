@@ -2,16 +2,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include <lib_util.h>
 #include <lib_log.h>
 #include <lib_file.h>
 
 #include "net_tcp.h"
 #include "util.h"
-#include "bind_conf.h"
 #include "daemon.h"
 #include "dll.h"
 #include "bench_conf.h"
+#include "bind_conf.h"
 #include "service.h"
 
 service_t g_service;
@@ -19,8 +18,14 @@ service_t g_service;
 void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 {
 	g_is_parent = false;
-
+	//释放资源(从父进程继承来的资源)
+	// close fds inherited from parent process
+	g_pipe_fd_elems.clear();
 	g_net_server.destroy();
+	for (int i = 0; i != n_inited_bc; ++i ) {
+		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
+		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_RDONLY]);
+	}
 
 	this->bind_elem = bind_elem;
 	char prefix[10] = { 0 };
@@ -29,13 +34,6 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
 		prefix, g_bench_conf.get_log_save_next_file_interval_min());
-
-	//释放资源(从父进程继承来的资源)
-	// close fds inherited from parent process
-	for (int i = 0; i != n_inited_bc; ++i ) {
-		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
-		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_RDONLY]);
-	}
 
 	//初始化子进程
 	//todo 处理返回值
@@ -51,7 +49,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		goto fail;
 	}
 
-	while (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent)){//todo 考虑这样判断是否正确
+	while (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent)){
 		g_net_server.get_server_epoll()->run();
 	}
 
