@@ -1,6 +1,6 @@
 EXE=libice.so
 CC=g++
-FLAG=-Wall -fPIC -shared -O0 -o
+FLAG=-Wall -DENABLE_TRACE_LOG -fPIC -shared -O0 -o
 INCLUDES=-I/usr/include/ -I../include/ -I/usr/include/libxml2/
 GLIB_INCLUDES=-I/usr/include/glib-2.0/ -I/usr/lib/glib-2.0/include/ 
 LINK=-lxml2

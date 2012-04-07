@@ -78,14 +78,13 @@ namespace{
 	};
 	fds_t s_fds_info[ice::lib_log_t::e_lvl_max];
 
-	//************************************
-	// Brief:     生成日志文件路径
-	// Returns:   void	
-	// Parameter: int lvl	日志等级
-	// Parameter: int seq	日志序号
-	// Parameter: char * file_name	产生的日志文件路径
-	// Parameter: const struct tm * tm 时间
-	//************************************
+	/**
+	 * @brief	生成日志文件路径
+	 * @param	int lvl	日志等级
+	 * @param	int seq	日志序号
+	 * @param	char * file_name	产生的日志文件路径
+	 * @param	const struct tm & t_m	时间
+	 */
 	inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm& t_m)
 	{
 		assert((lvl >= ice::lib_log_t::e_lvl_emerg) && (lvl < ice::lib_log_t::e_lvl_max));
@@ -136,7 +135,7 @@ namespace{
 	int open_fd(int lvl, const struct tm& t_m)
 	{
 		//O_APPEND 有该选项,write时是线程安全的.请看本页write函数
-		static int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
+		int flag = O_WRONLY | O_CREAT | O_APPEND/* | O_LARGEFILE*/;
 
 		char file_name[FILENAME_MAX];
 		gen_log_file_path(lvl, s_fds_info[lvl].seq, file_name, t_m);
@@ -144,7 +143,6 @@ namespace{
 		s_fds_info[lvl].opfd = ::open(file_name, flag, 0644);
 		if (-1 != s_fds_info[lvl].opfd) {
 			if (s_fds_info[lvl].day != t_m.tm_yday ) {
-
 				s_fds_info[lvl].day = t_m.tm_yday;
 			}
 
@@ -253,7 +251,8 @@ int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre
 	ret_code    = 0;
 
 loop_return:
-	BOOT_LOG(ret_code, "Set log dir %s, per file name %s, time %u", dir, pre_name, logtime);
+	BOOT_LOG(ret_code, "Set log dir %s, per file name %s, time %u",
+		dir, pre_name, logtime);
 }
 
 void ice::lib_log_t::destroy()

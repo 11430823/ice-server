@@ -8,11 +8,7 @@
 
 int ice::lib_tcp_server_epoll_t::run()
 {
-	if (0 == this->max_events_num){
-		return -1;
-	}
-	
-
+	sleep(1000);
 	return 0;
 }
 
@@ -83,7 +79,7 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 		cfi.remote_port = peer->sin_port;
 	}
 
-	KDEBUG_LOG(0, "time now:%ld, fd:%d, fd type:%d", ice::lib_time_t::get_now_second(), fd, fd_type);
+	TRACE_LOG("time now:%ld, fd:%d, fd type:%d", ice::lib_time_t::get_now_second(), fd, fd_type);
 	return 0;
 }
 

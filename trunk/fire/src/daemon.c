@@ -216,6 +216,7 @@ int daemon_t::run()
 {
 	while (likely(!this->stop || 0 != g_dll.functions.on_fini(g_is_parent))) {
 		g_net_server.get_server_epoll()->run();
+		DEBUG_LOG("daemon_t::run()");
 	}
 	return 0;
 }

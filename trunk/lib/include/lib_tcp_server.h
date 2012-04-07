@@ -97,7 +97,7 @@ namespace ice{
 		  * return -1 if you find that the incoming package is invalid and ice-server will close the connection,
 		  * otherwise, return the length of the incoming package. Note, the package should be no larger than 8192 bytes.
 		  */
-		typedef int	(*ON_GET_PKG_LEN)(int fd, const void* avail_data, int avail_len, int isparent);ON_GET_PKG_LEN on_get_pkg_len;
+		typedef int	(*ON_GET_PKG_LEN)(int fd, const void* data, int len, int isparent);ON_GET_PKG_LEN on_get_pkg_len;
 		on_functions_tcp_server(){
 			this->on_events = 0;
 			this->on_cli_pkg = 0;

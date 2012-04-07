@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <ice_dll.h>
 #include <lib_log.h>
+#include <lib_tcp_server.h>
 
 /**
   * @brief Initialize service
@@ -11,8 +11,13 @@
 extern "C" int on_init(int isparent)
 {
 	if(isparent){
+		DEBUG_LOG("======daemon start======");
+		DEBUG_LOG("555");
+		TRACE_LOG("555");
 	}else{
 		DEBUG_LOG("======server start======");
+		DEBUG_LOG("444");
+		TRACE_LOG("444");
 	}
 	return 0;
 }
@@ -23,10 +28,11 @@ extern "C" int on_init(int isparent)
   */
 extern "C" int on_fini(int isparent)
 {
-	if (!isparent) {
+	if (isparent) {
+		DEBUG_LOG("======daemon done======");
+	}else{
 		DEBUG_LOG("======server done======");
 	}
-
 	return 0;
 }
 
@@ -42,13 +48,19 @@ extern "C" void on_events()
   * @brief Return length of the receiving package
   *
   */
-extern "C" int on_get_pkg_len(int fd, const void* avail_data, int avail_len, int isparent)
+extern "C" int on_get_pkg_len(int fd, const void* data, int len, int isparent)
 {
-	if (avail_len < 4) {
-		return 0;
+	if (isparent){
+		INFO_LOG("parent [fd:%d, len:%d, data:%s]", fd, len, (char*)data);
+		if (len < 4) {
+			return 0;
+		}
+	}else{
+		INFO_LOG("child [fd:%d, len:%d, data:%s]", fd, len, (char*)data);
+		if (len < 4) {
+			return 0;
+		}
 	}
-	uint32_t len = 0;
-	INFO_LOG("[fd:%d, avail_len:%d, isparent:%d, avail_data:%s]", fd, avail_len, isparent, (char*)avail_data);
 	return len;
 }
 
@@ -56,10 +68,10 @@ extern "C" int on_get_pkg_len(int fd, const void* avail_data, int avail_len, int
   * @brief Process packages from clients
   *
   */
-extern "C" int on_cli_pkg(void* data, int len, fdsession_t* fdsess)
+extern "C" int on_cli_pkg(void* pkg, int pkglen, ice::cli_fd_info_t* cli_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
-	INFO_LOG("[fd:%d, len:%d, data:%s]", fdsess->fd, len, (char*)data);
+	INFO_LOG("[fd:%d, len:%d, data:%s]", cli_fd_info->fd, pkglen, (char*)pkg);
 
 	return 0;
 }
@@ -68,7 +80,7 @@ extern "C" int on_cli_pkg(void* data, int len, fdsession_t* fdsess)
   * @brief Process packages from servers
   *
   */
-extern "C" void on_srv_pkg(int fd, void* data, int len)
+extern "C" void on_srv_pkg(int fd, void* pkg, int pkglen)
 {
 }
 
@@ -84,23 +96,7 @@ extern "C" void on_cli_conn_closed(int fd)
   * @brief Called each time on close of the fds created by the child process
   *
   */
-extern "C" void on_fd_closed(int fd)
-{
-}
-
-/**
-  * @brief Called to process mcast package from the address and port configured in the config file
-  */
-extern "C" void on_mcast_pkg(void* data, int len)
-{
-}
-
-extern "C" int	on_udp_pkg(int fd, const void* avail_data, int avail_len ,struct sockaddr_in * from, socklen_t fromlen )
-{
-	return 0;
-}
-
-extern "C" void on_sync_srv_info(uint32_t svr_id, const char* svr_name, const char* svr_ip, in_port_t port, int flag)
+extern "C" void on_svr_conn_closed(int fd)
 {
 }
 
