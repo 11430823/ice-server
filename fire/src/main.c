@@ -32,18 +32,24 @@ int main(int argc, char* argv[])
 	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
 	g_net_server.get_server_epoll()->register_pipe_event_fn(dll_t::on_pipe_event);
 
+	ice::lib_log_t::boot(0, 0,  "ispar:%d, begin setup_by_time::log", g_is_parent);
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
 		NULL, g_bench_conf.get_log_save_next_file_interval_min());
-
+	DEBUG_LOG("333");
+	TRACE_LOG("333");
 	if (0 != g_dll.functions.on_init(g_is_parent)) {
 		BOOT_LOG(-1, "FAILED TO INIT PARENT PROCESS");
 	}
 
 	for (uint32_t i = 0; i != g_bind_conf.elems.size(); ++i ) {
+		ice::lib_log_t::boot(0,0,"g_bind_conf.elems idx:%u", i);
 		bind_config_elem_t& bc_elem = g_bind_conf.elems[i];
-		bc_elem.recv_pipe.create();
-		bc_elem.send_pipe.create();
+		if (0 != bc_elem.recv_pipe.create()
+			|| 0 != bc_elem.send_pipe.create()){
+			ERROR_LOG("pipe create err");
+			return -1;
+		}
 		pid_t pid;
 		if ( (pid = fork ()) < 0 ) {
 			BOOT_LOG(-1, "fork child process err [id:%u]", bc_elem.id);
@@ -62,8 +68,12 @@ int main(int argc, char* argv[])
 	}
 
 	//parent process
+	TRACE_LOG("todo begin listen");
 	g_net_server.get_server_epoll()->listen(LISTEN_NUM);
+	TRACE_LOG("todo end listen");
+	TRACE_LOG("todo begin run");
 	g_daemon.run();
+	TRACE_LOG("todo end run");
 
 	g_daemon.killall_children();
 	g_net_server.destroy();

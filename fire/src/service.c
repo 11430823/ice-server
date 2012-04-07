@@ -26,11 +26,14 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_RDONLY]);
 	}
+	ice::lib_log_t::destroy();
 
 	this->bind_elem = bind_elem;
 	char prefix[10] = { 0 };
 	int  len = snprintf(prefix, 8, "%u", this->bind_elem->id);
-	prefix[len] = '_';
+	prefix[len] = '_';	
+
+	ice::lib_log_t::boot(0,0,"ispar:%d, begin setup_by_time::log", g_is_parent);
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
 		prefix, g_bench_conf.get_log_save_next_file_interval_min());
@@ -51,6 +54,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 
 	while (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent)){
 		g_net_server.get_server_epoll()->run();
+		DEBUG_LOG("service_t::run");
 	}
 
 fail:

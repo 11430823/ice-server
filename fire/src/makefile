@@ -5,7 +5,7 @@ CC=g++
 #编译选项
 ICE_LIB_PATH=../../lib/
 ICE_LIBS_FLAG=-Wl,-rpath,$(ICE_LIB_PATH)
-FLAG=-Wall -DDEBUG -g -O0 -o
+FLAG=-Wall -DDEBUG -DENABLE_TRACE_LOG -g -O0 -o
 
 #包含的头文件
 INCLUDES=-I/usr/include/ -I../../lib/include/ -I../include/
