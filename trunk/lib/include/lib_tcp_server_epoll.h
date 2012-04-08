@@ -30,6 +30,8 @@ namespace ice{
 			destroy();
 		}
 		virtual int register_on_functions(const on_functions_tcp_server* functions){
+			on_functions_tcp_server_epoll* p = (on_functions_tcp_server_epoll*)functions;
+
 			return 0;
 		}
 		virtual int create();
