@@ -15,6 +15,7 @@ int net_server_t::create(uint32_t max_fd_num)
 	int ret = 0;
 	if (0 != (ret = this->server_epoll->create())){
 		ALERT_LOG("new tcp_server_epoll create err [ret:%d]", ret);
+		this->destroy();
 		return -1;
 	}
 

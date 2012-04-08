@@ -12,12 +12,8 @@ extern "C" int on_init(int isparent)
 {
 	if(isparent){
 		DEBUG_LOG("======daemon start======");
-		DEBUG_LOG("555");
-		TRACE_LOG("555");
 	}else{
 		DEBUG_LOG("======server start======");
-		DEBUG_LOG("444");
-		TRACE_LOG("444");
 	}
 	return 0;
 }

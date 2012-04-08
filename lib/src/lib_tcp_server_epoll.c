@@ -8,7 +8,7 @@
 
 int ice::lib_tcp_server_epoll_t::run()
 {
-	sleep(1000);
+	sleep(1);
 	return 0;
 }
 

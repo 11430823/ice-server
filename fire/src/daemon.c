@@ -49,7 +49,7 @@ namespace {
 	{
 		ALERT_LOG("SIGCHLD FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
 		pid_t pid;
-		static int	status;
+		int	status;
 		while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {
 			for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
 				if (atomic_read(&g_daemon.child_pids[i]) == pid) {
@@ -216,7 +216,6 @@ int daemon_t::run()
 {
 	while (likely(!this->stop || 0 != g_dll.functions.on_fini(g_is_parent))) {
 		g_net_server.get_server_epoll()->run();
-		DEBUG_LOG("daemon_t::run()");
 	}
 	return 0;
 }
