@@ -319,6 +319,17 @@ namespace ice{
 		} while (0)
 
 /**
+ * @def BOOT_LOG_VOID
+ * @brief 输出程序启动日志到屏幕。如果OK非0，则退出程序；如果OK为0，则返回上一级函数。\n
+ *        用法示例：BOOT_LOG_VOID(-1, "dlopen error, %s", error);
+ */
+#define BOOT_LOG_VOID(OK, fmt, args...) \
+	do { \
+	ice::lib_log_t::boot(OK, 0, fmt, ##args); \
+	return; \
+	} while (0)
+
+/**
  * @def BOOT_LOG_SPACE
  * @brief 输出程序启动日志到屏幕。如果OK非0，则退出程序；如果OK为0，则返回上一级函数。n是空格填充个数。\n
  *        用法示例：BOOT_LOG_SPACE(0, 8, "dlopen ok");

@@ -212,10 +212,15 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 	}
 }
 
+bool daemon_check_run_fn()
+{
+	return (likely(!g_daemon.stop || 0 != g_dll.functions.on_fini(g_is_parent)));
+}
+
 int daemon_t::run()
 {
-	while (likely(!this->stop || 0 != g_dll.functions.on_fini(g_is_parent))) {
-		g_net_server.get_server_epoll()->run();
-	}
+//	while (likely(!this->stop || 0 != g_dll.functions.on_fini(g_is_parent))) {
+		g_net_server.get_server_epoll()->run(daemon_check_run_fn);
+//	}
 	return 0;
 }

@@ -112,23 +112,28 @@ namespace ice{
 
 	class lib_tcp_sever_t : public lib_tcp_t
 	{
+	public:
+		typedef bool (*CHECK_RUN)();CHECK_RUN check_run;
 		PROTECTED_READONLY_DEFAULT(bool, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
 		PROTECTED_READONLY_DEFAULT(cli_fd_info_t*, cli_fd_infos);//连接用户的信息
 		PROTECTED_READONLY_DEFAULT(int, cli_fd_value_max);//连接上的FD中的最大值
+		PROTECTED_READONLY_DEFAULT(int, listen_fd);//监听FD
 	public:
 		lib_tcp_sever_t(){
 			this->cli_time_out_sec = 0;
 			this->cli_fd_infos = NULL;
+			this->listen_fd = -1;
+			this->cli_fd_value_max = -1;
 		}
 		virtual ~lib_tcp_sever_t(){
 		}
 		virtual int register_on_functions(const on_functions_tcp_server* functions) = 0;
 		virtual int create() = 0;
-		virtual int listen(uint32_t listen_num) = 0;
-		virtual int run() = 0;
-		virtual int stop() = 0;
+		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num) = 0;
+		virtual int run(CHECK_RUN check_run_fn) = 0;
 		virtual int add_connect(int fd, E_FD_TYPE fd_type, struct sockaddr_in* peer) = 0;
 		void set_cli_time_out_sec(uint32_t time_out_sec);
+		int bind(const char* ip,uint16_t port);
 		/**
 		* @brief Create a listening socket fd
 		*
