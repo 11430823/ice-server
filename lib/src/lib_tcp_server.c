@@ -2,11 +2,12 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "lib_file.h"
 #include "lib_net_util.h"
 #include "lib_tcp_server.h"
-
 
 int ice::lib_tcp_sever_t::safe_tcp_accept( int sockfd, struct sockaddr_in* peer, bool block )
 {
@@ -66,7 +67,7 @@ int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port
 		goto ret;
 	}
 
-	err = bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+	err = ::bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
 	if (-1 == err) {
 		goto ret;
 	}
@@ -150,4 +151,15 @@ ret:
 void ice::lib_tcp_sever_t::set_cli_time_out_sec( uint32_t time_out_sec )
 {
 	this->cli_time_out_sec = time_out_sec;
+}
+
+int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
+{
+	sockaddr_in sa_in;
+	memset(&sa_in, 0, sizeof(sa_in));
+	sa_in.sin_addr.s_addr = inet_addr(ip);
+	sa_in.sin_family = PF_INET;
+	sa_in.sin_port = htons(port);
+
+	return ::bind(this->listen_fd, (sockaddr*)&sa_in,sizeof(sa_in));
 }

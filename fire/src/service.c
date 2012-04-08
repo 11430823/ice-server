@@ -15,6 +15,11 @@
 
 service_t g_service;
 
+bool server_check_run()
+{
+	return (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent));
+}
+
 void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 {
 	g_is_parent = false;
@@ -37,7 +42,6 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		prefix, g_bench_conf.get_log_save_next_file_interval_min());
 
 	//初始化子进程
-	//todo 处理返回值
 	int ret = 0;
 	if (0 != (ret = g_net_server.create(g_bench_conf.get_max_fd_num()))){
 		ALERT_LOG("g_net_server.create err [ret:%d]", ret);
@@ -45,19 +49,18 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	}
 	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
 	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
+	//todo 处理返回值
 	ret = g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
-	ret = g_net_server.get_server_epoll()->listen(LISTEN_NUM);
+	if (0 != g_net_server.get_server_epoll()->listen(this->bind_elem->ip.c_str(), this->bind_elem->port, LISTEN_NUM)){
+		BOOT_LOG_VOID(-1, "server listen err [ip:%s, port:%u]", this->bind_elem->ip.c_str(), this->bind_elem->port);
+	}
 
 	if ( 0 != g_dll.functions.on_init(g_is_parent)) {
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", this->bind_elem->id, this->bind_elem->name.c_str());
 		goto fail;
 	}
 
-	while (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent)){
-		TRACE_LOG("service_t::run begin");
-		g_net_server.get_server_epoll()->run();
-		TRACE_LOG("service_t::run end");
-	}
+	g_net_server.get_server_epoll()->run(server_check_run);
 
 fail:
 	TRACE_LOG("service run over");
