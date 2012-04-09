@@ -6,6 +6,7 @@
 #include "lib_log.h"
 #include "lib_file.h"
 #include "lib_time.h"
+#include "lib_linux_version.h"
 #include "lib_tcp_server_epoll.h"
 
 #if 0
@@ -173,14 +174,20 @@ ice::lib_tcp_server_epoll_t::lib_tcp_server_epoll_t(uint32_t max_events_num)
 
 int ice::lib_tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_num)
 {
-	//Since Linux 2.6.27  SOCK_NONBLOCK | SOCK_CLOEXEC
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
 	this->listen_fd = ::socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+#else
+	this->listen_fd = ::socket(PF_INET, SOCK_STREAM, 0);
+#endif
 	if (-1 == this->listen_fd){
 		ALERT_LOG("create socket err [%s]", ::strerror(errno));
 		return -1;
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
+	//todo this->listen_fd = ::socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 	lib_file_t::set_io_block(this->listen_fd, false);
+#endif
 
 	if (0 != this->bind(ip, port)){
 		lib_file_t::close_fd(this->listen_fd);
