@@ -55,31 +55,17 @@ int KM_TCP_S::__handle_message_epoll(SOCKET s)
 
 int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 {
-	while(check_run_fn()){
-		sleep(1);
-	}
-
-	
-#if 0
-	
-	int ret = 0;//返回值
-	int eve_num = 0;//事件的数量
-	int nCountFDs = 1;//epoll 中的套接字数量
-	int i = 0;
+	int event_num = 0;//事件的数量
 	epoll_event evs[this->max_events_num];
-	SOCKET accept_s;//连接上的客户SOCKET
+
+	int accept_s = -1;//连接上的客户SOCKET
 	sockaddr_in sa_in_peer;//对方sockaddr_in
 	memset(&sa_in_peer,0,sizeof(sa_in_peer));
 	socklen_t nSocklen;
-	epoll_event ev;
-	int nn = 1;
-	int nTimeOut = 1000;
-	while(m_bRun)
-	{
-		//cout << nn++ << endl;
-		//wait event happen
-		eve_num = epoll_wait(this->fd, evs, this->max_events_num, this->epoll_wait_time_out);
-		switch(eve_num)
+
+	while(check_run_fn()){
+		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->max_events_num, this->epoll_wait_time_out));
+		switch(event_num)
 		{
 		case 0://time out
 			continue;//while
@@ -94,35 +80,28 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 		}
 
 		//handling event
-		for (i = 0; i < eve_num; ++i){
-			if (m_s == evs[i].data.fd)
-			{// 处理来自监听端的连接
-				accept_s = accept(m_s, (struct sockaddr *) &sa_in_peer,&nSocklen);
-				if (accept_s < 0) 
-				{
-					perror("accept:");
+		for (int i = 0; i < event_num; ++i){
+			if (this->listen_fd == evs[i].data.fd){
+				accept_s = HANDLE_EINTR(::accept(this->listen_fd, (struct sockaddr*)&sa_in_peer, &nSocklen));
+				if (accept_s < 0){
+					ALERT_LOG("accept err [%s]", ::strerror(errno));
 					continue;
-				} 
-				else
-				{
-					cout << accept_s << endl;
-					m_ilog.log("client from:%s:%d,socket == %d",inet_ntoa(sa_in_peer.sin_addr),ntohs(sa_in_peer.sin_port),accept_s);
+				}else{
+					TRACE_LOG("client accept [ip:%s, port:%u, socket:%d",
+						inet_ntoa(sa_in_peer.sin_addr), ntohs(sa_in_peer.sin_port), accept_s);
 				}
+				lib_file_t::set_io_block(accept_s, false);
 
-				set_nonblocking(accept_s);
-				ev.events = EPOLLIN ;//| EPOLLOUT;//可读 | 可写   //EPOLLIN | EPOLLET;
-				ev.data.fd = accept_s;
-				if (epoll_ctl(m_nFD, EPOLL_CTL_ADD, accept_s, &ev) < 0)
-				{
-					m_ilog.err("file:%s,line:%d,add socket:%d in epoll false! %s,",__FILE__,__LINE__,accept_s,strerror(errno));
+				if (0 != add_connect(accept_s, FD_TYPE_REMOTE, &sa_in_peer)){
 					return -1;
 				}
-				nCountFDs++;
-			}
-			else 
-			{//可读或可写(可同时发生,并不互斥)
-				if(evs[i].events & EPOLLIN)
-				{//接收并处理其他套接字的数据
+			} else{//可读或可写(可同时发生,并不互斥)
+				if(EPOLLIN & evs[i].events){//接收并处理其他套接字的数据
+					cli_fd_info_t& fd_info = this->cli_fd_infos[evs[i].data.fd];
+					if (fd_info.fd_type == FD_TYPE_LISTEN){
+					}
+					
+#if 0
 					ret = __handle_message_epoll(evs[i].data.fd);
 					switch(ret)
 					{
@@ -133,7 +112,6 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 							{
 								m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
 							}
-							nCountFDs--;
 							close_socket(evs[i].data.fd);
 						}
 						break;
@@ -144,23 +122,20 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 								m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
 								perror("11 != errno:");
 								int e = epoll_ctl(m_nFD, EPOLL_CTL_DEL, evs[i].data.fd,&ev);
-								nCountFDs--;
 							}	
 						}
 						break;
 					default:
 						break;
 					}
+#endif
+				}
+				if(EPOLLOUT & evs[i].events){//该套接字可写
 				}
 
-				if(evs[i].events & EPOLLOUT)
-				{//该套接字可写
-					m_ilog.log("file:%s,line:%d,evs[i].events & EPOLLOUT",__FILE__,__LINE__);
-				}
 			}
 		}
 	}
-#endif
 	return 0;
 }
 
