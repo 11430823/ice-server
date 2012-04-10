@@ -1,7 +1,7 @@
 [plugin]
 liblogic=./liblogic.so
 [common]
-#打开FD的最大数量,默认20000
+#子进程打开FD的最大值,默认20000
 #max_fd_num=100
 #默认为1:守护进程模式
 #is_daemon=1
@@ -22,7 +22,12 @@ dir=../log
 #最大重启次数.默认20
 #restart_cnt_max=10
 [net]
-#守护进程的链接信息(注释掉表明不需要链接)
-daemon_tcp_ip=192.168.1.19
-daemon_tcp_port=9999
-daemon_tcp_max_fd_num=20000
+#服务IP.守护进程的链接信息(注释掉表明不需要链接)
+#daemon_tcp_ip=192.168.1.19
+#服务端口号,默认9999
+#daemon_tcp_port=9999
+#服务名称
+#daemon_name=daemon_fire
+#打开FD的最大值,默认20000
+#daemon_tcp_max_fd_num=20000
+
