@@ -9,83 +9,17 @@
 #include "lib_net_util.h"
 #include "lib_tcp_server.h"
 
-int ice::lib_tcp_sever_t::safe_tcp_accept( int sockfd, struct sockaddr_in* peer, bool block )
+int ice::lib_tcp_sever_t::accept( struct sockaddr_in* peer, bool block )
 {
-	int err;
-	int newfd;
 	socklen_t peer_size = sizeof(*peer);
-	while(1) {
-		newfd = accept(sockfd, (struct sockaddr*)peer, &peer_size);
-		if (newfd >= 0) {
-			break;
-		} else if (errno != EINTR) {
-			return -1;
-		}
-	}
 
-	if (!block && (lib_file_t::set_io_block(newfd, false) == -1)) {
-		err   = errno;
-		close(newfd);
-		errno = err;
+	int newfd = HANDLE_EINTR(::accept(this->listen_fd, (struct sockaddr*)&peer, &peer_size));
+	if (newfd < 0){
 		return -1;
 	}
+	lib_file_t::set_io_block(newfd, false);
 
 	return newfd;
-}
-
-int ice::lib_tcp_sever_t::safe_socket_listen( const char* ipaddr, in_port_t port, int backlog, int bufsize )
-{
-	assert((backlog > 0) && (bufsize > 0) && (bufsize <= (10 * 1024 * 1024)));
-
-	struct sockaddr_in servaddr;
-	memset(&servaddr, 0, sizeof(servaddr));
-	servaddr.sin_family  = PF_INET;
-	servaddr.sin_port    = htons(port);
-	if (NULL != ipaddr) {
-		inet_pton(PF_INET, ipaddr, &servaddr.sin_addr);
-	} else {
-		servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	}
-
-	int listenfd;
-	if (-1 == (listenfd = socket(PF_INET, SOCK_STREAM, 0))) {
-		return -1;
-	}
-
-	int err = lib_tcp_t::set_reuse_addr(listenfd);
-	if (-1 == err) {
-		goto ret;
-	}
-
-	err = lib_tcp_t::set_recvbuf(listenfd, bufsize);
-	if (-1 == err) {
-		goto ret;
-	}
-
-	err = lib_tcp_t::set_sendbuf(listenfd, bufsize);
-	if (-1 == err) {
-		goto ret;
-	}
-
-	err = ::bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-	if (-1 == err) {
-		goto ret;
-	}
-
-	if (-1 == ::listen(listenfd, backlog)) {
-		err = -1;
-		goto ret;
-	}
-
-ret:
-	if (err) {
-		err      = errno;
-		close(listenfd);
-		listenfd = -1;
-		errno    = err;		
-	}
-
-	return listenfd;
 }
 
 int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char* serv, int backlog, int bufsize )
@@ -157,9 +91,14 @@ int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
 {
 	sockaddr_in sa_in;
 	memset(&sa_in, 0, sizeof(sa_in));
-	sa_in.sin_addr.s_addr = inet_addr(ip);
+
 	sa_in.sin_family = PF_INET;
 	sa_in.sin_port = htons(port);
+	if (NULL != ip){
+		inet_pton(PF_INET, ip, &sa_in.sin_addr);
+	}else{
+		sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
+	}
 
 	return ::bind(this->listen_fd, (sockaddr*)&sa_in,sizeof(sa_in));
 }

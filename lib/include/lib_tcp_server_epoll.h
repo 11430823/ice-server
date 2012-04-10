@@ -36,7 +36,17 @@ namespace ice{
 			return 0;
 		}
 		virtual int create();
-		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num);
+		/**
+		* @brief Create a listening socket fd
+		* @param ip the binding ip address. If this argument is assigned with 0,
+		*                                           then INADDR_ANY will be used as the binding address.
+		* @param port the binding port.
+		* @param listen_num the maximum length to which the queue of pending connections for sockfd may grow.
+		* @param bufsize maximum socket send and receive buffer in bytes, should be less than 10 * 1024 * 1024
+		* @return the newly created listening fd on success, -1 on error.
+		* @see create_passive_endpoint
+		*/
+		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize);
 		virtual int run(CHECK_RUN check_run_fn);
 		virtual int add_connect(int fd, E_FD_TYPE fd_type, struct sockaddr_in* peer);
 		int add_events(int fd, uint32_t flag);
