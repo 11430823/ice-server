@@ -32,7 +32,7 @@ namespace {
 	void sigterm_handler(int signo) 
 	{
 		//停止服务（不重启）
-		ALERT_LOG("SIG_TERM FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
+		CRIT_LOG("SIG_TERM FROM [is_parent:%d]", (int)g_is_parent);
 		g_daemon.stop     = true;
 		g_daemon.restart  = false;
 	}
@@ -40,14 +40,14 @@ namespace {
 	void sighup_handler(int signo) 
 	{
 		//停止&&重启服务
-		ALERT_LOG("SIGHUP FROM [pid=%d]", getpid());
+		CRIT_LOG("SIGHUP FROM [restart:true, stop:true]");
 		g_daemon.restart  = true;
 		g_daemon.stop     = true;
 	}
 
 	void sigchld_handler(int signo, siginfo_t *si, void * p) 
 	{
-		ALERT_LOG("SIGCHLD FROM [pid=%d, is_parent:%d]", getpid(), (int)g_is_parent);
+		CRIT_LOG("SIGCHLD FROM [is_parent:%d]", (int)g_is_parent);
 		pid_t pid;
 		int	status;
 		while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {
@@ -69,14 +69,14 @@ namespace {
 		rlim.rlim_cur = g_bench_conf.get_max_fd_num();
 		rlim.rlim_max = g_bench_conf.get_max_fd_num();
 		if (-1 == setrlimit(RLIMIT_NOFILE, &rlim)) {
-			ALERT_LOG("INIT FD RESOURCE FAILED [OPEN FILES NUMBER:%d]", g_bench_conf.get_max_fd_num());
+			CRIT_LOG("INIT FD RESOURCE FAILED [OPEN FILES NUMBER:%d]", g_bench_conf.get_max_fd_num());
 		}
 
 		/* set core dump */
 		rlim.rlim_cur = g_bench_conf.get_core_size();
 		rlim.rlim_max = g_bench_conf.get_core_size();
 		if (-1 == setrlimit(RLIMIT_CORE, &rlim)) {
-			ALERT_LOG("INIT CORE FILE RESOURCE FAILED [CORE DUMP SIZE:%d]", g_bench_conf.get_core_size());
+			CRIT_LOG("INIT CORE FILE RESOURCE FAILED [CORE DUMP SIZE:%d]", g_bench_conf.get_core_size());
 		}
 	}
 
@@ -183,11 +183,13 @@ WAIT_AGAIN:
 
 void daemon_t::restart_child_process( bind_config_elem_t* elem )
 {
+	CRIT_LOG("[stop:%d, restart:%d]", g_daemon.stop, g_daemon.restart);
 	if (g_daemon.stop && !g_daemon.restart){
 		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
 		return;
 	}
 
+	CRIT_LOG("[close1:%d, close2:%d]", elem->recv_pipe.handles[E_PIPE_INDEX_WRONLY], elem->send_pipe.handles[E_PIPE_INDEX_RDONLY]);
 	ice::lib_file_t::close_fd(elem->recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
 	ice::lib_file_t::close_fd(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY]);
 
@@ -199,7 +201,7 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 
 	if ( (pid = fork ()) < 0 ) {
 		CRIT_LOG("fork failed: %s", strerror(errno));
-	} else if (pid > 0) { 
+	} else if (pid > 0) {
 		//parent process
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
@@ -219,8 +221,5 @@ bool daemon_check_run_fn()
 
 int daemon_t::run()
 {
-//	while (likely(!this->stop || 0 != g_dll.functions.on_fini(g_is_parent))) {
-		g_net_server.get_server_epoll()->run(daemon_check_run_fn);
-//	}
-	return 0;
+	return g_net_server.get_server_epoll()->run(daemon_check_run_fn);
 }
