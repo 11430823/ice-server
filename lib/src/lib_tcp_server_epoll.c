@@ -150,7 +150,7 @@ ice::lib_tcp_server_epoll_t::lib_tcp_server_epoll_t(uint32_t max_events_num)
 int ice::lib_tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_num)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
-	this->listen_fd = ::socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+	this->listen_fd = ::socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 #else
 	this->listen_fd = ::socket(PF_INET, SOCK_STREAM, 0);
 #endif
@@ -160,7 +160,6 @@ int ice::lib_tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t 
 	}
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)
-	//todo this->listen_fd = ::socket(PF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
 	lib_file_t::set_io_block(this->listen_fd, false);
 #endif
 
