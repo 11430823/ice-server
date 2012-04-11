@@ -15,13 +15,14 @@
 
 service_t g_service;
 
-bool server_check_run()
+bool service_check_run()
 {
 	return (!g_daemon.stop || g_dll.functions.on_fini(g_is_parent));
 }
 
 void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 {
+	sleep(2);
 	g_is_parent = false;
 	//释放资源(从父进程继承来的资源)
 	// close fds inherited from parent process
@@ -61,7 +62,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		goto fail;
 	}
 
-	g_net_server.get_server_epoll()->run(server_check_run);
+	g_net_server.get_server_epoll()->run(service_check_run);
 
 fail:
 	TRACE_LOG("service run over");

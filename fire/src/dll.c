@@ -73,6 +73,8 @@ dll_t::~dll_t()
 
 int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 {
+	static int i = 0;
+	i++;
 	if (r_evs.events & EPOLLHUP) {
 		if (g_is_parent) {
 			// Child Crashed
@@ -81,8 +83,8 @@ int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 			if (g_pipe_fd_elems.end() != it){
 				bc = it->second;
 				g_pipe_fd_elems.erase(fd);
-				CRIT_LOG("CHILD PROCESS CRASHED![olid:%u, olname:%s, fd:%d]",
-					bc->id, bc->name.c_str(), fd);
+				CRIT_LOG("CHILD PROCESS CRASHED![olid:%u, olname:%s, fd:%d, restart_cnt;%u, restart_cnt_max:%u, i:%d]",
+					bc->id, bc->name.c_str(), fd, bc->restart_cnt, g_bench_conf.get_restart_cnt_max(), i);
 
 				// prevent child process from being restarted again and again forever
 				if (bc->restart_cnt++ <= g_bench_conf.get_restart_cnt_max()) {

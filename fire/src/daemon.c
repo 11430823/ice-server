@@ -205,7 +205,9 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 		//parent process
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
-		g_pipe_fd_elems.insert(std::make_pair(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem));
+		bool bret = g_pipe_fd_elems.insert(std::make_pair(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem)).second;
+		DEBUG_LOG("g_pipe_fd_elems insert [fd:%d, id:%u, ip:%s, port:%u, bret:%d]",
+			elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem->id, elem->ip.c_str(), elem->port, bret);
 		g_net_server.get_server_epoll()->add_connect(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { 

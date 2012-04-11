@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 
 	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
 	g_net_server.get_server_epoll()->register_pipe_event_fn(dll_t::on_pipe_event);
+	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
 
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
@@ -53,7 +54,9 @@ int main(int argc, char* argv[])
 			//¸¸½ø³Ì
 			ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 			ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
-			g_pipe_fd_elems.insert(std::make_pair(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], &bc_elem));
+			bool bret = g_pipe_fd_elems.insert(std::make_pair(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], &bc_elem)).second;
+			DEBUG_LOG("g_pipe_fd_elems insert [fd:%d, id:%u, ip:%s, port:%u, ret:%d]",
+				bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], bc_elem.id, bc_elem.ip.c_str(), bc_elem.port, bret);
 			g_net_server.get_server_epoll()->add_connect(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
