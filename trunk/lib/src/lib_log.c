@@ -251,8 +251,7 @@ int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre
 	ret_code    = 0;
 
 loop_return:
-	BOOT_LOG(ret_code, "set log dir:%s, per file name:%s, log_interval_time:%u",
-		dir, pre_name, logtime);
+	BOOT_LOG(ret_code, "log [dir:%s, per_name:%s, interval_time:%u]", dir, pre_name, logtime);
 }
 
 void ice::lib_log_t::destroy()

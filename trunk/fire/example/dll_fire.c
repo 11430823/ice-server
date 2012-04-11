@@ -14,7 +14,6 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		return -1;
 	}
 	return 0;
 }
