@@ -57,12 +57,12 @@ int KM_TCP_S::__handle_message_epoll(SOCKET s)
 int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 {
 	int event_num = 0;//事件的数量
-	epoll_event evs[this->max_events_num];
+	epoll_event evs[this->cli_fd_value_max];
 
 	int accept_fd = -1;//连接上的客户SOCKET
 
 	while(check_run_fn()){
-		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->max_events_num, this->epoll_wait_time_out));
+		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
 		renew_now();
 		if (0 == event_num){
 			//time out
@@ -77,13 +77,6 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 			cli_fd_info_t& fd_info = this->cli_fd_infos[evs[i].data.fd];
 			if ( unlikely(FD_TYPE_PIPE == fd_info.fd_type) ) {
 				if (0 == this->on_pipe_event(fd_info.fd, evs[i])) {
-
-					//////////////////////////////////////////////////////////////////////////
-					epoll_event ev;
-					int e = epoll_ctl(this->fd, EPOLL_CTL_DEL,fd_info.fd, &ev);
-					if(-1 == e){
-						//todo ...fd_info.close();
-					}
 					continue;
 				} else {
 					return -1;
@@ -146,7 +139,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 
 ice::lib_tcp_server_epoll_t::lib_tcp_server_epoll_t(uint32_t max_events_num)
 {
-	this->max_events_num = max_events_num;
+	this->cli_fd_value_max = max_events_num;
 	this->epoll_wait_time_out = -1;
 	this->on_pipe_event = NULL;
 	this->on_functions = NULL;
@@ -213,15 +206,15 @@ int ice::lib_tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t 
 
 int ice::lib_tcp_server_epoll_t::create()
 {
-	if ((this->fd = epoll_create(this->max_events_num)) < 0) {
+	if ((this->fd = epoll_create(this->cli_fd_value_max)) < 0) {
 		ALERT_LOG("EPOLL_CREATE FAILED [ERROR:%s]", strerror (errno));
 		return -1;
 	}
 
-	this->cli_fd_infos = (struct cli_fd_info_t*) new cli_fd_info_t[this->max_events_num];
+	this->cli_fd_infos = (struct cli_fd_info_t*) new cli_fd_info_t[this->cli_fd_value_max];
 	if (NULL == this->cli_fd_infos){
 		lib_file_t::close_fd(this->fd);
-		ALERT_LOG ("CALLOC CLI_FD_INFO_T FAILED [MAXEVENTS=%d]", this->max_events_num);
+		ALERT_LOG ("CALLOC CLI_FD_INFO_T FAILED [MAXEVENTS=%d]", this->cli_fd_value_max);
 		return -1;
 	}
 	return 0;
@@ -268,22 +261,6 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 	}
 
 	TRACE_LOG("time now:%u, fd:%d, fd type:%d", cfi.last_tm, fd, fd_type);
-	return 0;
-}
-
-int ice::lib_tcp_server_epoll_t::destroy()
-{
-	for (uint32_t i = 0; i < this->max_events_num; i++) {
-		cli_fd_info_t& cfi = cli_fd_infos[i];
-		if (FD_TYPE_UNUSED == cfi.fd_type){
-			continue;
-		}
-		lib_file_t::close_fd(cfi.fd);
-	}
-
-	safe_delete_arr(this->cli_fd_infos);
-
-	lib_file_t::close_fd(this->fd);
 	return 0;
 }
 

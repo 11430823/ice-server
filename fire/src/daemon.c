@@ -183,18 +183,18 @@ WAIT_AGAIN:
 
 void daemon_t::restart_child_process( bind_config_elem_t* elem )
 {
-	CRIT_LOG("[stop:%d, restart:%d]", g_daemon.stop, g_daemon.restart);
 	if (g_daemon.stop && !g_daemon.restart){
 		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
 		return;
 	}
-
-	CRIT_LOG("[close1:%d, close2:%d]", elem->recv_pipe.handles[E_PIPE_INDEX_WRONLY], elem->send_pipe.handles[E_PIPE_INDEX_RDONLY]);
 	ice::lib_file_t::close_fd(elem->recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
 	ice::lib_file_t::close_fd(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY]);
 
-	elem->send_pipe.create();
-	elem->recv_pipe.create();
+	if (0 != elem->recv_pipe.create()
+		|| 0 != elem->send_pipe.create()){
+		ERROR_LOG("pipe create err");
+		return;
+	}
 
 	int i = g_bind_conf.get_elem_idx(elem);
 	pid_t pid;
@@ -205,9 +205,10 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 		//parent process
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
-		bool bret = g_pipe_fd_elems.insert(std::make_pair(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem)).second;
-		DEBUG_LOG("g_pipe_fd_elems insert [fd:%d, id:%u, ip:%s, port:%u, bret:%d]",
-			elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem->id, elem->ip.c_str(), elem->port, bret);
+		if (!g_pipe_fd_elems.insert(std::make_pair(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem)).second){
+			ERROR_LOG("g_pipe_fd_elems insert err [fd:%d, id:%u, name:%s]",
+				elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem->id, elem->name.c_str());
+		}
 		g_net_server.get_server_epoll()->add_connect(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { 

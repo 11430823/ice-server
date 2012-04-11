@@ -128,9 +128,19 @@ namespace ice{
 			this->cli_time_out_sec = 0;
 			this->cli_fd_infos = NULL;
 			this->listen_fd = -1;
-			this->cli_fd_value_max = -1;
+			this->cli_fd_value_max = 0;
 		}
-		virtual ~lib_tcp_sever_t(){}
+		virtual ~lib_tcp_sever_t(){
+			for (int i = 0; i < this->cli_fd_value_max; i++) {
+				cli_fd_info_t& cfi = cli_fd_infos[i];
+				if (FD_TYPE_UNUSED == cfi.fd_type){
+					continue;
+				}
+				lib_file_t::close_fd(cfi.fd);
+			}
+			safe_delete_arr(this->cli_fd_infos);
+			lib_file_t::close_fd(this->listen_fd);
+		}
 		virtual int register_on_functions(const on_functions_tcp_server* functions) = 0;
 		virtual int create() = 0;
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize) = 0;
@@ -157,15 +167,6 @@ namespace ice{
 		static int create_passive_endpoint(const char* host, const char* serv, int backlog, int bufsize);
 
 	public:
-		void update_cli_fd_value_max_by_add(int fd){
-			if (this->cli_fd_value_max < fd){
-				this->cli_fd_value_max = fd;
-			}
-		}
-		void update_cli_fd_value_max_by_reduce(int fd){
-			//todo ‘ı√¥ºı…Ÿ?
-		}
-
 	private:
 		lib_tcp_sever_t(const lib_tcp_sever_t& cr);
 		lib_tcp_sever_t& operator=(const lib_tcp_sever_t& cr);

@@ -22,14 +22,11 @@ namespace ice{
 		typedef int (*ON_PIPE_EVENT)(int fd, epoll_event& r_evs);
 	private:
 		ON_PIPE_EVENT on_pipe_event;
-		PRIVATE_READONLY_DEFAULT(uint32_t, max_events_num);
 		PRIVATE_RW_DEFAULT(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
 		PRIVATE_READONLY_DEFAULT(on_functions_tcp_server_epoll*, on_functions);//回调函数
-		
 	public:
 		lib_tcp_server_epoll_t(uint32_t max_events_num);
 		virtual ~lib_tcp_server_epoll_t(){
-			destroy();
 		}
 		virtual int register_on_functions(const on_functions_tcp_server* functions){
 			this->on_functions = (on_functions_tcp_server_epoll*)functions;
@@ -54,6 +51,5 @@ namespace ice{
 	private:
 		lib_tcp_server_epoll_t(const lib_tcp_server_epoll_t& cr);
 		lib_tcp_server_epoll_t& operator=(const lib_tcp_server_epoll_t& cr);
-		int destroy();
 	};
 }//end namespace ice

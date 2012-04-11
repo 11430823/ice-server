@@ -78,7 +78,7 @@ int bind_config_t::load()
 	GMarkupParseContext * context; 
 	context = g_markup_parse_context_new(&parser, (GMarkupParseFlags)0, NULL, NULL);
 	if (!g_markup_parse_context_parse(context, buf, length, NULL)){
-		BOOT_LOG(-1, "COULDN'T LOAD BIND CONFIG");
+		BOOT_LOG(-1, "couldn't load bind config");
 	}
 
 	g_markup_parse_context_free(context);

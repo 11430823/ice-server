@@ -92,7 +92,7 @@ bench_conf_t::bench_conf_t()
 	this->log_save_next_file_interval_min = 0;
 	this->fd_time_out = 0;
 	this->page_size_max = 8192;
-	this->core_size = 2147483648;
+	this->core_size = 2147483648U;
 	this->restart_cnt_max = 20;
 	this->daemon_tcp_port = 0;
 	this->daemon_tcp_max_fd_num = 20000;
