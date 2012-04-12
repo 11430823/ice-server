@@ -87,7 +87,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 				if (FD_TYPE_LISTEN == fd_info.fd_type){	
 					sockaddr_in peer;//¶Ô·½sockaddr_in
 					memset(&peer,0,sizeof(peer));
-					accept_fd = this->accept(&peer, false);
+					accept_fd = this->accept(peer, false);
 					if (unlikely(accept_fd < 0)){
 						ALERT_LOG("accept err [%s]", ::strerror(errno));
 						continue;
