@@ -46,8 +46,6 @@ public:
 private:
 };
 
-typedef std::map<int, struct bind_config_elem_t*> PIPE_FD_ELEMS_MAP;
-extern PIPE_FD_ELEMS_MAP g_pipe_fd_elems;//管道绑定的子进程
 extern bool	g_is_parent;
 extern daemon_t g_daemon;
 
