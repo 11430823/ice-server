@@ -154,7 +154,7 @@ namespace ice{
 		* @param int block,  true and the accepted fd will be set blocking, false and the fd will be set nonblocking.
 		* @return int, the accpected fd on success, -1 on error.
 		*/
-		virtual int accept(struct sockaddr_in* peer, bool block);
+		virtual int accept(struct sockaddr_in& peer, bool block);
 		virtual int bind(const char* ip,uint16_t port);
 		void set_cli_time_out_sec(uint32_t time_out_sec);
 		/**

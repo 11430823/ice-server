@@ -9,9 +9,9 @@
 #include "lib_net_util.h"
 #include "lib_tcp_server.h"
 
-int ice::lib_tcp_sever_t::accept( struct sockaddr_in* peer, bool block )
+int ice::lib_tcp_sever_t::accept( struct sockaddr_in& peer, bool block )
 {
-	socklen_t peer_size = sizeof(*peer);
+	socklen_t peer_size = sizeof(peer);
 
 	int newfd = HANDLE_EINTR(::accept(this->listen_fd, (struct sockaddr*)&peer, &peer_size));
 	if (newfd < 0){
