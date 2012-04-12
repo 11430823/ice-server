@@ -70,33 +70,39 @@ dll_t::~dll_t()
 		this->handle = NULL;
 	}
 }
-
+#include <sys/wait.h>
 int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 {
 	if (r_evs.events & EPOLLHUP) {
 		if (g_is_parent) {
-			// Child Crashed
-			bind_config_elem_t* bc = NULL;
-			PIPE_FD_ELEMS_MAP::iterator it = g_pipe_fd_elems.find(fd);
-			if (g_pipe_fd_elems.end() != it){
-				bc = it->second;
-				g_pipe_fd_elems.erase(fd);
-				CRIT_LOG("CHILD PROCESS CRASHED![olid:%u, olname:%s, fd:%d, restart_cnt;%u, restart_cnt_max:%u]",
-					bc->id, bc->name.c_str(), fd, bc->restart_cnt, g_bench_conf.get_restart_cnt_max());
-
-				// prevent child process from being restarted again and again forever
-				if (++bc->restart_cnt <= g_bench_conf.get_restart_cnt_max()) {
-					g_daemon.restart_child_process(bc);
+			//////////////////////////////////////////////////////////////////////////
+			pid_t pid;
+			int	status;
+			while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {
+				for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
+					if (atomic_read(&g_daemon.child_pids[i]) == pid) {
+						atomic_set(&g_daemon.child_pids[i], 0);
+						bind_config_elem_t& elem = g_bind_conf.elems[i];
+						CRIT_LOG("child process crashed![olid:%u, olname:%s, fd:%d, restart_cnt;%u, restart_cnt_max:%u]",
+							elem.id, elem.name.c_str(), fd, elem.restart_cnt, g_bench_conf.get_restart_cnt_max());
+						// prevent child process from being restarted again and again forever
+						if (++elem.restart_cnt <= g_bench_conf.get_restart_cnt_max()) {
+							g_daemon.restart_child_process(&elem);
+						}else{
+							//关闭pipe(不使用PIPE,并且epoll_wait不再监控PIPE)
+							ice::lib_file_t::close_fd(elem.recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
+							ice::lib_file_t::close_fd(elem.send_pipe.handles[E_PIPE_INDEX_RDONLY]);
+						}
+						break;
+					}
 				}
-			}else{
-				CRIT_LOG("CHILD PROCESS CRASHED![olid:??? olname:???]");
 			}
 		} else {
 			// Parent Crashed
-			CRIT_LOG("PARENT PROCESS CRASHED!");
+			CRIT_LOG("parent process crashed!");
 			g_daemon.stop = true;
 			g_daemon.restart = false;
-			return -1;
+			return 0;
 		}
 	} else {
 		CRIT_LOG("unuse ???");
@@ -107,6 +113,5 @@ int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 // 		char trash[trash_size];
 // 		while (trash_size == read(fd, trash, trash_size)) ;
 	}
-
 	return 0;
 }

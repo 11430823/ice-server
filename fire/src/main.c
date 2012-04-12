@@ -54,10 +54,6 @@ int main(int argc, char* argv[])
 			//¸¸½ø³Ì
 			ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 			ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
-			if (!g_pipe_fd_elems.insert(std::make_pair(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], &bc_elem)).second){
-				ERROR_LOG("g_pipe_fd_elems insert err [fd:%d, id:%u, name:%s]",
-					bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], bc_elem.id, bc_elem.name.c_str());
-			}
 			g_net_server.get_server_epoll()->add_connect(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {

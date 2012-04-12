@@ -23,7 +23,6 @@
 
 daemon_t g_daemon;
 bool g_is_parent = true;
-PIPE_FD_ELEMS_MAP g_pipe_fd_elems;
 
 namespace {
 
@@ -32,7 +31,7 @@ namespace {
 	void sigterm_handler(int signo) 
 	{
 		//停止服务（不重启）
-		CRIT_LOG("SIG_TERM FROM [is_parent:%d]", (int)g_is_parent);
+		CRIT_LOG("SIG_TERM FROM [stop:true, restart:false]");
 		g_daemon.stop     = true;
 		g_daemon.restart  = false;
 	}
@@ -43,22 +42,6 @@ namespace {
 		CRIT_LOG("SIGHUP FROM [restart:true, stop:true]");
 		g_daemon.restart  = true;
 		g_daemon.stop     = true;
-	}
-
-	void sigchld_handler(int signo, siginfo_t *si, void * p) 
-	{
-		CRIT_LOG("SIGCHLD FROM [is_parent:%d]", (int)g_is_parent);
-		pid_t pid;
-		int	status;
-		while ((pid = waitpid (-1, &status, WNOHANG)) > 0) {
-			for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
-				if (atomic_read(&g_daemon.child_pids[i]) == pid) {
-					atomic_set(&g_daemon.child_pids[i], 0);
-					//todo g_daemon.restart_child_process(bc);将重启的功能放在这里
-					break;
-				}
-			}
-		}
 	}
 
 	void rlimit_reset()
@@ -103,10 +86,6 @@ namespace {
 
 		sa.sa_handler = sighup_handler;
 		sigaction(SIGHUP, &sa, NULL);
-
-		sa.sa_flags = SA_RESTART|SA_SIGINFO;
-		sa.sa_sigaction = sigchld_handler;
-		sigaction(SIGCHLD, &sa, NULL);
 
 		sigemptyset(&sset);
 		sigaddset(&sset, SIGSEGV);
@@ -164,20 +143,8 @@ void daemon_t::killall_children()
 {
 	for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
 		if (0 != atomic_read(&this->child_pids[i])) {
-			kill(atomic_read(&this->child_pids[i]), SIGKILL);
+			kill(atomic_read(&this->child_pids[i]), SIGTERM/*SIGKILL*/);
 		}
-	}
-
-	/* wait for all child exit*/
-WAIT_AGAIN:
-	while (1) {
-		for (uint32_t i = 0; i < g_bind_conf.elems.size(); ++i) {
-			if (0 != atomic_read(&this->child_pids[i])) {
-				usleep(100);
-				goto WAIT_AGAIN;
-			}
-		}
-		return;
 	}
 }
 
@@ -205,10 +172,6 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 		//parent process
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
-		if (!g_pipe_fd_elems.insert(std::make_pair(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem)).second){
-			ERROR_LOG("g_pipe_fd_elems insert err [fd:%d, id:%u, name:%s]",
-				elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], elem->id, elem->name.c_str());
-		}
 		g_net_server.get_server_epoll()->add_connect(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
 		atomic_set(&g_daemon.child_pids[i], pid);
 	} else { 
@@ -219,7 +182,7 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 
 bool daemon_check_run_fn()
 {
-	return (likely(!g_daemon.stop || 0 != g_dll.functions.on_fini(g_is_parent)));
+	return likely(!g_daemon.stop) || 0 != g_dll.functions.on_fini(g_is_parent);
 }
 
 int daemon_t::run()

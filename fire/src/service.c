@@ -17,7 +17,7 @@ service_t g_service;
 
 bool service_check_run()
 {
-	return (likely(!g_daemon.stop || g_dll.functions.on_fini(g_is_parent)));
+	return likely(!g_daemon.stop) || g_dll.functions.on_fini(g_is_parent);
 }
 
 void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
@@ -25,7 +25,6 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	g_is_parent = false;
 	//释放资源(从父进程继承来的资源)
 	// close fds inherited from parent process
-	g_pipe_fd_elems.clear();
 	g_net_server.destroy();
 	for (int i = 0; i != n_inited_bc; ++i ) {
 		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_WRONLY]);
@@ -64,7 +63,6 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	g_net_server.get_server_epoll()->run(service_check_run);
 
 fail:
-	DEBUG_LOG("service run over");
 	g_net_server.destroy();
 	ice::lib_log_t::destroy();
 	exit(0);
