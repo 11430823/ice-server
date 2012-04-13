@@ -5,6 +5,9 @@
 	purpose:	utilities for parsing xml files\n
 				使用方法：请参阅test/xml.cpp和xml.xml
 				g++ xml.cpp -I/usr/include/libxml2 -lxml2 -lice
+
+				sudo apt-get install libxml2
+				sudo apt-get install libxml2-dev 
 	brief:		ok	
 *********************************************************************/
 
