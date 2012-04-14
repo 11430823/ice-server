@@ -23,7 +23,7 @@ namespace ice{
 	private:
 		ON_PIPE_EVENT on_pipe_event;
 		PRIVATE_RW_DEFAULT(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
-		PRIVATE_READONLY_DEFAULT(on_functions_tcp_server_epoll*, on_functions);//回调函数
+		PRIVATE_R_DEFAULT(on_functions_tcp_server_epoll*, on_functions);//回调函数
 	public:
 		lib_tcp_server_epoll_t(uint32_t max_events_num);
 		virtual ~lib_tcp_server_epoll_t(){

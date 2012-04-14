@@ -27,15 +27,20 @@
 
 //////////////////////////////////////////////////////////////////////////
 //使用宏管理成员变量
-#define PROTECTED_READONLY_DEFAULT(varType, varName)\
+#define PROTECTED_R_DEFAULT(varType, varName)\
 	protected:	varType varName;\
 	public:		varType get_##varName(void) { return varName; }
 
-#define PRIVATE_READONLY_DEFAULT(varType, varName)\
+#define PROTECTED_RW_DEFAULT(varType, varName)\
+	protected:	varType varName;\
+	public:		varType get_##varName(void) { return varName; } \
+	public:		void set_##varName(varType var) { varName = var; }
+
+#define PRIVATE_R_DEFAULT(varType, varName)\
 	private:	varType varName;\
 	public:		varType get_##varName(void) { return varName; }
 
-#define PRIVATE_READONLY_BY_REF_DEFAULT(varType, varName)\
+#define PRIVATE_R_BY_REF_DEFAULT(varType, varName)\
 	private:	varType varName;\
 	public:		const varType& get_##varName(void) { return varName; }
 

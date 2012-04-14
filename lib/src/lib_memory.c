@@ -3,19 +3,6 @@
 #include "lib_util.h"
 #include "lib_memory.h"
 
-void ice::lib_active_buf_t::init_data()
-{
-	this->data = NULL;
-	this->total_len = 0;
-	this->write_pos = 0;
-}
-
-void ice::lib_active_buf_t::clean()
-{
-	safe_free(this->data);
-	this->init_data();
-}
-
 uint32_t ice::lib_active_buf_t::pop_front( uint32_t len )
 {
 	if(this->write_pos <= len){

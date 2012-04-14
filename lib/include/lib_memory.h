@@ -17,9 +17,9 @@ namespace ice{
 	//自动无限放大,但是不会自动紧缩.
 	class lib_active_buf_t
 	{
-		PRIVATE_READONLY_DEFAULT(char*, data);//数据头指针
-		PRIVATE_READONLY_DEFAULT(uint32_t, total_len);//已分配的总长度
-		PRIVATE_READONLY_DEFAULT(uint32_t, write_pos);//已使用到的位置
+		PRIVATE_R_DEFAULT(char*, data);//数据头指针
+		PRIVATE_R_DEFAULT(uint32_t, total_len);//已分配的总长度
+		PRIVATE_R_DEFAULT(uint32_t, write_pos);//已使用到的位置
 	public:
 		lib_active_buf_t();
 		virtual ~lib_active_buf_t();
@@ -40,9 +40,16 @@ namespace ice{
 		// Brief:	清理所有数据/释放内存空间  
 		// Returns:   void ()
 		//************************************
-		inline void clean();
+		void clean(){
+			safe_free(this->data);
+			this->init_data();
+		}
 	private:
-		inline void init_data();
+		void init_data(){
+			this->data = NULL;
+			this->total_len = 0;
+			this->write_pos = 0;
+		}
 	private:
 		lib_active_buf_t(const lib_active_buf_t& cr);
 		lib_active_buf_t& operator=(const lib_active_buf_t& cr);
