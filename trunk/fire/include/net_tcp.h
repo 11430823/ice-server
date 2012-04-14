@@ -12,7 +12,7 @@
 
 class net_server_t
 {
-	PRIVATE_READONLY_DEFAULT(ice::lib_tcp_server_epoll_t*, server_epoll);
+	PRIVATE_R_DEFAULT(ice::lib_tcp_server_epoll_t*, server_epoll);
 public:
 	net_server_t(void);
 	virtual ~net_server_t(){}

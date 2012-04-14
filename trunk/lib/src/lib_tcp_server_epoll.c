@@ -9,50 +9,49 @@
 #include "lib_timer.h"
 #include "lib_linux_version.h"
 #include "lib_tcp_server_epoll.h"
+#include "lib_tcp_client.h"
 
-#if 0
-int KM_TCP_S::__handle_message_epoll(SOCKET s)
-{
-    char buf[1500 + 1] = {0};
-    int len;
-    /* 开始处理每个新连接上的数据收发 */
-    /* 接收客户端的消息 */
-    len = recv(s, buf, sizeof(buf)-1, 0);
-    switch(len)
-    {
-    	case 0:
-			{
-				m_ilog.log("client close! 0 == recv");
-			}
-    	break;
-    	case SOCKET_ERROR:
-    		break;
-    	default:
-    		{
-    			buf[len] = '\0';
-    			cout << buf << endl;
-					int i = send(s,buf,len,0);
-					cout << "send : " << i << endl;
+const uint32_t RECV_BUF_LEN = 1024*8;//8K
+
+namespace {
+	/**
+	 * @brief	接收客户端消息
+	 * @param	ice::lib_tcp_client_t & cli_info
+	 * @return	int 0:断开 >0:接收的数据长度
+	 */
+	int client_recv(ice::lib_tcp_client_t& cli_info)
+	{
+		char buf[RECV_BUF_LEN] = {0};
+		int len = 0;
+
+		int sum_len = 0;
+		while (1) {
+			len = cli_info.recv(buf, sizeof(buf));
+			if (likely(len > 0)){
+				if (len < (int)sizeof(buf)){
+					cli_info.recv_buf.push_back(buf, len);
+					return len;
+				}else if (sizeof(buf) == len){
+					cli_info.recv_buf.push_back(buf, len);
+					sum_len += len;
+					continue;
 				}
-    		break;
-    }
-    /*ET模式，即，边沿触发，类似于电平触发，epoll中的边沿触发的意思是只对新到的数据进行通知，而内核缓冲区中如果是旧数据则不进行通知，所以在do_use_fd函数中应该使用如下循环，才能将内核缓冲区中的数据读完。
-            while (1) {
-           len = recv(*******);
-           if (len == -1) {
-             if(errno == EAGAIN)
-                break;
-             perror("recv");
-             break;
-           }
-           do something with the recved data........
-        }
-    */
+			} else if (0 == len){
+				return 0;
+			} else if (len == -1) {
+				return sum_len;
+			}
+		}
+		return sum_len;
+	}
 
-    return len;
-}
+	int server_recv()
+	{
+		//todo
+		return 0;
+	}
+}//end namespace 
 
-#endif
 
 int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 {
@@ -64,6 +63,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 	while(check_run_fn()){
 		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
 		renew_now();
+		//todo 添加事件处理机制接口.
 		if (0 == event_num){
 			//time out
 			continue;
@@ -74,9 +74,9 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 
 		//handling event
 		for (int i = 0; i < event_num; ++i){
-			cli_fd_info_t& fd_info = this->cli_fd_infos[evs[i].data.fd];
+			lib_tcp_client_t& fd_info = this->cli_fd_infos[evs[i].data.fd];
 			if ( unlikely(FD_TYPE_PIPE == fd_info.fd_type) ) {
-				if (0 == this->on_pipe_event(fd_info.fd, evs[i])) {
+				if (0 == this->on_pipe_event(fd_info.get_fd(), evs[i])) {
 					continue;
 				} else {
 					return -1;
@@ -84,24 +84,46 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 			}
 			//可读或可写(可同时发生,并不互斥)
 			if(EPOLLIN & evs[i].events){//接收并处理其他套接字的数据
-				if (FD_TYPE_LISTEN == fd_info.fd_type){	
+				if (FD_TYPE_LISTEN == fd_info.fd_type){
 					sockaddr_in peer;//对方sockaddr_in
 					memset(&peer,0,sizeof(peer));
 					accept_fd = this->accept(peer, false);
 					if (unlikely(accept_fd < 0)){
 						ALERT_LOG("accept err [%s]", ::strerror(errno));
-						continue;
 					}else{
-						TRACE_LOG("client accept [ip:%s, port:%u, socket:%d",
+						DEBUG_LOG("client accept [ip:%s, port:%u, socket:%d",
 							inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), accept_fd);
-						if (0 != add_connect(accept_fd, FD_TYPE_REMOTE, &peer)){
-							return -1;
+						if (0 != add_connect(accept_fd, FD_TYPE_CLIENT, &peer)){
 						}
+					}
+					continue;
+				}
+
+				if(EPOLLOUT & evs[i].events){//该套接字可写
+				}
+				if (EPOLLIN & evs[i].events){//该套接字可读
+					if (FD_TYPE_CLIENT == fd_info.fd_type){
+						int ret = client_recv(fd_info);
+						if (ret > 0){
+							//(int fd, const void* data, int len, int isparent)
+							int available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos());
+							if (-1 == available_len){
+								this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+								fd_info.close();
+							}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
+								this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
+								fd_info.recv_buf.pop_front(available_len);
+							}
+						}else if (0 == ret || -1 == ret){
+							this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+							fd_info.close();
+						}			
+					}else if (FD_TYPE_SERVER == fd_info.fd_type){
 					}
 				}
 				
+
 #if 0
-				ret = __handle_message_epoll(evs[i].data.fd);
 				switch(ret)
 				{
 				case 0:
@@ -128,10 +150,8 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					break;
 				}
 #endif
-				if(EPOLLOUT & evs[i].events){//该套接字可写
-				}
-
 			}
+
 		}
 	}
 	return 0;
@@ -211,7 +231,7 @@ int ice::lib_tcp_server_epoll_t::create()
 		return -1;
 	}
 
-	this->cli_fd_infos = (struct cli_fd_info_t*) new cli_fd_info_t[this->cli_fd_value_max];
+	this->cli_fd_infos = (struct lib_tcp_client_t*) new lib_tcp_client_t[this->cli_fd_value_max];
 	if (NULL == this->cli_fd_infos){
 		lib_file_t::close_fd(this->fd);
 		ALERT_LOG ("CALLOC CLI_FD_INFO_T FAILED [MAXEVENTS=%d]", this->cli_fd_value_max);
@@ -250,9 +270,9 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 		return -1;
 	}
 
-	cli_fd_info_t& cfi = this->cli_fd_infos[fd];
+	lib_tcp_client_t& cfi = this->cli_fd_infos[fd];
 	cfi.init();
-	cfi.fd = fd;
+	cfi.set_fd(fd);
 	cfi.fd_type = fd_type;
 	cfi.last_tm = ice::lib_time_t::get_now_second();
 	if (NULL != peer) {

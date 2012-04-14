@@ -44,23 +44,22 @@ namespace {
 		g_daemon.stop     = true;
 	}
 
+#if 0
 	//man 2 sigaction to see si->si_code
 	void sigchld_handler(int signo, siginfo_t *si, void * p) 
 	{
-		CRIT_LOG("sigchld from pid=%d uid=%d", si->si_pid, si->si_uid);
+		CRIT_LOG("sigchld from [pid=%d, uid=%d", si->si_pid, si->si_uid);
 		switch (si->si_code) {
 		case CLD_DUMPED:
-			CRIT_LOG("child %d coredumped by signal %s",
-				si->si_pid, signame[WTERMSIG(si->si_status)]);
-			chmod("core", 700);
-			chown("core", 0, 0);
+			::chmod("core", 700);
+			::chown("core", 0, 0);
 			char core_name[1024] ={0};
-			sprintf(core_name, "core.%d", si->si_pid);
-			rename("core", core_name);
+			::sprintf(core_name, "core.%d", si->si_pid);
+			::rename("core", core_name);
 			break;
 		}
 	}
-
+#endif
 	void rlimit_reset()
 	{
 		struct rlimit rlim;
@@ -100,10 +99,11 @@ namespace {
 		sigaction(SIGINT, &sa, NULL);
 		sigaction(SIGTERM, &sa, NULL);
 		sigaction(SIGQUIT, &sa, NULL);
-
+#if 0
 		sa.sa_flags = SA_RESTART|SA_SIGINFO;
 		sa.sa_sigaction = sigchld_handler;
 		sigaction(SIGCHLD, &sa, NULL);
+#endif
 
 		sa.sa_handler = sighup_handler;
 		sigaction(SIGHUP, &sa, NULL);

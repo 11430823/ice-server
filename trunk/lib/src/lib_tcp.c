@@ -49,20 +49,6 @@ int ice::lib_tcp_t::safe_tcp_send_n( int sockfd, const void* buf, int total )
 	return send_bytes;
 }
 
-int ice::lib_tcp_t::safe_tcp_recv( int sockfd, void* buf, int bufsize )
-{
-	int cur_len = 0;
-	while(1){
-		cur_len = ::recv(sockfd, buf, bufsize, 0);
-		if (-1 == cur_len && errno == EINTR) {
-			continue;
-		}else{
-			break;
-		}
-	}
-	return cur_len;
-}
-
 int ice::lib_tcp_t::safe_tcp_recv_n( int sockfd, void* buf, int total )
 {
 	int recv_bytes = 0;
@@ -123,10 +109,8 @@ int ice::lib_tcp_t::send( const void* buf, int total )
 
 int ice::lib_tcp_t::recv( void* buf, int bufsize )
 {
-	//todo 
-	return 0;
+	return HANDLE_EINTR(::recv(this->fd, buf, bufsize, 0));
 }
-
 
 
 int ice::lib_tcp_cli_t::safe_tcp_connect( const char* ipaddr, in_port_t port, int timeout, bool block )

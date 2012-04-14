@@ -1,4 +1,6 @@
 #include <dlfcn.h>
+#include <sys/stat.h>
+#include <stdio.h>
 
 #include <lib_log.h>
 
@@ -20,6 +22,18 @@ namespace {
 			h = NULL;\
 			goto out;\
 		}\
+	}
+
+	/**
+	 * @brief	重命名core文件(core.进程id)
+	 */
+	void rename_core(int pid)
+	{
+		::chmod("core", 700);
+		::chown("core", 0, 0);
+		char core_name[1024] ={0};
+		::sprintf(core_name, "core.%d", pid);
+		::rename("core", core_name);
 	}
 
 }//end of namespace
@@ -83,8 +97,9 @@ int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 					if (atomic_read(&g_daemon.child_pids[i]) == pid) {
 						atomic_set(&g_daemon.child_pids[i], 0);
 						bind_config_elem_t& elem = g_bind_conf.elems[i];
-						CRIT_LOG("child process crashed![olid:%u, olname:%s, fd:%d, restart_cnt;%u, restart_cnt_max:%u]",
-							elem.id, elem.name.c_str(), fd, elem.restart_cnt, g_bench_conf.get_restart_cnt_max());
+						CRIT_LOG("child process crashed![olid:%u, olname:%s, fd:%d, restart_cnt;%u, restart_cnt_max:%u, pid=%d]",
+							elem.id, elem.name.c_str(), fd, elem.restart_cnt, g_bench_conf.get_restart_cnt_max(), pid);
+						rename_core(pid);
 						// prevent child process from being restarted again and again forever
 						if (++elem.restart_cnt <= g_bench_conf.get_restart_cnt_max()) {
 							g_daemon.restart_child_process(&elem);
