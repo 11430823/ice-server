@@ -105,14 +105,18 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					if (FD_TYPE_CLIENT == fd_info.fd_type){
 						int ret = client_recv(fd_info);
 						if (ret > 0){
-							//(int fd, const void* data, int len, int isparent)
-							int available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos());
-							if (-1 == available_len){
-								this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-								fd_info.close();
-							}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
-								this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
-								fd_info.recv_buf.pop_front(available_len);
+							int available_len = 0;
+							while (0 != (available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos()))){	
+								if (-1 == available_len){
+									this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+									fd_info.close();
+									break;
+								}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
+									this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
+									fd_info.recv_buf.pop_front(available_len);
+								}else{
+									break;
+								}
 							}
 						}else if (0 == ret || -1 == ret){
 							this->on_functions->on_cli_conn_closed(fd_info.get_fd());

@@ -6,14 +6,14 @@
 #include <bench_conf.h>
 
 #pragma pack(1)
-/* SERVERºÍCLIENTµÄÐ­Òé°üÍ·¸ñÊ½ */
+/* SERVERå’ŒCLIENTçš„åè®®åŒ…å¤´æ ¼å¼ */
 struct cli_proto_head_t {
-	uint32_t len; /* Ð­ÒéµÄ³¤¶È */
-	uint32_t cmd; /* Ð­ÒéµÄÃüÁîºÅ */
-	uint32_t id; /* ÕËºÅ */
-	uint32_t seq_num;/* ÐòÁÐºÅ */
-	uint32_t ret; /* S->C, ´íÎóÂë */
-	uint8_t body[]; /* °üÌåÐÅÏ¢ */
+	uint32_t len; /* åè®®çš„é•¿åº¦ */
+	uint32_t cmd; /* åè®®çš„å‘½ä»¤å· */
+	uint32_t id; /* è´¦å· */
+	uint32_t seq_num;/* åºåˆ—å· */
+	uint32_t ret; /* S->C, é”™è¯¯ç  */
+	uint8_t body[]; /* åŒ…ä½“ä¿¡æ¯ */
 };
 #pragma pack()
 
@@ -64,9 +64,8 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_client_t* cli_fd_info, const void* da
 	}
 
 	uint32_t pkg_len = 0;
-
-	TRACE_LOG("[fd:%d, len:%d, data:%s]", cli_fd_info->get_fd(), len, (char*)data);
 	pkg_len = *(uint32_t*)(data);
+	TRACE_LOG("[fd:%d, len:%d, pkg_len:%u]", cli_fd_info->get_fd(), len, pkg_len);
 	if (pkg_len < sizeof(cli_proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("head len err [len=%u]", pkg_len);
 		return -1;
@@ -81,9 +80,11 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_client_t* cli_fd_info, const void* da
   */
 extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_client_t* cli_fd_info)
 {
-	/* ·µ»Ø·ÇÁã£¬¶Ï¿ªFDµÄÁ¬½Ó */ 
-	TRACE_LOG("[fd:%d, len:%d, data:%s]", cli_fd_info->get_fd(), pkglen, (char*)pkg);
-	cli_fd_info->send(pkg ,pkglen);
+	/* è¿”å›žéžé›¶ï¼Œæ–­å¼€FDçš„è¿žæŽ¥ */ 
+	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
+	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
+		head->len, head->cmd, head->seq_num, head->ret, head->id, cli_fd_info->get_fd(), pkglen);
+	//cli_fd_info->send(pkg ,pkglen);
 	return 0;
 }
 
