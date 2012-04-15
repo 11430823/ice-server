@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import socket
 
-s = socket.socket()
-s.connect(("192.168.0.104", 9001))
-print s.recv(1024)
+for i in range (1, 10000):
+	s = socket.socket()
+	s.connect(("10.1.1.57", 9001))
+	#print 'connect:', i

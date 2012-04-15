@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "lib_util.h"
 #include "lib_net.h"
 
