@@ -8,6 +8,8 @@
 
 #pragma once
 
+
+
 #include "lib_util.h"
 #include "lib_net_util.h"
 #include "lib_tcp.h"
@@ -28,6 +30,11 @@ namespace ice{
 			this->init();
 		}
 		virtual ~lib_tcp_client_t(){}
+		char* get_str_ip(){
+			struct in_addr a;
+			a.s_addr = this->remote_ip;
+			return inet_ntoa(a);
+		}
 		void close(){
 			lib_file_t::close_fd(this->fd);
 			this->init();

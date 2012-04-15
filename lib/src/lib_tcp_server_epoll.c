@@ -91,7 +91,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					if (unlikely(accept_fd < 0)){
 						ALERT_LOG("accept err [%s]", ::strerror(errno));
 					}else{
-						DEBUG_LOG("client accept [ip:%s, port:%u, socket:%d",
+						TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
 							inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), accept_fd);
 						if (0 != add_connect(accept_fd, FD_TYPE_CLIENT, &peer)){
 						}
@@ -116,42 +116,13 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 							}
 						}else if (0 == ret || -1 == ret){
 							this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+							ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_str_ip(), fd_info.remote_port);
 							fd_info.close();
 						}			
 					}else if (FD_TYPE_SERVER == fd_info.fd_type){
 					}
 				}
-				
-
-#if 0
-				switch(ret)
-				{
-				case 0:
-					{
-						int e = epoll_ctl(m_nFD, EPOLL_CTL_DEL, evs[i].data.fd,&ev);
-						if(SOCKET_ERROR == e)
-						{
-							m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
-						}
-						close_socket(evs[i].data.fd);
-					}
-					break;
-				case SOCKET_ERROR:
-					{
-						if(11 != errno)
-						{// ¶Ï¿ª
-							m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
-							perror("11 != errno:");
-							int e = epoll_ctl(m_nFD, EPOLL_CTL_DEL, evs[i].data.fd,&ev);
-						}	
-					}
-					break;
-				default:
-					break;
-				}
-#endif
 			}
-
 		}
 	}
 	return 0;
