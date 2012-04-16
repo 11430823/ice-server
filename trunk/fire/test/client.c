@@ -42,7 +42,7 @@ int main()
 	head.ret = 0;
 	head.seq_num = 1;
 	head.len = sizeof(cli_proto_head_t);
-	for (int i = 0; i < 10000; i++){
+	for (int i = 0; i < 100000; i++){
 		head.seq_num++;
 	int slen = 	send(fd, (char*)&head, sizeof(cli_proto_head_t), 0);
 if(slen <= 0){
@@ -50,7 +50,7 @@ std::cout<< slen<< std::endl;
 }
 	}
 	
-	sleep(1000);
+	sleep(6);
 
 	return 0;
 }
