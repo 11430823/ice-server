@@ -50,6 +50,7 @@ namespace {
 		//todo
 		return 0;
 	}
+
 }//end namespace 
 
 
@@ -57,8 +58,6 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 {
 	int event_num = 0;//事件的数量
 	epoll_event evs[this->cli_fd_value_max];
-
-	int accept_fd = -1;//连接上的客户SOCKET
 
 	while(check_run_fn()){
 		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
@@ -83,48 +82,16 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 				}
 			}
 			//可读或可写(可同时发生,并不互斥)
+			if(EPOLLOUT & evs[i].events){//该套接字可写
+				this->handle_send(fd_info);
+			}
 			if(EPOLLIN & evs[i].events){//接收并处理其他套接字的数据
 				if (FD_TYPE_LISTEN == fd_info.fd_type){
-					sockaddr_in peer;//对方sockaddr_in
-					memset(&peer,0,sizeof(peer));
-					accept_fd = this->accept(peer, false);
-					if (unlikely(accept_fd < 0)){
-						ALERT_LOG("accept err [%s]", ::strerror(errno));
-					}else{
-						TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
-							inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), accept_fd);
-						if (0 != add_connect(accept_fd, FD_TYPE_CLIENT, &peer)){
-						}
-					}
+					this->handle_listen();
 					continue;
-				}
-
-				if(EPOLLOUT & evs[i].events){//该套接字可写
-				}
-				if (EPOLLIN & evs[i].events){//该套接字可读
-					if (FD_TYPE_CLIENT == fd_info.fd_type){
-						int ret = client_recv(fd_info);
-						if (ret > 0){
-							int available_len = 0;
-							while (0 != (available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos()))){	
-								if (-1 == available_len){
-									this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-									fd_info.close();
-									break;
-								}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
-									this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
-									fd_info.recv_buf.pop_front(available_len);
-								}else{
-									break;
-								}
-							}
-						}else if (0 == ret || -1 == ret){
-							this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-							ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_str_ip(), fd_info.remote_port);
-							fd_info.close();
-						}			
-					}else if (FD_TYPE_SERVER == fd_info.fd_type){
-					}
+				} else if (FD_TYPE_CLIENT == fd_info.fd_type){
+					this->handle_client(fd_info);			
+				}else if (FD_TYPE_SERVER == fd_info.fd_type){
 				}
 			}
 		}
@@ -264,6 +231,59 @@ void ice::lib_tcp_server_epoll_t::register_pipe_event_fn( ON_PIPE_EVENT fn )
 	this->on_pipe_event = fn;
 }
 
+void ice::lib_tcp_server_epoll_t::handle_client( lib_tcp_client_t& fd_info )
+{
+	int ret = client_recv(fd_info);
+	if (ret > 0){
+		int available_len = 0;
+		while (0 != (available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos()))){	
+			if (-1 == available_len){
+				this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+				fd_info.close();
+				break;
+			}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
+				this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
+				fd_info.recv_buf.pop_front(available_len);
+			}else{
+				break;
+			}
+		}
+	}else if (0 == ret || -1 == ret){
+		this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip(), fd_info.remote_port);
+		fd_info.close();
+	}
+}
+
+void ice::lib_tcp_server_epoll_t::handle_listen()
+{
+	int accept_fd = -1;//连接上的客户SOCKET
+	sockaddr_in peer;//对方sockaddr_in
+	memset(&peer,0,sizeof(peer));
+	accept_fd = this->accept(peer, false);
+	if (unlikely(accept_fd < 0)){
+		ALERT_LOG("accept err [%s]", ::strerror(errno));
+	}else{
+		TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
+			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), accept_fd);
+		if (0 != this->add_connect(accept_fd, ice::FD_TYPE_CLIENT, &peer)){
+		}
+	}
+}
+
+void ice::lib_tcp_server_epoll_t::handle_send( lib_tcp_client_t& fd_info )
+{
+	int send_len = this->send(fd_info.send_buf.get_data(), fd_info.send_buf.get_write_pos());
+	if (send_len > 0){
+		uint32_t remain_len = fd_info.send_buf.pop_front(send_len);
+		if (0 == remain_len){
+			//todo 从epoll中移除
+		}
+	} else if (send_len < 0){
+		this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+		fd_info.close();
+	}
+}
 
 int service_run()
 {

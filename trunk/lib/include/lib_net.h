@@ -26,10 +26,10 @@ namespace ice{
 		*/
 		virtual int send(const void* buf, int total) = 0;
 		/**
-		* @brief Receive data
+		* @brief Receive data  
 		* @param const void* buf,  buffer to hold the receiving data.
 		* @param int bufsize,  size of `buf`.
-		* @return int, number of bytes receive on success, -1 on error, 0 on connection closed by peer.
+		* @return int, number of bytes receive on success, -1 on error (没有处理EAGAIN), 0 on connection closed by peer.
 		*/
 		virtual int recv(void* buf, int bufsize) = 0;
 	protected:

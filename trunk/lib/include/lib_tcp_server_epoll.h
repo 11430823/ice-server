@@ -51,5 +51,9 @@ namespace ice{
 	private:
 		lib_tcp_server_epoll_t(const lib_tcp_server_epoll_t& cr);
 		lib_tcp_server_epoll_t& operator=(const lib_tcp_server_epoll_t& cr);
+
+		void handle_client(lib_tcp_client_t& fd_info);
+		void handle_listen();
+		void handle_send(lib_tcp_client_t& fd_info);
 	};
 }//end namespace ice
