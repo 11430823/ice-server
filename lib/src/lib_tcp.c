@@ -29,49 +29,6 @@ int ice::lib_tcp_t::set_sock_rcv_timeo( int sockfd, int millisec )
 	return setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 }
 
-int ice::lib_tcp_t::safe_tcp_send_n( int sockfd, const void* buf, int total )
-{
-	int send_bytes = 0;
-	for (int cur_len = 0; send_bytes < total; send_bytes += cur_len) {
-		//MSG_NOSIGNAL: linux man send 查看
-		cur_len = ::send(sockfd, (char*)buf + send_bytes, total - send_bytes, MSG_NOSIGNAL);
-		if (-1 == cur_len) {
-			if (errno == EINTR) {
-				cur_len = 0;
-			} else if (errno == EAGAIN) {
-				break;
-			} else {
-				return -1;
-			}
-		}
-	}
-
-	return send_bytes;
-}
-
-int ice::lib_tcp_t::safe_tcp_recv_n( int sockfd, void* buf, int total )
-{
-	int recv_bytes = 0;
-
-	for (int cur_len = 0; recv_bytes < total; recv_bytes += cur_len)	{
-		cur_len = ::recv(sockfd, (char*)buf + recv_bytes, total - recv_bytes, 0);
-		if (0 == cur_len) {
-			// connection closed by client
-			return 0;
-		} else if (-1 == cur_len) {
-			if (errno == EINTR) {
-				cur_len = 0;
-			} else if (errno == EAGAIN)	{
-				return recv_bytes;
-			} else {
-				return -1;
-			}
-		}
-	}
-
-	return recv_bytes;
-}
-
 int ice::lib_tcp_t::set_recvbuf( int s, uint32_t len )
 {
 	return  setsockopt(s, SOL_SOCKET, SO_RCVBUF, &len, sizeof(len));
@@ -95,7 +52,7 @@ int ice::lib_tcp_t::send( const void* buf, int total )
 		//MSG_NOSIGNAL: linux man send 查看
 		cur_len = ::send(this->fd, (char*)buf + send_bytes, total - send_bytes, MSG_NOSIGNAL);
 		if (-1 == cur_len) {
-			if (errno == EINTR) {
+			if (EINTR == errno) {
 				cur_len = 0;
 			} else if (EAGAIN == errno || EWOULDBLOCK == errno) {
 				break;
