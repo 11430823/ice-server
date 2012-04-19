@@ -21,6 +21,7 @@ namespace{
 
 	const uint32_t MAX_LOG_CNT = 10000000; //日志文件最大数量
 	const uint32_t LOG_BUF_SIZE = 8192; //每条日志的最大字节数
+	uint16_t LOG_IDX = 0;//日志中的序号
 
 	struct log_info_t {
 		ice::lib_log_t::E_LEVEL  level;	  // default log level
@@ -317,8 +318,8 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 	}
 
 	char log_buffer[LOG_BUF_SIZE];
-	int pos = ::snprintf(log_buffer, sizeof(log_buffer), "[%02d:%02d:%02d] %u [%05d]",
-		t_m.tm_hour, t_m.tm_min, t_m.tm_sec, key, ::getpid());
+	int pos = ::snprintf(log_buffer, sizeof(log_buffer), "[%02d:%02d:%02d] %u [%05d,%05d]",
+		t_m.tm_hour, t_m.tm_min, t_m.tm_sec, key, ::getpid(), LOG_IDX++);
 	int end = ::vsnprintf(log_buffer + pos, sizeof(log_buffer) - pos, fmt, ap);
 	::va_end(ap);
 
