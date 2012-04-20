@@ -1,11 +1,10 @@
-#include <sys/epoll.h>
-
+#include "lib_include.h"
 #include "lib_tcp_client.h"
 
-char* ice::lib_tcp_client_t::get_ip()
+char* ice::lib_tcp_client_t::get_ip_str()
 {
 	struct in_addr a;
-	a.s_addr = this->remote_ip;
+	a.s_addr = this->ip;
 	return inet_ntoa(a);
 }
 
@@ -24,25 +23,23 @@ void ice::lib_tcp_client_t::init()
 {
 	this->fd = -1;
 	this->fd_type = FD_TYPE_UNUSED;
-	this->remote_port = 0;
-	this->remote_ip = 0;
+	this->port = 0;
+	this->ip = 0;
 	this->last_tm = 0;
 	this->recv_buf.clean();
-}
-
-int ice::lib_tcp_client_t::send( const void* buf, int total )
-{
-	int send_len = lib_tcp_t::send(buf, total);
-	if (send_len < total){
-		this->send_buf.pop_front(send_len);
-		g_net_server.get_server_epoll()->mod_events(this->fd, EPOLLIN | EPOLLOUT);
-	} else {
-		this->send_buf.pop_front(send_len);
-	}
-	return send_len;
 }
 
 ice::lib_tcp_client_t::~lib_tcp_client_t()
 {
 
+}
+
+uint16_t ice::lib_tcp_client_t::get_port()
+{
+	return this->port;
+}
+
+uint32_t ice::lib_tcp_client_t::get_ip()
+{
+	return this->ip;
 }

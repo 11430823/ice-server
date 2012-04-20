@@ -1,8 +1,4 @@
-#include <sys/epoll.h>
-#include <string.h>
-#include <errno.h>
-#include <arpa/inet.h>
-
+#include "lib_include.h"
 #include "lib_log.h"
 #include "lib_file.h"
 #include "lib_time.h"
@@ -197,7 +193,6 @@ int ice::lib_tcp_server_epoll_t::add_events( int fd, uint32_t flag )
 		ERROR_LOG ("epoll_ctl add fd:%d error:%s", fd, strerror(errno));
 		return -1;
 	}
-
 	return 0; 
 }
 
@@ -222,17 +217,12 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 	cfi.fd_type = fd_type;
 	cfi.last_tm = ice::lib_time_t::get_now_second();
 	if (NULL != peer) {
-		cfi.remote_ip = peer->sin_addr.s_addr;
-		cfi.remote_port = peer->sin_port;
+		cfi.ip = peer->sin_addr.s_addr;
+		cfi.port = peer->sin_port;
 	}
 
 	TRACE_LOG("time now:%u, fd:%d, fd type:%d", cfi.last_tm, fd, fd_type);
 	return 0;
-}
-
-void ice::lib_tcp_server_epoll_t::register_pipe_event_fn( ON_PIPE_EVENT fn )
-{
-	this->on_pipe_event = fn;
 }
 
 void ice::lib_tcp_server_epoll_t::handle_client( lib_tcp_client_t& fd_info )
@@ -254,7 +244,7 @@ void ice::lib_tcp_server_epoll_t::handle_client( lib_tcp_client_t& fd_info )
 		}
 	}else if (0 == ret || -1 == ret){
 		this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip(), fd_info.remote_port);
+		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
 		fd_info.close();
 	}
 }
@@ -300,10 +290,18 @@ int ice::lib_tcp_server_epoll_t::mod_events( int fd, uint32_t flag )
 		ERROR_LOG ("epoll_ctl mod fd:%d error:%s", fd, strerror(errno));
 		return -1;
 	}
-
 	return 0; 
 }
 
+ice::lib_tcp_server_epoll_t::~lib_tcp_server_epoll_t()
+{
+
+}
+
+void ice::lib_tcp_server_epoll_t::register_on_functions( const on_functions_tcp_server* functions )
+{
+	this->on_functions = (on_functions_tcp_server_epoll*)functions;
+}
 
 int service_run()
 {

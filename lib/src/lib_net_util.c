@@ -1,11 +1,4 @@
-#include <netdb.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <assert.h>
-#include <ifaddrs.h>
-#include <string.h>
-
+#include "lib_include.h"
 #include "lib_util.h"
 #include "lib_net_util.h"
 #include "lib_file.h"

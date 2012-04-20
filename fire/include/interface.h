@@ -10,6 +10,18 @@
 
 #include <stdint.h>
 
+#include <lib_tcp_server.h>
+
+#include <lib_tcp_client.h>
+
 namespace fire{
-	int send(int fd, const void* data, uint32_t len);
+
+	struct client_info_t : public ice::lib_tcp_client_t
+	{
+		virtual uint16_t get_port();
+		virtual uint32_t get_ip();
+		virtual char* get_ip_str();
+		virtual int send(const void* data, uint32_t len);
+	};
+
 }//end namespace fire
