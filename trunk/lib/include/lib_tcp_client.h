@@ -30,7 +30,7 @@ namespace ice{
 		char* get_ip();
 		void close();
 		void init();
-		virtual int send(const void* buf, int total);
+		static int send(const void* buf, int total);
 	protected:
 		
 	private:

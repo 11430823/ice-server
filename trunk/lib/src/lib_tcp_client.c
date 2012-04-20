@@ -1,3 +1,5 @@
+#include <sys/epoll.h>
+
 #include "lib_tcp_client.h"
 
 char* ice::lib_tcp_client_t::get_ip()
@@ -30,10 +32,14 @@ void ice::lib_tcp_client_t::init()
 
 int ice::lib_tcp_client_t::send( const void* buf, int total )
 {
-	//todo 没有发送完毕放入epoll 发送队列中
-	return lib_tcp_t::send(buf, total);
-	// 			uint32_t flag = EPOLLOUT;
-	// 			int ret = HANDLE_EINTR(::epoll_ctl(this->fd, EPOLL_CTL_ADD, fd, &ev));
+	int send_len = lib_tcp_t::send(buf, total);
+	if (send_len < total){
+		this->send_buf.pop_front(send_len);
+		g_net_server.get_server_epoll()->mod_events(this->fd, EPOLLIN | EPOLLOUT);
+	} else {
+		this->send_buf.pop_front(send_len);
+	}
+	return send_len;
 }
 
 ice::lib_tcp_client_t::~lib_tcp_client_t()

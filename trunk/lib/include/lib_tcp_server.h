@@ -77,16 +77,7 @@ namespace ice{
 		  */
 		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_client_t* cli_fd_info, const void* data, uint32_t len);
 		ON_GET_PKG_LEN on_get_pkg_len;
-		on_functions_tcp_server(){
-			this->on_events = 0;
-			this->on_cli_pkg = 0;
-			this->on_srv_pkg = 0;
-			this->on_cli_conn_closed = 0;
-			this->on_svr_conn_closed = 0;
-			this->on_init = 0;
-			this->on_fini = 0;
-			this->on_get_pkg_len = 0;
-		}
+		on_functions_tcp_server();
 	};
 
 	class lib_tcp_sever_t : public lib_tcp_t
@@ -103,13 +94,14 @@ namespace ice{
 			this->cli_fd_infos = NULL;
 			this->listen_fd = -1;
 			this->cli_fd_value_max = 0;
+			this->check_run = NULL;
 		}
 		virtual ~lib_tcp_sever_t(){
 			if (NULL != cli_fd_infos){
 				for (int i = 0; i < this->cli_fd_value_max; i++) {
 					lib_tcp_client_t& cfi = cli_fd_infos[i];
 					if (FD_TYPE_UNUSED == cfi.fd_type){
-						continue;
+						continue;//todo 删除FD时要设置该类型
 					}
 					cfi.close();
 				}

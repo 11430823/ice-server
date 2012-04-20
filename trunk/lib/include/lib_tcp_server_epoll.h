@@ -46,6 +46,7 @@ namespace ice{
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize);
 		virtual int run(CHECK_RUN check_run_fn);
 		virtual int add_connect(int fd, E_FD_TYPE fd_type, struct sockaddr_in* peer);
+		int mod_events(int fd, uint32_t flag);
 		int add_events(int fd, uint32_t flag);
 		void register_pipe_event_fn(ON_PIPE_EVENT fn);
 	private:
@@ -54,6 +55,6 @@ namespace ice{
 
 		void handle_client(lib_tcp_client_t& fd_info);
 		void handle_listen();
-		void handle_send(lib_tcp_client_t& fd_info);
+		int handle_send(lib_tcp_client_t& fd_info);
 	};
 }//end namespace ice

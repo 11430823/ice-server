@@ -83,7 +83,11 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 			}
 			//可读或可写(可同时发生,并不互斥)
 			if(EPOLLOUT & evs[i].events){//该套接字可写
-				this->handle_send(fd_info);
+				if (this->handle_send(fd_info) < 0){
+					this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+					fd_info.close();
+					continue;
+				}
 			}
 			if(EPOLLIN & evs[i].events){//接收并处理其他套接字的数据
 				if (FD_TYPE_LISTEN == fd_info.fd_type){
@@ -91,7 +95,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					continue;
 				} else if (FD_TYPE_CLIENT == fd_info.fd_type){
 					this->handle_client(fd_info);			
-				}else if (FD_TYPE_SERVER == fd_info.fd_type){
+				} else if (FD_TYPE_SERVER == fd_info.fd_type){
 				}
 			}
 		}
@@ -129,12 +133,12 @@ int ice::lib_tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t 
 		return -1;
 
 	}
-	ret = set_recvbuf(this->listen_fd, bufsize);
+	ret = lib_net_t::set_recvbuf(this->listen_fd, bufsize);
 	if (-1 == ret){
 		lib_file_t::close_fd(this->listen_fd);
 		return -1;
 	}
-	ret = lib_tcp_t::set_sendbuf(this->listen_fd, bufsize);
+	ret = lib_net_t::set_sendbuf(this->listen_fd, bufsize);
 	if(-1 == ret){
 		lib_file_t::close_fd(this->listen_fd);
 		return -1;
@@ -271,19 +275,35 @@ void ice::lib_tcp_server_epoll_t::handle_listen()
 	}
 }
 
-void ice::lib_tcp_server_epoll_t::handle_send( lib_tcp_client_t& fd_info )
+int ice::lib_tcp_server_epoll_t::handle_send( lib_tcp_client_t& fd_info )
 {
 	int send_len = this->send(fd_info.send_buf.get_data(), fd_info.send_buf.get_write_pos());
 	if (send_len > 0){
 		uint32_t remain_len = fd_info.send_buf.pop_front(send_len);
 		if (0 == remain_len){
-			//todo 从epoll中移除
+			this->mod_events(fd_info.get_fd(), EPOLLIN);
 		}
 	} else if (send_len < 0){
-		this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-		fd_info.close();
+		ALERT_LOG("send err [%s]", ::strerror(errno));
 	}
+	return send_len;
 }
+
+int ice::lib_tcp_server_epoll_t::mod_events( int fd, uint32_t flag )
+{
+	epoll_event ev;
+	ev.events = flag;
+	ev.data.fd = fd;
+
+	int ret = HANDLE_EINTR(::epoll_ctl(this->fd, EPOLL_CTL_MOD, fd, &ev));
+	if (0 != ret){
+		ERROR_LOG ("epoll_ctl mod fd:%d error:%s", fd, strerror(errno));
+		return -1;
+	}
+
+	return 0; 
+}
+
 
 int service_run()
 {

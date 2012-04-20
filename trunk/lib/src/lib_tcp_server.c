@@ -102,3 +102,15 @@ int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
 
 	return ::bind(this->listen_fd, (sockaddr*)&sa_in,sizeof(sa_in));
 }
+
+ice::on_functions_tcp_server::on_functions_tcp_server()
+{
+	this->on_events = 0;
+	this->on_cli_pkg = 0;
+	this->on_srv_pkg = 0;
+	this->on_cli_conn_closed = 0;
+	this->on_svr_conn_closed = 0;
+	this->on_init = 0;
+	this->on_fini = 0;
+	this->on_get_pkg_len = 0;
+}
