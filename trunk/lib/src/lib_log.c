@@ -1,16 +1,4 @@
-#include <assert.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-
+#include "lib_include.h"
 #include "lib_time.h"
 #include "lib_lock.h"
 #include "lib_log.h"

@@ -1,10 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <arpa/inet.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-
+#include "lib_include.h"
 #include "lib_file.h"
 #include "lib_net_util.h"
 #include "lib_tcp_server.h"
@@ -82,11 +79,6 @@ ret:
 	return listenfd;
 }
 
-void ice::lib_tcp_sever_t::set_cli_time_out_sec( uint32_t time_out_sec )
-{
-	this->cli_time_out_sec = time_out_sec;
-}
-
 int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
 {
 	sockaddr_in sa_in;
@@ -102,6 +94,32 @@ int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
 
 	return ::bind(this->listen_fd, (sockaddr*)&sa_in,sizeof(sa_in));
 }
+
+ice::lib_tcp_sever_t::lib_tcp_sever_t()
+{
+	this->cli_time_out_sec = 0;
+	this->cli_fd_infos = NULL;
+	this->listen_fd = -1;
+	this->cli_fd_value_max = 0;
+	this->check_run = NULL;
+}
+
+ice::lib_tcp_sever_t::~lib_tcp_sever_t()
+{
+	if (NULL != this->cli_fd_infos){
+		for (int i = 0; i < this->cli_fd_value_max; i++) {
+			lib_tcp_client_t& cfi = this->cli_fd_infos[i];
+			if (FD_TYPE_UNUSED == cfi.fd_type){
+				continue;
+			}
+			cfi.close();
+		}
+		safe_delete_arr(this->cli_fd_infos);
+	}
+	lib_file_t::close_fd(this->listen_fd);
+}
+
+
 
 ice::on_functions_tcp_server::on_functions_tcp_server()
 {

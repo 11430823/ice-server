@@ -1,5 +1,4 @@
-#include <stdlib.h>
-
+#include "lib_include.h"
 #include "lib_random.h"
 
 int ice::lib_random_t::random( int min, int max )

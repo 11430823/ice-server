@@ -1,14 +1,7 @@
-#include <errno.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <assert.h>
-#include <netdb.h>
-
+#include "lib_include.h"
 #include "lib_file.h"
 #include "lib_net_util.h"
 #include "lib_tcp.h"
-
-
 
 int ice::lib_tcp_t::set_reuse_addr( int s )
 {
@@ -40,7 +33,20 @@ int ice::lib_tcp_t::recv( void* buf, int bufsize )
 	return HANDLE_EINTR(::recv(this->fd, buf, bufsize, 0));
 }
 
+#if 0
 
+		/**
+		* @brief Create a TCP connection
+		*
+		* @param const char* ipaddr,  the ip address to connect to.
+		* @param in_port_t port,  the port to connect to.
+		* @param int timeout,  abort the connecting attempt after timeout secs. If timeout is less than or equal to 0, 
+		*                                then the connecting attempt will not be interrupted until error occurs.
+		* @param int block,  true and the connected fd will be set blocking, false and the fd will be set nonblocking.
+		*
+		* @return int, the connected fd on success, -1 on error.
+		*/
+		// todo need test connect timeout [3/11/2012 meng]
 int ice::lib_tcp_cli_t::connect( const char* ipaddr, in_port_t port, int timeout, bool block )
 {
 	struct sockaddr_in peer;
@@ -78,3 +84,4 @@ int ice::lib_tcp_cli_t::connect( const char* ipaddr, in_port_t port, int timeout
 
 
 
+#endif

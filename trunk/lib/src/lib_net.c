@@ -1,9 +1,4 @@
-#include <errno.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <assert.h>
-#include <netdb.h>
-
+#include "lib_include.h"
 #include "lib_file.h"
 #include "lib_net.h"
 

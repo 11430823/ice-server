@@ -83,33 +83,19 @@ namespace ice{
 	class lib_tcp_sever_t : public lib_tcp_t
 	{
 	public:
-		typedef bool (*CHECK_RUN)();CHECK_RUN check_run;
-		PROTECTED_R_DEFAULT(bool, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
+		typedef bool (*CHECK_RUN)();
+		PROTECTED_R_DEFAULT(CHECK_RUN, check_run);//服务器循环时检测是否继续执行
+		PROTECTED_RW_DEFAULT(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
 		PROTECTED_R_DEFAULT(lib_tcp_client_t*, cli_fd_infos);//连接用户的信息
 		PROTECTED_R_DEFAULT(int, cli_fd_value_max);//连接上的FD中的最大值
 		PROTECTED_R_DEFAULT(int, listen_fd);//监听FD
 	public:
-		lib_tcp_sever_t(){
-			this->cli_time_out_sec = 0;
-			this->cli_fd_infos = NULL;
-			this->listen_fd = -1;
-			this->cli_fd_value_max = 0;
-			this->check_run = NULL;
-		}
-		virtual ~lib_tcp_sever_t(){
-			if (NULL != cli_fd_infos){
-				for (int i = 0; i < this->cli_fd_value_max; i++) {
-					lib_tcp_client_t& cfi = cli_fd_infos[i];
-					if (FD_TYPE_UNUSED == cfi.fd_type){
-						continue;//todo 删除FD时要设置该类型
-					}
-					cfi.close();
-				}
-				safe_delete_arr(this->cli_fd_infos);
-			}
-			lib_file_t::close_fd(this->listen_fd);
-		}
-		virtual int register_on_functions(const on_functions_tcp_server* functions) = 0;
+		lib_tcp_sever_t();
+		virtual ~lib_tcp_sever_t();
+		/**
+		* @brief	设置服务器回调消息
+		*/
+		virtual void register_on_functions(const on_functions_tcp_server* functions) = 0;
 		virtual int create() = 0;
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize) = 0;
 		virtual int run(CHECK_RUN check_run_fn) = 0;
@@ -121,9 +107,8 @@ namespace ice{
 		* @return int, the accpected fd on success, -1 on error.
 		*/
 		virtual int accept(struct sockaddr_in& peer, bool block);
-		virtual int bind(const char* ip,uint16_t port);
-		void set_cli_time_out_sec(uint32_t time_out_sec);
-		/**
+	public:
+		/** todo
 		* @brief 创建一个TCP listen socket或者UDP socket，用于接收客户端数据。支持IPv4和IPv6。
 		* @param host 监听的地址。可以是IP地址，也可以是域名。如果传递参数为“0.0.0.0”，则监听INADDR_ANY。
 		* @param serv 监听的端口。可以是数字端口，也可以是端口对应的服务名，如dns、time、ftp等。
@@ -133,8 +118,8 @@ namespace ice{
 		* @see safe_socket_listen
 		*/
 		static int create_passive_endpoint(const char* host, const char* serv, int backlog, int bufsize);
-
-	public:
+	protected:
+		virtual int bind(const char* ip,uint16_t port);
 	private:
 		lib_tcp_sever_t(const lib_tcp_sever_t& cr);
 		lib_tcp_sever_t& operator=(const lib_tcp_sever_t& cr);
