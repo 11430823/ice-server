@@ -11,11 +11,11 @@ const uint32_t RECV_BUF_LEN = 1024*8;//8K
 
 namespace {
 	/**
-	 * @brief	接收客户端消息
+	 * @brief	接收对方消息
 	 * @param	ice::lib_tcp_client_t & cli_info
 	 * @return	int 0:断开 >0:接收的数据长度
 	 */
-	int client_recv(ice::lib_tcp_client_t& cli_info)
+	int recv_peer_msg(ice::lib_tcp_client_t& cli_info)
 	{
 		char buf[RECV_BUF_LEN] = {0};
 		int len = 0;
@@ -90,8 +90,9 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					this->handle_listen();
 					continue;
 				} else if (FD_TYPE_CLIENT == fd_info.fd_type){
-					this->handle_client(fd_info);			
+					this->handle_peer_msg(fd_info);			
 				} else if (FD_TYPE_SERVER == fd_info.fd_type){
+					this->handle_peer_msg(fd_info);	
 				}
 			}
 		}
@@ -225,26 +226,39 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 	return 0;
 }
 
-void ice::lib_tcp_server_epoll_t::handle_client( lib_tcp_client_t& fd_info )
+void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_client_t& fd_info )
 {
-	int ret = client_recv(fd_info);
+	int ret = recv_peer_msg(fd_info);
 	if (ret > 0){
 		int available_len = 0;
 		while (0 != (available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos()))){	
 			if (-1 == available_len){
-				this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+				if (FD_TYPE_CLIENT == fd_info.fd_type){
+					this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+				} else if (FD_TYPE_SERVER == fd_info.fd_type){
+					this->on_functions->on_svr_conn_closed(fd_info.get_fd());
+				}
 				fd_info.close();
 				break;
 			}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
-				this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
+				if (FD_TYPE_CLIENT == fd_info.fd_type){
+					this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
+				} else if (FD_TYPE_SERVER == fd_info.fd_type){
+					this->on_functions->on_srv_pkg(fd_info.get_fd(), fd_info.recv_buf.get_data(), available_len);
+				}
 				fd_info.recv_buf.pop_front(available_len);
 			}else{
 				break;
 			}
 		}
 	}else if (0 == ret || -1 == ret){
-		this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
+		if (FD_TYPE_CLIENT == fd_info.fd_type){
+			this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+			ERROR_LOG("close socket by peer cli[fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
+		} else if (FD_TYPE_SERVER == fd_info.fd_type){
+			this->on_functions->on_svr_conn_closed(fd_info.get_fd());
+			ERROR_LOG("close socket by peer svr[fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
+		}
 		fd_info.close();
 	}
 }
