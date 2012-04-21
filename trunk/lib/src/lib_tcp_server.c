@@ -119,8 +119,6 @@ ice::lib_tcp_sever_t::~lib_tcp_sever_t()
 	lib_file_t::close_fd(this->listen_fd);
 }
 
-
-
 ice::on_functions_tcp_server::on_functions_tcp_server()
 {
 	this->on_events = 0;

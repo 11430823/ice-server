@@ -38,4 +38,5 @@ namespace ice{
 		lib_tcp_t(const lib_tcp_t& cr);
 		lib_tcp_t& operator=(const lib_tcp_t& cr);
 	};
+
 }//end namespace ice
