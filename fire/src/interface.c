@@ -1,5 +1,5 @@
-#include "net_tcp.h"
 #include "interface.h"
+#include "net_tcp.h"
 
 uint32_t fire::client_info_t::get_ip()
 {
@@ -25,4 +25,3 @@ int fire::client_info_t::send( const void* data, uint32_t len )
 	}
 	return send_len;
 }
-

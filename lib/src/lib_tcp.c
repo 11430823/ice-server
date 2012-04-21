@@ -34,7 +34,6 @@ int ice::lib_tcp_t::recv( void* buf, int bufsize )
 }
 
 #if 0
-
 		/**
 		* @brief Create a TCP connection
 		*
@@ -81,7 +80,4 @@ int ice::lib_tcp_cli_t::connect( const char* ipaddr, in_port_t port, int timeout
 
 	return sockfd;
 }
-
-
-
 #endif
