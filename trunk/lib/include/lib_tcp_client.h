@@ -15,7 +15,7 @@
 #include "lib_file.h"
 
 namespace ice{
-	class lib_tcp_client_t : public lib_tcp_t
+	class lib_tcp_client_info_t : public lib_tcp_t
 	{
 	public:
 		uint8_t		fd_type;
@@ -25,8 +25,8 @@ namespace ice{
 		lib_active_buf_t recv_buf;
 		lib_active_buf_t send_buf;
 	public:
-		lib_tcp_client_t();
-		virtual ~lib_tcp_client_t();
+		lib_tcp_client_info_t();
+		virtual ~lib_tcp_client_info_t();
 		virtual char* get_ip_str();
 		virtual uint32_t get_ip();
 		virtual uint16_t get_port();
@@ -35,7 +35,7 @@ namespace ice{
 		void init();
 	protected:
 	private:
-		lib_tcp_client_t(const lib_tcp_client_t& cr);
-		lib_tcp_client_t& operator=(const lib_tcp_client_t& cr);
+		lib_tcp_client_info_t(const lib_tcp_client_info_t& cr);
+		lib_tcp_client_info_t& operator=(const lib_tcp_client_info_t& cr);
 	};
 }//end namespace ice

@@ -13,6 +13,7 @@
 #include "lib_tcp.h"
 #include "lib_util.h"
 #include "lib_file.h"
+#include "lib_log.h"
 #include "lib_tcp_client.h"
 
 namespace ice{
@@ -32,7 +33,7 @@ namespace ice{
 		// 			Return non-zero if you want to close the client connection from which the `pkg` is sent,
 		// 			otherwise returns 0. If non-zero is returned, `on_cli_conn_closed` will be called too. 
 		//************************************
-		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_client_t* cli_fd_info);
+		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_client_info_t* cli_fd_info);
 		ON_CLI_PKG on_cli_pkg;
 		//************************************
 		// Brief:	Called to process packages from servers that the child connects to. Called once for each package.
@@ -75,7 +76,7 @@ namespace ice{
 		  * return -1 if you find that the incoming package is invalid and ice-server will close the connection,
 		  * otherwise, return the length of the incoming package. Note, the package should be no larger than 8192 bytes.
 		  */
-		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_client_t* cli_fd_info, const void* data, uint32_t len);
+		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_client_info_t* cli_fd_info, const void* data, uint32_t len);
 		ON_GET_PKG_LEN on_get_pkg_len;
 		on_functions_tcp_server();
 	};
@@ -86,7 +87,7 @@ namespace ice{
 		typedef bool (*CHECK_RUN)();
 		PROTECTED_R_DEFAULT(CHECK_RUN, check_run);//服务器循环时检测是否继续执行
 		PROTECTED_RW_DEFAULT(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
-		PROTECTED_R_DEFAULT(lib_tcp_client_t*, cli_fd_infos);//连接用户的信息
+		PROTECTED_R_DEFAULT(lib_tcp_client_info_t*, cli_fd_infos);//连接用户的信息
 		PROTECTED_R_DEFAULT(int, cli_fd_value_max);//连接上的FD中的最大值
 		PROTECTED_R_DEFAULT(int, listen_fd);//监听FD
 	public:
@@ -123,6 +124,32 @@ namespace ice{
 	private:
 		lib_tcp_sever_t(const lib_tcp_sever_t& cr);
 		lib_tcp_sever_t& operator=(const lib_tcp_sever_t& cr);
+	};
+
+	class lib_tcp_server_info_t : public lib_tcp_t
+	{
+	public:
+		lib_tcp_server_info_t(){}
+		//virtual ~lib_tcp_server_info_t(){}
+
+		/**
+		* @brief Create a TCP connection
+		*
+		* @param const char* ipaddr,  the ip address to connect to.
+		* @param in_port_t port,  the port to connect to.
+		* @param int timeout,  abort the connecting attempt after timeout secs. If timeout is less than or equal to 0, 
+		*                                then the connecting attempt will not be interrupted until error occurs.
+		* @param int block,  true and the connected fd will be set blocking, false and the fd will be set nonblocking.
+		*
+		* @return int, the connected fd on success, -1 on error.
+		*/
+		// todo need test connect timeout [3/11/2012 meng]
+		int connect( const char* ipaddr, in_port_t port, int timeout, bool block );
+	protected:
+		
+	private:
+		lib_tcp_server_info_t(const lib_tcp_server_info_t& cr);
+		lib_tcp_server_info_t& operator=(const lib_tcp_server_info_t& cr);
 	};
 
 }//end namespace ice

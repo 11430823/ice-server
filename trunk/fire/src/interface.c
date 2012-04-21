@@ -1,27 +1,21 @@
-#include "interface.h"
+#include <lib_tcp_client.h>
+#include <lib_tcp.h>
+#include <lib_tcp_server_epoll.h>
+
 #include "net_tcp.h"
+#include <lib_log.h>
+#include "interface.h"
 
-uint32_t fire::client_info_t::get_ip()
+int fire::send( ice::lib_tcp_client_info_t* cli_info, const void* data, uint32_t len )
 {
-	return ice::lib_tcp_client_t::get_ip();
-}
-
-char* fire::client_info_t::get_ip_str()
-{
-	return ice::lib_tcp_client_t::get_ip_str();
-}
-
-int fire::client_info_t::send( const void* data, uint32_t len )
-{
-	int send_len = lib_tcp_t::send(data, len);
+	int send_len = cli_info->send(data, len);
 	if (-1 == send_len){
-		g_net_server.get_server_epoll()->get_on_functions()->on_cli_conn_closed(this->get_fd());
-		this->close();
+		WARN_LOG("send err [len:%u, send_len:%d]", len, send_len);
+		g_net_server.get_server_epoll()->close_peer(*cli_info);
 	} else if (send_len < (int)len){
-		this->send_buf.pop_front(send_len);
-		g_net_server.get_server_epoll()->mod_events(this->fd, EPOLLIN | EPOLLOUT);
-	} else {
-		this->send_buf.pop_front(send_len);
+		WARN_LOG("send too long [len:%u, send_len:%d]", len, send_len);
+		cli_info->send_buf.push_back((char*)data + send_len, len - send_len);
+		g_net_server.get_server_epoll()->mod_events(cli_info->get_fd(), EPOLLIN | EPOLLOUT);
 	}
 	return send_len;
 }

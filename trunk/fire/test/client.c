@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 using namespace std;
 
 
@@ -24,6 +25,18 @@ using namespace std;
 
 int main()
 {
+	cli_proto_head_t head;
+	head.len = sizeof(cli_proto_head_t);
+	head.cmd = 1;
+	head.id = 102356;
+	head.seq_num = 1;
+	head.ret = 0;
+	for(int i = 0; i < sizeof(head);i++){
+		char* p = (char*)&head + i;
+		char a = *(((char*)&head)+i);
+		printf("%02hhX ", a);
+	}
+	printf("\r\n");
 	int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
 
 	sockaddr_in addr;
@@ -36,21 +49,15 @@ int main()
 		cout<<"WSACleanup failed with error:"<< endl;
 	}
 
-	cli_proto_head_t head;
-	head.cmd = 1;
-	head.id = 102356;
-	head.ret = 0;
-	head.seq_num = 1;
-	head.len = sizeof(cli_proto_head_t);
+/*
 	for (int i = 0; i < 100000; i++){
 		head.seq_num++;
-	int slen = 	send(fd, (char*)&head, sizeof(cli_proto_head_t), 0);
-if(slen <= 0){
-std::cout<< slen<< std::endl;
-}
+		int slen = 	send(fd, (char*)&head, sizeof(cli_proto_head_t), 0);
+		if(slen <= 0){
+			std::cout<< slen<< std::endl;
+		}
 	}
-	
+*/
 	sleep(6);
-
 	return 0;
 }
