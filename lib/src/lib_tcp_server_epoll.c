@@ -15,7 +15,7 @@ namespace {
 	 * @param	ice::lib_tcp_client_t & cli_info
 	 * @return	int 0:断开 >0:接收的数据长度
 	 */
-	int recv_peer_msg(ice::lib_tcp_client_t& cli_info)
+	int recv_peer_msg(ice::lib_tcp_client_info_t& cli_info)
 	{
 		char buf[RECV_BUF_LEN] = {0};
 		int len = 0;
@@ -41,12 +41,6 @@ namespace {
 		return sum_len;
 	}
 
-	int server_recv()
-	{
-		//todo
-		return 0;
-	}
-
 }//end namespace 
 
 
@@ -69,7 +63,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 
 		//handling event
 		for (int i = 0; i < event_num; ++i){
-			lib_tcp_client_t& fd_info = this->cli_fd_infos[evs[i].data.fd];
+			lib_tcp_client_info_t& fd_info = this->cli_fd_infos[evs[i].data.fd];
 			if ( unlikely(FD_TYPE_PIPE == fd_info.fd_type) ) {
 				if (0 == this->on_pipe_event(fd_info.get_fd(), evs[i])) {
 					continue;
@@ -80,8 +74,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 			//可读或可写(可同时发生,并不互斥)
 			if(EPOLLOUT & evs[i].events){//该套接字可写
 				if (this->handle_send(fd_info) < 0){
-					this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-					fd_info.close();
+					this->close_peer(fd_info);
 					continue;
 				}
 			}
@@ -174,7 +167,7 @@ int ice::lib_tcp_server_epoll_t::create()
 		return -1;
 	}
 
-	this->cli_fd_infos = (struct lib_tcp_client_t*) new lib_tcp_client_t[this->cli_fd_value_max];
+	this->cli_fd_infos = (struct lib_tcp_client_info_t*) new lib_tcp_client_info_t[this->cli_fd_value_max];
 	if (NULL == this->cli_fd_infos){
 		lib_file_t::close_fd(this->fd);
 		ALERT_LOG ("CALLOC CLI_FD_INFO_T FAILED [MAXEVENTS=%d]", this->cli_fd_value_max);
@@ -212,7 +205,7 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 		return -1;
 	}
 
-	lib_tcp_client_t& cfi = this->cli_fd_infos[fd];
+	lib_tcp_client_info_t& cfi = this->cli_fd_infos[fd];
 	cfi.init();
 	cfi.set_fd(fd);
 	cfi.fd_type = fd_type;
@@ -226,23 +219,20 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, struct 
 	return 0;
 }
 
-void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_client_t& fd_info )
+void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_client_info_t& fd_info )
 {
 	int ret = recv_peer_msg(fd_info);
 	if (ret > 0){
 		int available_len = 0;
 		while (0 != (available_len = this->on_functions->on_get_pkg_len(&fd_info, fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos()))){	
 			if (-1 == available_len){
-				if (FD_TYPE_CLIENT == fd_info.fd_type){
-					this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-				} else if (FD_TYPE_SERVER == fd_info.fd_type){
-					this->on_functions->on_svr_conn_closed(fd_info.get_fd());
-				}
-				fd_info.close();
+				this->close_peer(fd_info);
 				break;
 			}else if (available_len > 0 && (int)fd_info.recv_buf.get_write_pos() >= available_len){
 				if (FD_TYPE_CLIENT == fd_info.fd_type){
-					this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
+					if (0 != this->on_functions->on_cli_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info)){
+						this->close_peer(fd_info);
+					}
 				} else if (FD_TYPE_SERVER == fd_info.fd_type){
 					this->on_functions->on_srv_pkg(fd_info.get_fd(), fd_info.recv_buf.get_data(), available_len);
 				}
@@ -252,36 +242,30 @@ void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_client_t& fd_info )
 			}
 		}
 	}else if (0 == ret || -1 == ret){
-		if (FD_TYPE_CLIENT == fd_info.fd_type){
-			this->on_functions->on_cli_conn_closed(fd_info.get_fd());
-			ERROR_LOG("close socket by peer cli[fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
-		} else if (FD_TYPE_SERVER == fd_info.fd_type){
-			this->on_functions->on_svr_conn_closed(fd_info.get_fd());
-			ERROR_LOG("close socket by peer svr[fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
-		}
-		fd_info.close();
+		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
+		this->close_peer(fd_info);
 	}
 }
 
 void ice::lib_tcp_server_epoll_t::handle_listen()
 {
-	int accept_fd = -1;//连接上的客户SOCKET
-	sockaddr_in peer;//对方sockaddr_in
+	int peer_fd = -1;
+	sockaddr_in peer;
 	memset(&peer,0,sizeof(peer));
-	accept_fd = this->accept(peer, false);
-	if (unlikely(accept_fd < 0)){
+	peer_fd = this->accept(peer, false);
+	if (unlikely(peer_fd < 0)){
 		ALERT_LOG("accept err [%s]", ::strerror(errno));
 	}else{
 		TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
-			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), accept_fd);
-		if (0 != this->add_connect(accept_fd, ice::FD_TYPE_CLIENT, &peer)){
+			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), peer_fd);
+		if (0 != this->add_connect(peer_fd, ice::FD_TYPE_CLIENT, &peer)){
 		}
 	}
 }
 
-int ice::lib_tcp_server_epoll_t::handle_send( lib_tcp_client_t& fd_info )
+int ice::lib_tcp_server_epoll_t::handle_send( lib_tcp_client_info_t& fd_info )
 {
-	int send_len = this->send(fd_info.send_buf.get_data(), fd_info.send_buf.get_write_pos());
+	int send_len = fd_info.send(fd_info.send_buf.get_data(), fd_info.send_buf.get_write_pos());
 	if (send_len > 0){
 		uint32_t remain_len = fd_info.send_buf.pop_front(send_len);
 		if (0 == remain_len){
@@ -317,140 +301,16 @@ void ice::lib_tcp_server_epoll_t::register_on_functions( const on_functions_tcp_
 	this->on_functions = (on_functions_tcp_server_epoll*)functions;
 }
 
-int service_run()
+void ice::lib_tcp_server_epoll_t::close_peer( lib_tcp_client_info_t& fd_info, bool do_calback /*= true*/ )
 {
-#if 0
-	enum {
-		trash_size		= 4096,
-		mcast_pkg_size	= 8192,
-		udp_pkg_size	= 8192
-	};
-	int max_len = 0;
-
-		epoll_event evs[this->max_ev_num];
-	int nr = 0;
-	int pos = 0;
-	epoll_event ev;
-	while ( !g_daemon.stop || 0 != g_dll.on_fini(g_is_parent) ) {
-		nr = epoll_wait(this->fd , evs, this->max_ev_num, EPOLL_TIME_OUT);
-
-		if (unlikely(-1 == nr && errno != EINTR)){
-			ALERT_LOG("EPOLL_WAIT FAILED, [maxfd=%d, epfd=%d, error:%s]",
-				this->max_fd, this->fd, strerror(errno));
-			return -1;
+	if (do_calback){
+		if (FD_TYPE_CLIENT == fd_info.fd_type){
+			ERROR_LOG("close socket cli [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
+			this->on_functions->on_cli_conn_closed(fd_info.get_fd());
+		} else if (FD_TYPE_SERVER == fd_info.fd_type){
+			ERROR_LOG("close socket svr [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.port);
+			this->on_functions->on_svr_conn_closed(fd_info.get_fd());
 		}
-
-		ice::renew_now();
-
-		for (pos = 0; pos < nr; pos++) {
-			int fd = evs[pos].data.fd;
-			fdinfo_t& fdinfo = this->m_fds[fd];
-			if (fd > this->max_fd || fdinfo.fd != fd || fdinfo.fd_type == fd_type_unused) {
-				ERROR_LOG("DELAYED EPOLL EVENTS [event fd=%d, cache fd=%d, maxfd=%d, type=%d]", 
-					fd, fdinfo.fd, this->max_fd, fdinfo.fd_type);
-				continue;
-			}
-
-			if ( unlikely(fd_type_pipe == fdinfo.fd_type ) ) {
-				if (0 == handle_pipe_event(fd, evs[pos])) {
-					continue;
-				} else {
-					return -1;
-				}
-			}
-
-			if (evs[pos].events & EPOLLIN) {
-				switch (fdinfo.fd_type) {
-				case fd_type_listen:
-					//accept
-					//////////////////////////////////////////////////////////////////////////
-					struct sockaddr_in peer;
-					int newfd;
-
-					newfd = ice::lib_tcp_sever_t::safe_tcp_accept(fd, &peer, false);
-					if (-1 != newfd) {
-						get_server_epoll()->add_connect(newfd, fd_type_remote, &peer);
-						//todo 后面的错误处理
-					} else if ((errno == EMFILE) || (errno == ENFILE)) {
-						//add_to_etin_queue(fd);
-					} else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-						//del_from_etin_queue(fd);
-					}else{
-						ERROR_LOG("ACCEPT ERROR:%s", strerror(errno));
-					}
-					break;
-				case fd_type_remote:
-					{
-						char buf[1500 + 1] = {0};
-						int len;
-						/* 开始处理每个新连接上的数据收发 */
-						/* 接收客户端的消息 */
-						len = recv(fd, buf, sizeof(buf)-1, 0);
-						switch(len)
-						{
-    						case 0:
-								{
-									//todo 删除
-									int e = epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, &ev);
-									if(-1 == e)
-									{
-										//m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
-									}
-									close(fd);
-								}
-    						break;
-    						case -1:
-								if(EAGAIN != errno){// 断开
-									//m_ilog.err("file:%s,line:%d,errno:%d,%s",__FILE__,__LINE__,errno,strerror(errno));
-									perror("11 != errno:");
-									epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, &ev);
-								}	
-    							break;
-    						default:
-    							{
-    								buf[len] = '\0';
-    								std::cout << buf << std::endl;
-										int i = send(fd, buf, len, 0);
-										std::cout << "send : " << i << std::endl;
-								}
-    							break;
-						}
-					}
-					break;
-				default:
-					ALERT_LOG("FDINFO TYPE[TYPE=%u]", fdinfo.fd_type);
-					break;
-				}
-			}
-
-			if (evs[pos].events & EPOLLOUT) {
-				//该套接字可写
-				/*
-				if (fdinfo.cb.sendlen > 0 && do_write_conn(fd) == -1) {
-					//do_del_conn(fd, g_is_parent);
-				}
-				if (fdinfo.cb.sendlen == 0) {
-					mod_events(this->fd, fd, EPOLLIN);
-				}
-				}*/
-			}
-
-			if (evs[pos].events & EPOLLHUP) {
-				//do_del_conn(fd, g_is_parent);
-			}
-		}
-
-		if (g_bench_conf.get_fd_time_out()) {
-			for (int i = 0; i <= this->max_fd; ++i) {
-				if ((g_net_server.m_fds[i].fd_type == fd_type_remote)
-					&& ((time(0) - (int32_t)g_net_server.m_fds[i].last_tm) >= g_bench_conf.get_fd_time_out())) {
-						//do_del_conn(i, g_is_parent);
-				}
-			}
-		}
-
-		g_dll.on_events();
 	}
-#endif
-	return 0;
+	fd_info.close();
 }

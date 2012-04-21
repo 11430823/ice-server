@@ -27,6 +27,8 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
+		ice::lib_tcp_server_info_t ser;
+		ser.connect("192.168.0.102", 8001, 0, false);
 	}
 	return 0;
 }
@@ -57,7 +59,7 @@ extern "C" void on_events()
   * @brief Return length of the receiving package
   *
   */
-extern "C" int on_get_pkg_len(fire::client_info_t* cli_fd_info, const void* data, uint32_t len)
+extern "C" int on_get_pkg_len(ice::lib_tcp_client_info_t* cli_fd_info, const void* data, uint32_t len)
 {
 	if (len < 4){
 		return 0;
@@ -78,13 +80,13 @@ extern "C" int on_get_pkg_len(fire::client_info_t* cli_fd_info, const void* data
   * @brief Process packages from clients
   *
   */
-extern "C" int on_cli_pkg(const void* pkg, int pkglen, fire::client_info_t* cli_fd_info)
+extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_client_info_t* cli_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
 	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
 		head->len, head->cmd, head->seq_num, head->ret, head->id, cli_fd_info->get_fd(), pkglen);
-	cli_fd_info->send(pkg, pkglen);
+	fire::send(cli_fd_info, pkg, pkglen);
 	return 0;
 }
 

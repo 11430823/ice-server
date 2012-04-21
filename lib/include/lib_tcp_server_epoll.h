@@ -44,12 +44,17 @@ namespace ice{
 	public:
 		int mod_events(int fd, uint32_t flag);
 		int add_events(int fd, uint32_t flag);
+		/**
+		 * @brief	关闭连接
+		 * @param	bool do_calback true:调用客户端注册的回调函数.通知被关闭, false:不做通知
+		 */
+		void close_peer(lib_tcp_client_info_t& fd_info, bool do_calback = true);
 	private:
 		lib_tcp_server_epoll_t(const lib_tcp_server_epoll_t& cr);
 		lib_tcp_server_epoll_t& operator=(const lib_tcp_server_epoll_t& cr);
 
-		void handle_peer_msg(lib_tcp_client_t& fd_info);
+		void handle_peer_msg(lib_tcp_client_info_t& fd_info);
 		void handle_listen();
-		int handle_send(lib_tcp_client_t& fd_info);
+		int handle_send(lib_tcp_client_info_t& fd_info);
 	};
 }//end namespace ice
