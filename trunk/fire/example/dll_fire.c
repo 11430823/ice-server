@@ -27,10 +27,7 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		ice::lib_tcp_peer_info_t* ser = new ice::lib_tcp_peer_info_t;
-		ser->set_ip(ice::lib_net_t::ip2int("192.168.0.102"));
-		ser->set_port(8001);
-		fire::connect(ser);
+		ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
 	}
 	return 0;
 }
@@ -82,13 +79,13 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
   * @brief Process packages from clients
   *
   */
-extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* cli_fd_info)
+extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
 	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
-		head->len, head->cmd, head->seq_num, head->ret, head->id, cli_fd_info->get_fd(), pkglen);
-	fire::s2peer(cli_fd_info, pkg, pkglen);
+		head->len, head->cmd, head->seq_num, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
+	fire::s2peer(peer_fd_info, pkg, pkglen);
 	return 0;
 }
 
@@ -96,9 +93,10 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
   * @brief Process packages from servers
   *
   */
-extern "C" void on_srv_pkg(int fd, void* pkg, int pkglen)
+extern "C" void on_srv_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
-	TRACE_LOG("[fd%d]", fd);
+	TRACE_LOG("[fd:%d, ip:%s, port:%u]", peer_fd_info->get_fd(), peer_fd_info->get_ip_str(), peer_fd_info->get_port());
+	fire::s2peer(peer_fd_info, pkg, pkglen);
 }
 
 /**

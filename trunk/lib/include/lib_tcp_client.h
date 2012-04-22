@@ -30,19 +30,7 @@ namespace ice{
 	public:
 		void close();
 		void init();
-				/**
-		* @brief Create a TCP connection
-		*
-		* @param const char* ipaddr,  the ip address to connect to.
-		* @param in_port_t port,  the port to connect to.
-		* @param int timeout,  abort the connecting attempt after timeout secs. If timeout is less than or equal to 0, 
-		*                                then the connecting attempt will not be interrupted until error occurs.
-		* @param int block,  true and the connected fd will be set blocking, false and the fd will be set nonblocking.
-		*
-		* @return int, the connected fd on success, -1 on error.
-		*/
-		// todo need test connect timeout [3/11/2012 meng]
-		int connect( int timeout, bool block );
+
 	protected:
 	private:
 		lib_tcp_peer_info_t(const lib_tcp_peer_info_t& cr);

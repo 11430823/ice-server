@@ -88,6 +88,39 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					this->handle_peer_msg(fd_info);	
 				}
 			}
+			if (EPOLLHUP & evs[i].events){
+				// EPOLLRDHUP: If a client send some data to a server and than close the connection
+				//					  immediately, the server will receive RDHUP and IN at the same time.
+				//					  Under ET mode, this can make a sockfd into CLOSE_WAIT state.
+				// EPOLLHUP: When close of a fd is detected (ie, after receiving a RST segment:
+				//				   the client has closed the socket, and the server has performed
+				//				   one write on the closed socket.)
+				// After receiving EPOLLRDHUP or EPOLLHUP, we can still read data from the fd until
+				// read() returns 0 indicating EOF is reached. So, we should alway call read on receving
+				// this kind of events to aquire the remaining data and/or EOF. (Linux-2.6.18)
+				//todo 可读
+			}
+			if(EPOLLERR & evs[i].events){
+					//收到这个//socket仍可读数据?
+
+					/************************************************************************/
+					/*只有采取动作时，才能知道是否对方异常。即对方突然断掉，是不可能
+					有此事件发生的。只有自己采取动作（当然自己此刻也不知道），read，
+					write时，出EPOLLERR错，说明对方已经异常断开。
+
+					EPOLLERR 是服务器这边出错（自己出错当然能检测到，对方出错你咋能
+					直到啊）*/
+					/************************************************************************/
+					//disconnect(handle_fd);
+			}
+			if(EPOLLRDHUP & evs[i].events){
+					//对端close
+					/************************************************************************/
+					/*	  　　EPOLLRDHUP = 0x2000,
+					　　#define EPOLLRDHUP EPOLLRDHUP*/
+					/************************************************************************/
+					//disconnect(handle_fd);
+			}
 		}
 	}
 	return 0;
@@ -146,7 +179,7 @@ int ice::lib_tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t 
 		return -1;
 	}
 
-	if (0 != this->add_connect(this->listen_fd, FD_TYPE_LISTEN, ip, port)){
+	if (NULL == this->add_connect(this->listen_fd, FD_TYPE_LISTEN, ip, port)){
 		lib_file_t::close_fd(this->listen_fd);
 		ALERT_LOG("add connect err[%s]", ::strerror(errno));
 		return -1;
@@ -188,7 +221,7 @@ int ice::lib_tcp_server_epoll_t::add_events( int fd, uint32_t flag )
 	return 0; 
 }
 
-int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port )
+ice::lib_tcp_peer_info_t* ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port )
 {
 	uint32_t flag;
 
@@ -200,7 +233,7 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, const c
 
 	if (0 != this->add_events(fd, flag)) {
 		ERROR_LOG("add events err [fd:%d, flag:%u]", fd, flag);
-		return -1;
+		return NULL;
 	}
 
 	lib_tcp_peer_info_t& cfi = this->peer_fd_infos[fd];
@@ -215,7 +248,7 @@ int ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD_TYPE fd_type, const c
 
 	TRACE_LOG("time now:%u, fd:%d, fd type:%d, ip:%s, port:%u", 
 		cfi.get_last_tm(), fd, fd_type, cfi.get_ip_str(), cfi.get_port());
-	return 0;
+	return &cfi;
 }
 
 void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_peer_info_t& fd_info )
@@ -233,7 +266,7 @@ void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_peer_info_t& fd_info 
 						this->close_peer(fd_info);
 					}
 				} else if (FD_TYPE_SVR == fd_info.fd_type){
-					this->on_functions->on_srv_pkg(fd_info.get_fd(), fd_info.recv_buf.get_data(), available_len);
+					this->on_functions->on_srv_pkg(fd_info.recv_buf.get_data(), available_len, &fd_info);
 				}
 				fd_info.recv_buf.pop_front(available_len);
 			}else{
@@ -257,8 +290,7 @@ void ice::lib_tcp_server_epoll_t::handle_listen()
 	}else{
 		TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
 			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), peer_fd);
-		if (0 != this->add_connect(peer_fd, ice::FD_TYPE_CLI, lib_net_t::ip2str(peer.sin_addr.s_addr), peer.sin_port)){
-		}
+		this->add_connect(peer_fd, ice::FD_TYPE_CLI, lib_net_t::ip2str(peer.sin_addr.s_addr), peer.sin_port);
 	}
 }
 

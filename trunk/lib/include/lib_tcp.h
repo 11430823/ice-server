@@ -33,6 +33,19 @@ namespace ice{
 
 		const char* get_ip_str();
 
+		/**
+		* @brief Create a TCP connection
+		*
+		* @param const char* ip,  the ip address to connect to.
+		* @param uint16_t port,  the port to connect to.
+		* @param int timeout,  abort the connecting attempt after timeout secs. If timeout is less than or equal to 0, 
+		*                                then the connecting attempt will not be interrupted until error occurs.
+		* @param int block,  true and the connected fd will be set blocking, false and the fd will be set nonblocking.
+		*
+		* @return int, the connected fd on success, -1 on error.
+		*/
+		// todo need test connect timeout [3/11/2012 meng]
+		static int connect( const char* ip, uint16_t port, int timeout, bool block );
 		//************************************
 		// Brief:	  Set the given fd SO_REUSEADDR
 		// Returns:   int (0 on success, -1 on error)

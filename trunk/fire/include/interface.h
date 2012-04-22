@@ -15,6 +15,6 @@
 #include <lib_tcp_client.h>
 
 namespace fire{
-	int s2peer(ice::lib_tcp_peer_info_t* cli_info, const void* data, uint32_t len);
-	int connect(ice::lib_tcp_peer_info_t* svr_info);
+	int s2peer(ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_t len);
+	ice::lib_tcp_peer_info_t* connect(const char* ip, uint16_t port);
 }//end namespace fire

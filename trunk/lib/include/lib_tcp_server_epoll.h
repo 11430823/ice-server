@@ -40,7 +40,7 @@ namespace ice{
 		*/
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize);
 		virtual int run(CHECK_RUN check_run_fn);
-		virtual int add_connect(int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port);
+		virtual lib_tcp_peer_info_t* add_connect(int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port);
 	public:
 		int mod_events(int fd, uint32_t flag);
 		int add_events(int fd, uint32_t flag);
