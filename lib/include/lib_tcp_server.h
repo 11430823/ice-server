@@ -33,12 +33,12 @@ namespace ice{
 		// 			Return non-zero if you want to close the client connection from which the `pkg` is sent,
 		// 			otherwise returns 0. If non-zero is returned, `on_cli_conn_closed` will be called too. 
 		//************************************
-		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* cli_fd_info);
+		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info);
 		ON_CLI_PKG on_cli_pkg;
 		//************************************
 		// Brief:	Called to process packages from servers that the child connects to. Called once for each package.
 		//************************************
-		typedef void (*ON_SRV_PKG)(int fd, void* pkg, int pkglen);
+		typedef void (*ON_SRV_PKG)(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info);
 		ON_SRV_PKG on_srv_pkg;
 		//************************************
 		// Brief:	Called each time when a client close a connection, or when `on_cli_pkg` returns non-zero.
@@ -76,7 +76,7 @@ namespace ice{
 		  * return -1 if you find that the incoming package is invalid and ice-server will close the connection,
 		  * otherwise, return the length of the incoming package. Note, the package should be no larger than 8192 bytes.
 		  */
-		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_peer_info_t* cli_fd_info, const void* data, uint32_t len);
+		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_peer_info_t* peer_fd_info, const void* data, uint32_t len);
 		ON_GET_PKG_LEN on_get_pkg_len;
 		on_functions_tcp_srv();
 	};
@@ -100,7 +100,7 @@ namespace ice{
 		virtual int create() = 0;
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize) = 0;
 		virtual int run(CHECK_RUN check_run_fn) = 0;
-		virtual int add_connect(int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port) = 0;
+		virtual lib_tcp_peer_info_t* add_connect(int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port) = 0;
 		/**
 		* @brief Accept a TCP connection
 		* @param struct sockaddr_in* peer,  used to return the protocol address of the connected peer process.  

@@ -21,19 +21,15 @@ int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_
 	return send_len;
 }
 
-int fire::connect( ice::lib_tcp_peer_info_t* svr_info )
+ice::lib_tcp_peer_info_t* fire::connect( const char* ip, uint16_t port )
 {
-	int fd = svr_info->connect(1, false);
+	int fd = ice::lib_tcp_t::connect(ip, port, 1, false);
 	if (-1 == fd){
+		ERROR_LOG("[ip:%s, port:%u]", ip, port);
 	}else{
-		sockaddr_in sa_in;
-		memset(&sa_in, 0, sizeof(sa_in));
-		sa_in.sin_addr.s_addr = inet_addr(svr_info->get_ip_str());
-		sa_in.sin_family = PF_INET;
-		sa_in.sin_port = htons(svr_info->get_port());
-		TRACE_LOG("%u, %u", sa_in.sin_port, svr_info->get_port());
-		g_net_server.get_server_epoll()->add_connect(fd, ice::FD_TYPE_SVR, svr_info->get_ip_str(), svr_info->get_port());
+		TRACE_LOG("[ip:%s, port:%u]", ip, port);
+		return g_net_server.get_server_epoll()->add_connect(fd, ice::FD_TYPE_SVR, ip, port);
 	}
 
-	return fd;
+	return NULL;
 }

@@ -49,8 +49,8 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
 	g_net_server.get_server_epoll()->set_on_pipe_event(dll_t::on_pipe_event);
 	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
-	//todo 处理返回值
-	ret = g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
+
+	g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
 	if (0 != g_net_server.get_server_epoll()->listen(this->bind_elem->ip.c_str(), this->bind_elem->port, LISTEN_NUM, SEND_RECV_BUF)){
 		BOOT_LOG_VOID(-1, "server listen err [ip:%s, port:%u]", this->bind_elem->ip.c_str(), this->bind_elem->port);
 	}
