@@ -32,3 +32,8 @@ int ice::lib_tcp_t::recv( void* buf, int bufsize )
 {
 	return HANDLE_EINTR(::recv(this->fd, buf, bufsize, 0));
 }
+
+const char* ice::lib_tcp_t::get_ip_str()
+{
+	return lib_net_t::ip2str(this->ip);
+}

@@ -3,7 +3,7 @@
 #include "lib_net_util.h"
 #include "lib_tcp_server.h"
 
-int ice::lib_tcp_sever_t::accept( struct sockaddr_in& peer, bool block )
+int ice::lib_tcp_srv_t::accept( struct sockaddr_in& peer, bool block )
 {
 	socklen_t peer_size = sizeof(peer);
 
@@ -16,7 +16,7 @@ int ice::lib_tcp_sever_t::accept( struct sockaddr_in& peer, bool block )
 	return newfd;
 }
 
-int ice::lib_tcp_sever_t::create_passive_endpoint( const char* host, const char* serv, int backlog, int bufsize )
+int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* serv, int backlog, int bufsize )
 {
 	assert((backlog > 0) && (bufsize > 0) && (bufsize <= (10 * 1024 * 1024)));
 
@@ -76,7 +76,7 @@ ret:
 	return listenfd;
 }
 
-int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
+int ice::lib_tcp_srv_t::bind( const char* ip, uint16_t port )
 {
 	sockaddr_in sa_in;
 	memset(&sa_in, 0, sizeof(sa_in));
@@ -92,31 +92,31 @@ int ice::lib_tcp_sever_t::bind( const char* ip, uint16_t port )
 	return ::bind(this->listen_fd, (sockaddr*)&sa_in,sizeof(sa_in));
 }
 
-ice::lib_tcp_sever_t::lib_tcp_sever_t()
+ice::lib_tcp_srv_t::lib_tcp_srv_t()
 {
 	this->cli_time_out_sec = 0;
-	this->cli_fd_infos = NULL;
+	this->peer_fd_infos = NULL;
 	this->listen_fd = -1;
 	this->cli_fd_value_max = 0;
 	this->check_run = NULL;
 }
 
-ice::lib_tcp_sever_t::~lib_tcp_sever_t()
+ice::lib_tcp_srv_t::~lib_tcp_srv_t()
 {
-	if (NULL != this->cli_fd_infos){
+	if (NULL != this->peer_fd_infos){
 		for (int i = 0; i < this->cli_fd_value_max; i++) {
-			lib_tcp_client_info_t& cfi = this->cli_fd_infos[i];
+			lib_tcp_peer_info_t& cfi = this->peer_fd_infos[i];
 			if (FD_TYPE_UNUSED == cfi.fd_type){
 				continue;
 			}
 			cfi.close();
 		}
-		safe_delete_arr(this->cli_fd_infos);
+		safe_delete_arr(this->peer_fd_infos);
 	}
 	lib_file_t::close_fd(this->listen_fd);
 }
 
-ice::on_functions_tcp_server::on_functions_tcp_server()
+ice::on_functions_tcp_srv::on_functions_tcp_srv()
 {
 	this->on_events = 0;
 	this->on_cli_pkg = 0;
@@ -126,42 +126,4 @@ ice::on_functions_tcp_server::on_functions_tcp_server()
 	this->on_init = 0;
 	this->on_fini = 0;
 	this->on_get_pkg_len = 0;
-}
-
-int ice::lib_tcp_server_info_t::connect( const char* ipaddr, in_port_t port, int timeout, bool block )
-{
-	struct sockaddr_in peer;
-
-	::memset(&peer, 0, sizeof(peer));
-	peer.sin_family  = AF_INET;
-	peer.sin_port    = ::htons(port);
-	if (::inet_pton(AF_INET, ipaddr, &peer.sin_addr) <= 0) {
-		return -1;
-	}
-
-	this->fd = ::socket(PF_INET, SOCK_STREAM, 0);
-	if ( -1 == this->fd) {
-		ALERT_LOG("create socket err [%s]", ::strerror(errno));
-		return -1;
-	}
-
-	//------------------------
-	// Works under Linux, although **UNDOCUMENTED**!!
-	// 设置超时无用.要用select判断. 见unix网络编程connect
-	// 			if (timeout > 0) {
-	// 				ice::lib_net_t::set_sock_send_timeo(sockfd, timeout * 1000);
-	// 			}
-	if (-1 == HANDLE_EINTR(::connect(this->fd, (struct sockaddr*)&peer, sizeof(peer)))) {
-		ALERT_LOG("connect err [errno:%s, ip:%s, port:%u]", 
-			::strerror(errno), ipaddr, port);
-		lib_file_t::close_fd(this->fd);
-		return -1;
-	}
-	// 			if (timeout > 0) {
-	// 				ice::lib_tcp_t::set_sock_send_timeo(sockfd, 0);
-	// 			}
-
-	ice::lib_file_t::set_io_block(this->fd, block);
-
-	return this->fd;
 }

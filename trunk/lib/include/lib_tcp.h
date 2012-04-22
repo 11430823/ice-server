@@ -18,13 +18,20 @@
 namespace ice{
 	class lib_tcp_t : public lib_net_t
 	{
+		PROTECTED_RW_DEFAULT(uint16_t, port);
+		PROTECTED_RW_DEFAULT(uint32_t, ip);
 	public:
-		lib_tcp_t(){}
+		lib_tcp_t(){
+			this->port = 0;
+			this->ip = 0;
+		}
 		virtual ~lib_tcp_t(){}
 
 		virtual int send(const void* buf, int total);
 
 		virtual int recv(void* buf, int bufsize);
+
+		const char* get_ip_str();
 
 		//************************************
 		// Brief:	  Set the given fd SO_REUSEADDR
@@ -32,6 +39,7 @@ namespace ice{
 		// Parameter: int s (fd)
 		//************************************
 		static int set_reuse_addr(int s);
+
 	protected:
 		
 	private:

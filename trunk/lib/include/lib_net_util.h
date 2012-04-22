@@ -13,12 +13,12 @@ namespace ice{
 		FD_TYPE_UNUSED = 0,
 		FD_TYPE_LISTEN = 1,
 		FD_TYPE_PIPE = 2,
-		FD_TYPE_CLIENT = 3,
+		FD_TYPE_CLI = 3,
 		FD_TYPE_MCAST = 4,
 		FD_TYPE_ADDR_MCAST = 5,
 		FD_TYPE_UDP = 6,
 		FD_TYPE_ASYN_CONNECT = 7,
-		FD_TYPE_SERVER = 8,
+		FD_TYPE_SVR = 8,
 	};
 
 	class lib_net_util_t

@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 			//父进程
 			ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
 			ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
-			g_net_server.get_server_epoll()->add_connect(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL);
+			g_net_server.get_server_epoll()->add_connect(bc_elem.send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
 			atomic_set(&g_daemon.child_pids[i], pid);
 		} else {
 			//子进程

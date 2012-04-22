@@ -13,10 +13,10 @@
 #include "lib_tcp_server.h"
 
 namespace ice{
-	struct on_functions_tcp_server_epoll : public on_functions_tcp_server 
+	struct on_functions_tcp_server_epoll : public on_functions_tcp_srv 
 	{
 	};
-	class lib_tcp_server_epoll_t : public lib_tcp_sever_t
+	class lib_tcp_server_epoll_t : public lib_tcp_srv_t
 	{
 	public:
 		typedef int (*ON_PIPE_EVENT)(int fd, epoll_event& r_evs);
@@ -26,7 +26,7 @@ namespace ice{
 	public:
 		lib_tcp_server_epoll_t(uint32_t max_events_num);
 		virtual ~lib_tcp_server_epoll_t();
-		virtual void register_on_functions(const on_functions_tcp_server* functions);
+		virtual void register_on_functions(const on_functions_tcp_srv* functions);
 		virtual int create();
 		/**
 		* @brief Create a listening socket fd
@@ -40,7 +40,7 @@ namespace ice{
 		*/
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize);
 		virtual int run(CHECK_RUN check_run_fn);
-		virtual int add_connect(int fd, E_FD_TYPE fd_type, struct sockaddr_in* peer);
+		virtual int add_connect(int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port);
 	public:
 		int mod_events(int fd, uint32_t flag);
 		int add_events(int fd, uint32_t flag);
@@ -48,13 +48,13 @@ namespace ice{
 		 * @brief	关闭连接
 		 * @param	bool do_calback true:调用客户端注册的回调函数.通知被关闭, false:不做通知
 		 */
-		void close_peer(lib_tcp_client_info_t& fd_info, bool do_calback = true);
+		void close_peer(lib_tcp_peer_info_t& fd_info, bool do_calback = true);
 	private:
 		lib_tcp_server_epoll_t(const lib_tcp_server_epoll_t& cr);
 		lib_tcp_server_epoll_t& operator=(const lib_tcp_server_epoll_t& cr);
 
-		void handle_peer_msg(lib_tcp_client_info_t& fd_info);
+		void handle_peer_msg(lib_tcp_peer_info_t& fd_info);
 		void handle_listen();
-		int handle_send(lib_tcp_client_info_t& fd_info);
+		int handle_send(lib_tcp_peer_info_t& fd_info);
 	};
 }//end namespace ice

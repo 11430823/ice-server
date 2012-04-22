@@ -19,7 +19,7 @@
 namespace ice{
 	
 	//服务器回调函数
-	struct on_functions_tcp_server
+	struct on_functions_tcp_srv
 	{
 	//The following interfaces are called only by the child process
 		//************************************
@@ -33,7 +33,7 @@ namespace ice{
 		// 			Return non-zero if you want to close the client connection from which the `pkg` is sent,
 		// 			otherwise returns 0. If non-zero is returned, `on_cli_conn_closed` will be called too. 
 		//************************************
-		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_client_info_t* cli_fd_info);
+		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* cli_fd_info);
 		ON_CLI_PKG on_cli_pkg;
 		//************************************
 		// Brief:	Called to process packages from servers that the child connects to. Called once for each package.
@@ -76,31 +76,31 @@ namespace ice{
 		  * return -1 if you find that the incoming package is invalid and ice-server will close the connection,
 		  * otherwise, return the length of the incoming package. Note, the package should be no larger than 8192 bytes.
 		  */
-		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_client_info_t* cli_fd_info, const void* data, uint32_t len);
+		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_peer_info_t* cli_fd_info, const void* data, uint32_t len);
 		ON_GET_PKG_LEN on_get_pkg_len;
-		on_functions_tcp_server();
+		on_functions_tcp_srv();
 	};
 
-	class lib_tcp_sever_t : public lib_tcp_t
+	class lib_tcp_srv_t : public lib_tcp_t
 	{
 	public:
 		typedef bool (*CHECK_RUN)();
 		PROTECTED_R_DEFAULT(CHECK_RUN, check_run);//服务器循环时检测是否继续执行
 		PROTECTED_RW_DEFAULT(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
-		PROTECTED_R_DEFAULT(lib_tcp_client_info_t*, cli_fd_infos);//连接用户的信息
+		PROTECTED_R_DEFAULT(lib_tcp_peer_info_t*, peer_fd_infos);//连接用户的信息
 		PROTECTED_R_DEFAULT(int, cli_fd_value_max);//连接上的FD中的最大值
 		PROTECTED_R_DEFAULT(int, listen_fd);//监听FD
 	public:
-		lib_tcp_sever_t();
-		virtual ~lib_tcp_sever_t();
+		lib_tcp_srv_t();
+		virtual ~lib_tcp_srv_t();
 		/**
 		* @brief	设置服务器回调消息
 		*/
-		virtual void register_on_functions(const on_functions_tcp_server* functions) = 0;
+		virtual void register_on_functions(const on_functions_tcp_srv* functions) = 0;
 		virtual int create() = 0;
 		virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize) = 0;
 		virtual int run(CHECK_RUN check_run_fn) = 0;
-		virtual int add_connect(int fd, E_FD_TYPE fd_type, struct sockaddr_in* peer) = 0;
+		virtual int add_connect(int fd, E_FD_TYPE fd_type, const char* ip, uint16_t port) = 0;
 		/**
 		* @brief Accept a TCP connection
 		* @param struct sockaddr_in* peer,  used to return the protocol address of the connected peer process.  
@@ -122,34 +122,7 @@ namespace ice{
 	protected:
 		virtual int bind(const char* ip,uint16_t port);
 	private:
-		lib_tcp_sever_t(const lib_tcp_sever_t& cr);
-		lib_tcp_sever_t& operator=(const lib_tcp_sever_t& cr);
+		lib_tcp_srv_t(const lib_tcp_srv_t& cr);
+		lib_tcp_srv_t& operator=(const lib_tcp_srv_t& cr);
 	};
-
-	class lib_tcp_server_info_t : public lib_tcp_t
-	{
-	public:
-		lib_tcp_server_info_t(){}
-		//virtual ~lib_tcp_server_info_t(){}
-
-		/**
-		* @brief Create a TCP connection
-		*
-		* @param const char* ipaddr,  the ip address to connect to.
-		* @param in_port_t port,  the port to connect to.
-		* @param int timeout,  abort the connecting attempt after timeout secs. If timeout is less than or equal to 0, 
-		*                                then the connecting attempt will not be interrupted until error occurs.
-		* @param int block,  true and the connected fd will be set blocking, false and the fd will be set nonblocking.
-		*
-		* @return int, the connected fd on success, -1 on error.
-		*/
-		// todo need test connect timeout [3/11/2012 meng]
-		int connect( const char* ipaddr, in_port_t port, int timeout, bool block );
-	protected:
-		
-	private:
-		lib_tcp_server_info_t(const lib_tcp_server_info_t& cr);
-		lib_tcp_server_info_t& operator=(const lib_tcp_server_info_t& cr);
-	};
-
 }//end namespace ice
