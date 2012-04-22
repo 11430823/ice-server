@@ -27,8 +27,10 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		ice::lib_tcp_server_info_t ser;
-		ser.connect("192.168.0.102", 8001, 0, false);
+		ice::lib_tcp_peer_info_t* ser = new ice::lib_tcp_peer_info_t;
+		ser->set_ip(ice::lib_net_t::ip2int("192.168.0.102"));
+		ser->set_port(8001);
+		fire::connect(ser);
 	}
 	return 0;
 }
@@ -59,7 +61,7 @@ extern "C" void on_events()
   * @brief Return length of the receiving package
   *
   */
-extern "C" int on_get_pkg_len(ice::lib_tcp_client_info_t* cli_fd_info, const void* data, uint32_t len)
+extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void* data, uint32_t len)
 {
 	if (len < 4){
 		return 0;
@@ -80,13 +82,13 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_client_info_t* cli_fd_info, const voi
   * @brief Process packages from clients
   *
   */
-extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_client_info_t* cli_fd_info)
+extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* cli_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
 	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
 		head->len, head->cmd, head->seq_num, head->ret, head->id, cli_fd_info->get_fd(), pkglen);
-	fire::send(cli_fd_info, pkg, pkglen);
+	fire::s2peer(cli_fd_info, pkg, pkglen);
 	return 0;
 }
 
@@ -96,6 +98,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_client_info_
   */
 extern "C" void on_srv_pkg(int fd, void* pkg, int pkglen)
 {
+	TRACE_LOG("[fd%d]", fd);
 }
 
 /**
@@ -113,6 +116,7 @@ extern "C" void on_cli_conn_closed(int fd)
   */
 extern "C" void on_svr_conn_closed(int fd)
 {
+	TRACE_LOG("[fd%d]", fd);
 }
 
 

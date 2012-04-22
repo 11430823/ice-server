@@ -41,3 +41,15 @@ int ice::lib_net_t::set_sendbuf( int s, uint32_t len )
 {
 	return setsockopt(s, SOL_SOCKET, SO_SNDBUF, &len, sizeof(len));
 }
+
+uint32_t ice::lib_net_t::ip2int( const char* ip )
+{
+	return inet_addr(ip);
+}
+
+const char* ice::lib_net_t::ip2str( uint32_t ip )
+{
+	struct in_addr a;
+	a.s_addr = ip;
+	return inet_ntoa(a);
+}

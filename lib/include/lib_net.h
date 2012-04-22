@@ -62,6 +62,9 @@ namespace ice{
 		//************************************
 		static int set_recvbuf(int s, uint32_t len);
 		static int set_sendbuf(int s, uint32_t len);
+
+		static uint32_t ip2int(const char* ip);
+		static const char* ip2str(uint32_t ip);
 	protected:
 	private:
 		lib_net_t(const lib_net_t& cr);
