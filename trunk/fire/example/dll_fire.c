@@ -5,6 +5,8 @@
 #include <bench_conf.h>
 #include <interface.h>
 
+#include <lib_timer.h>
+
 #pragma pack(1)
 /* SERVER和CLIENT的协议包头格式 */
 struct cli_proto_head_t {
@@ -52,6 +54,7 @@ extern "C" int on_fini(int isparent)
   */
 extern "C" void on_events()
 {
+	ice::handle_timer();
 }
 
 /**
@@ -115,6 +118,14 @@ extern "C" void on_cli_conn_closed(int fd)
 extern "C" void on_svr_conn_closed(int fd)
 {
 	TRACE_LOG("[fd%d]", fd);
+}
+
+/**
+ * @brief	Called to process multicast packages from the specified `mcast_ip` and `mcast_port`. Called once for each package.
+ */
+extern "C" void	on_mcast_pkg(const void* data, int len)
+{
+
 }
 
 

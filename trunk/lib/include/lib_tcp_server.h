@@ -78,6 +78,10 @@ namespace ice{
 		  */
 		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_peer_info_t* peer_fd_info, const void* data, uint32_t len);
 		ON_GET_PKG_LEN on_get_pkg_len;
+
+		/*! Called to process multicast packages from the specified `mcast_ip` and `mcast_port`. Called once for each package. */
+		typedef void (*ON_MCAST_PKG)(const void* pkg, int len);
+		ON_MCAST_PKG on_mcast_pkg;//todo 调用的地方.
 		on_functions_tcp_srv();
 	};
 

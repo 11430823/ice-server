@@ -33,3 +33,13 @@ ice::lib_tcp_peer_info_t* fire::connect( const char* ip, uint16_t port )
 
 	return NULL;
 }
+
+uint32_t fire::get_server_id()
+{
+	return g_service.bind_elem->id;
+}
+
+const char* fire::get_server_name()
+{
+	return g_service.bind_elem->name.c_str();
+}

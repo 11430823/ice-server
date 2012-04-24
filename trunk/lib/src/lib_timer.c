@@ -21,11 +21,6 @@ namespace {
 
 	struct tvec_root_s  vec[TIMER_VEC_SIZE];
 	struct list_head    micro_timer;
-	enum {
-		max_timer_type	= 10000
-	};
-	/*用于保存定时器回调函数的地址*/
-	static timer_cb_func_t tcfs[max_timer_type];
 
 	static inline void add_timer(timer_struct_t* t);
 
@@ -175,19 +170,6 @@ new_timer:
 	return timer;
 }
 
-timer_struct_t* ice::add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag)
-{
-	if (!tcfs[fidx]) {
-		return 0;
-	}
-
-	timer_struct_t* timer = add_event(head, tcfs[fidx], owner, data, expire, flag);
-	if (timer) {
-		timer->func_indx = fidx;
-	}
-	return timer;
-}
-
 void ice::scan_seconds_timer()
 {
 	list_head_t *l, *p;
@@ -243,15 +225,6 @@ micro_timer_struct_t* ice::add_micro_event(timer_cb_func_t func, const struct ti
 	return timer;
 }
 
-micro_timer_struct_t* ice::add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data)
-{
-	micro_timer_struct_t* timer = add_micro_event(tcfs[fidx], tv, owner, data);
-	if (timer) {
-		timer->func_indx = fidx;
-	}
-	return timer;
-}
-
 void ice::scan_microseconds_timer()
 {
 	list_head_t *l, *p;
@@ -279,44 +252,6 @@ void ice::remove_micro_timers(void* owner)
 		if (t->owner == owner) {
 			remove_micro_timer(t, 0);
 		}
-	}
-}
-
-
-
-/*根据定时器的类型ID登记回调函数的地址*/
-int ice::register_timer_callback(int nbr, timer_cb_func_t cb)
-{
-	if (nbr <= 0 || nbr >= max_timer_type) {
-		return -1;
-	}
-	if (tcfs[nbr]) {
-		return -1;
-	}
-	tcfs[nbr] = cb;
-	return 0;
-}
-
-void ice::unregister_timers_callback()
-{
-	memset(tcfs, 0, sizeof(tcfs));
-
-}
-
-/*重新加载text.so后，回调函数的地址发生变化，更新已启动的定时器回调函数地址*/
-void ice::refresh_timers_callback()
-{
-	int i;
-	for (i = 0; i < TIMER_VEC_SIZE; i++) {
-		timer_struct_t* t;
-		list_for_each_entry (t, &vec[i].head, entry) {
-			t->function = tcfs[t->func_indx];
-		}	
-	}
-
-	micro_timer_struct_t* mt;
-	list_for_each_entry (mt, &micro_timer, entry) {
-		mt->function = tcfs[mt->func_indx];
 	}
 }
 
