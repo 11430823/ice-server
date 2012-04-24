@@ -91,8 +91,19 @@ namespace {
 	{
 		struct sigaction sa;
 		memset(&sa, 0, sizeof(sa));
-
-		sigset_t sset;
+		/************************************************************************/
+		/*	服务端关闭已连接客户端，客户端接着发数据产生问题，
+		1. 当服务器close一个连接时，若client端接着发数据。根据TCP协议的规定，会收到一个RST响应，client再往这个服务器发送数据时，系统会发出一个SIGPIPE信号给进程，告诉进程这个连接已经断开了，不要再写了。
+		根据信号的默认处理规则SIGPIPE信号的默认执行动作是terminate(终止、退出),所以client会退出。若不想客户端退出可以把SIGPIPE设为SIG_IGN
+		如:    signal(SIGPIPE,SIG_IGN);
+		这时SIGPIPE交给了系统处理。
+		2. 客户端write一个已经被服务器端关闭的sock后，返回的错误信息Broken pipe.
+		1）broken pipe的字面意思是“管道破裂”。broken pipe的原因是该管道的读端被关闭。
+		2）broken pipe经常发生socket关闭之后（或者其他的描述符关闭之后）的write操作中
+	　　　	  3）发生broken pipe错误时，进程收到SIGPIPE信号，默认动作是进程终止。
+		   4）broken pipe最直接的意思是：写入端出现的时候，另一端却休息或退出了，
+		   因此造成没有及时取走管道中的数据，从而系统异常退出；*/
+		/************************************************************************/
 		signal(SIGPIPE,SIG_IGN);
 
 		sa.sa_handler = sigterm_handler;
@@ -107,7 +118,7 @@ namespace {
 
 		sa.sa_handler = sighup_handler;
 		sigaction(SIGHUP, &sa, NULL);
-
+		sigset_t sset;
 		sigemptyset(&sset);
 		sigaddset(&sset, SIGSEGV);
 		sigaddset(&sset, SIGBUS);

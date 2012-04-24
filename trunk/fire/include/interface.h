@@ -3,7 +3,7 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	
-	brief:		用户接口(暂时无用)
+	brief:		用户接口
 *********************************************************************/
 
 #pragma once
@@ -11,7 +11,6 @@
 #include <stdint.h>
 
 #include <lib_tcp_server.h>
-
 #include <lib_tcp_client.h>
 
 namespace fire{

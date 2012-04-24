@@ -121,6 +121,9 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					/************************************************************************/
 					//disconnect(handle_fd);
 			}
+			if(!(evs[i].events & EPOLLOUT) && !(evs[i].events & EPOLLIN)){
+				ERROR_LOG("events:%u", evs[i].events);
+			}
 		}
 	}
 	return 0;
@@ -300,7 +303,7 @@ int ice::lib_tcp_server_epoll_t::handle_send( lib_tcp_peer_info_t& fd_info )
 	if (send_len > 0){
 		uint32_t remain_len = fd_info.send_buf.pop_front(send_len);
 		if (0 == remain_len){
-			this->mod_events(fd_info.get_fd(), EPOLLIN);
+			this->mod_events(fd_info.get_fd(), EPOLLIN | EPOLLRDHUP);//todo ? EPOLLRDHUP
 		}
 	} else if (send_len < 0){
 		ALERT_LOG("send err [%s]", ::strerror(errno));

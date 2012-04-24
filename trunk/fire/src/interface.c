@@ -16,7 +16,7 @@ int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_
 	} else if (send_len < (int)len){
 		WARN_LOG("send too long [len:%u, send_len:%d]", len, send_len);
 		peer_info->send_buf.push_back((char*)data + send_len, len - send_len);
-		g_net_server.get_server_epoll()->mod_events(peer_info->get_fd(), EPOLLIN | EPOLLOUT);
+		g_net_server.get_server_epoll()->mod_events(peer_info->get_fd(), EPOLLIN | EPOLLOUT | EPOLLRDHUP);//todo ? EPOLLRDHUP
 	}
 	return send_len;
 }
