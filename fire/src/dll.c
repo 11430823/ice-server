@@ -65,6 +65,8 @@ int dll_t::register_plugin()
 		ice::on_functions_tcp_server_epoll::ON_FINI);
   	DLFUNC(this->handle, this->functions.on_events, "on_events",
 		ice::on_functions_tcp_server_epoll::ON_EVENTS);
+	DLFUNC(this->handle, this->functions.on_mcast_pkg, "on_mcast_pkg",
+		ice::on_functions_tcp_server_epoll::ON_MCAST_PKG);
 	ret_code = 0;
 
 out:

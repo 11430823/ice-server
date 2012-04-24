@@ -126,4 +126,5 @@ ice::on_functions_tcp_srv::on_functions_tcp_srv()
 	this->on_init = 0;
 	this->on_fini = 0;
 	this->on_get_pkg_len = 0;
+	this->on_mcast_pkg = 0;
 }

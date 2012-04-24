@@ -31,3 +31,40 @@ ice::lib_multicast_t::lib_multicast_t()
 {
 
 }
+static struct sockaddr_in mcast_addr;
+int ice::lib_multicast_t::create(const char* ip, uint16_t port)
+{
+	this->fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (-1 == this->fd) {
+		ERROR_RETURN(("failed to create mcast_fd [err=%d, %s]", errno, strerror(errno)), -1);
+	}
+
+	memset(&mcast_addr, 0, sizeof mcast_addr);
+	mcast_addr.sin_family = AF_INET;
+	inet_pton(AF_INET, ip, &(mcast_addr.sin_addr));
+	mcast_addr.sin_port = htons(port);
+
+	lib_tcp_t::set_reuse_addr(this->fd);
+
+	// Set Default Interface For Outgoing Multicasts
+	in_addr_t ipaddr;
+	inet_pton(AF_INET, config_get_strval("mcast_outgoing_if"), &ipaddr);
+	if (setsockopt(mcast_fd, IPPROTO_IP, IP_MULTICAST_IF, &ipaddr, sizeof ipaddr) == -1) {
+		ERROR_RETURN(("Failed to Set Outgoing Interface: err=%d %s %s",
+			errno, strerror(errno), config_get_strval("mcast_outgoing_if")), -1);
+	}
+
+	if (bind(mcast_fd, (struct sockaddr*)&mcast_addr, sizeof mcast_addr) == -1) {
+		ERROR_RETURN(("Failed to Bind `mcast_fd`: err=%d %s", errno, strerror(errno)), -1);
+	}
+
+	// Join the Multicast Group
+	struct group_req req;
+	req.gr_interface = if_nametoindex(config_get_strval("mcast_incoming_if"));
+	memcpy(&req.gr_group, &mcast_addr, sizeof mcast_addr);
+	if (setsockopt(mcast_fd, IPPROTO_IP, MCAST_JOIN_GROUP, &req, sizeof req) == -1) {
+		ERROR_RETURN(("Failed to Join Mcast Grp: err=%d %s", errno, strerror(errno)), -1);
+	}
+
+	return do_add_conn(mcast_fd, fd_type_mcast, &mcast_addr, 0);
+}

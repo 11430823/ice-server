@@ -2,7 +2,7 @@
 liblogic=./liblogic.so
 [common]
 #子进程打开FD的最大值,默认20000
-#max_fd_num=100
+#max_fd_num=1000
 #默认为1:守护进程模式
 #is_daemon=1
 #连接FD超时秒数.默认0:连接FD无超时
@@ -30,4 +30,7 @@ dir=../log
 #daemon_name=daemon_fire
 #打开FD的最大值,默认20000
 #daemon_tcp_max_fd_num=20000
+[multicast]
+ip=xxx.xxx.xxx.xxx
+port=54321
 

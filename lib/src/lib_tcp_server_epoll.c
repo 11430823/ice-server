@@ -52,7 +52,7 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 	while(check_run_fn()){
 		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
 		renew_now();
-		//todo 添加事件处理机制接口.
+		this->on_functions->on_events();
 		if (0 == event_num){
 			//time out
 			continue;

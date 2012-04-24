@@ -16,10 +16,6 @@
 
 #include "lib_list.h"
 
-// export now and tm_cur
-extern struct timeval now;
-extern struct tm      tm_cur;
-
 /**
  * @brief   回调函数的类型。如果回调函数返回0，则表示定时器到期时要删除该定时器，反之，则不删除。
  */
@@ -99,23 +95,6 @@ namespace ice{
 	timer_struct_t* add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
 
 	/**
-	 * @brief  添加/替换一个秒级定时器，该定时器的到期时间是expire，回调函数是register_timer函数根据定时器类型登记。
-	 * @param  head 链头，新创建的定时器会被插入到该链表中。
-	 * @param  fidx 定时器类型。
-	 * @param  owner 传递给回调函数的第一个参数。
-	 * @param  data 传递给回调函数的第二个参数。
-	 * @param  expire 定时器到期时间（从Epoch开始的秒数）。
-	 * @param  flag 指示add_event添加/替换定时器。如果flag==timer_replace_timer，
-	 *         那么add_event将在head链表中搜索出第一个回调函数==func的定时器，
-	 *         然后把这个定时器的到期时间修改成expire。如果找不到符合条件的定时器，则新建一个定时器。
-	 *         建议只有当head链表中所有定时器的回调函数都各不相同的情况下，才使用timer_replace_timer。
-	 *         注意：绝对不能在定时器的回调函数中修改该定时器的到期时间！
-	 * @return 指向新添加/替换的秒级定时器的指针。
-	 * @see    ADD_TIMER_EVENT, REMOVE_TIMER, remove_timers, REMOVE_TIMERS
-	 */
-	timer_struct_t* add_event_ex(list_head_t* head, int fidx, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
-
-	/**
 	 * @brief  修改秒级定时器tmr的到期时间。注意：绝对不能在定时器的回调函数中修改该定时器的到期时间！
 	 * @param  tmr 需要修改到期时间的定时器。
 	 * @param  exptm 将tmr的到期时间修改成exptm（从Epoch开始的秒数）。
@@ -142,17 +121,6 @@ namespace ice{
 	 * @see    REMOVE_MICRO_TIMER, remove_micro_timers, REMOVE_TIMERS
 	 */
 	micro_timer_struct_t* add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data);
-
-	/**
-	 * @brief  添加一个微秒级定时器，该定时器的到期时间是tv，回调函数是register_timer函数根据定时器类型登记的。
-	 * @param  fidx 定时器类型。
-	 * @param  tv 定时器到期时间。
-	 * @param  owner 传递给回调函数的第一个参数。
-	 * @param  data 传递给回调函数的第二个参数。
-	 * @return 指向新添加的微秒级定时器的指针。
-	 * @see    REMOVE_MICRO_TIMER, remove_micro_timers, REMOVE_TIMERS
-	 */
-	micro_timer_struct_t* add_micro_event_ex(int fidx, const struct timeval* tv, void* owner, void* data);
 
 	void remove_micro_timer(micro_timer_struct_t *t, int freed);
 
@@ -195,24 +163,6 @@ namespace ice{
 		return &tm_cur;
 	}
 
-	/**
-	 * @brief 登记定时器类型，将定时器类型id与回调函数的对应关系保存在一个固定大小的数组中
-	 * @param nbr,定时器的类型；
-	 * @param cb,回调函数；
-	 * @return 0，成功；-1，失败。
-	 */
-	int register_timer_callback(int nbr, timer_cb_func_t cb);
-
-	/**
-	 * @brief 删除登记过的所有定时器类型
-	 */
-	void unregister_timers_callback();
-
-	/**
-	 * @brief 程序在线加载text.so时，由于定时器回调函数的地址会发生变化，需要更新定时器类型id与回调函数的关系对应表
-	 */ 
-	void refresh_timers_callback();
-
 	void scan_seconds_timer();
 	void scan_microseconds_timer();
 
@@ -233,22 +183,6 @@ namespace ice{
  */
 #define ADD_TIMER_EVENT(owner_, func_, data_, exptm_) \
 		add_event( &((owner_)->timer_list), (func_), (owner_), (data_), (exptm_), timer_add_new_timer)
-
-/**
- * @def    ADD_TIMER_EVENT_EX
- * @brief  创建一个新的秒级定时器，该定时器的到期时间是exptm_，回调函数是register_timer根据根据定时器类型登记的，
- *         传递给回调函数的第一个参数是owner_，第二个参数是data_。如果你要传递给回调函数的第一个参数是一个结构体，
- *         并且该结构体里面有一个名为timer_list的list_head_t类型的成员变量，那么你就可以使用这个宏来简化创建新定时器的操作。
- * @param  owner_ 传递给回调函数的第一个参数。指针类型，指向一个结构体，并且这个结构体里面必须有一个名为
- *         timer_list的list_head_t类型的成员变量。新创建的定时器会被插入到owner_下的timer_list链表中。
- * @param  fidx_ 定时器类型。
- * @param  data_ 传递给回调函数的第二个参数。
- * @param  exptm_ 定时器的到期时间（从Epoch开始的秒数）。
- * @return 指向新创建的秒级定时器的指针。
- * @see    add_event
- */
-#define ADD_TIMER_EVENT_EX(owner_, fidx_, data_, exptm_) \
-		add_event_ex( &((owner_)->timer_list), (fidx_), (owner_), (data_), (exptm_), timer_add_new_timer)
 
 /**
  * @def    REMOVE_TIMER
