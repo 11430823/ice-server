@@ -7,7 +7,7 @@
 int ice::lib_tcp_t::set_reuse_addr( int s )
 {
 	const int flag = 1;
-	return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+	return ::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 }
 
 int ice::lib_tcp_t::send( const void* buf, int total )

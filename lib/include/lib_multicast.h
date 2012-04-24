@@ -14,8 +14,8 @@ namespace ice{
 	public:
 		lib_multicast_t();
 		virtual ~lib_multicast_t(){}
-		virtual int send(const void* buf, int total);
-		virtual int recv(void* buf, int bufsize);
+		virtual int send(const void* buf, int total){}
+		virtual int recv(void* buf, int bufsize){}
 
 		int create(const char* ip, uint16_t port);
 
