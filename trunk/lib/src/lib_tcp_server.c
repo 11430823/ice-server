@@ -34,7 +34,7 @@ int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* s
 		return -1;
 	}
 
-	int listenfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	int listenfd = ::socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (listenfd < 0) {
 		freeaddrinfo(res);
 		return -1;
@@ -84,7 +84,7 @@ int ice::lib_tcp_srv_t::bind( const char* ip, uint16_t port )
 	sa_in.sin_family = PF_INET;
 	sa_in.sin_port = htons(port);
 	if (NULL != ip){
-		inet_pton(PF_INET, ip, &sa_in.sin_addr);
+		::inet_pton(PF_INET, ip, &sa_in.sin_addr);
 	}else{
 		sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
 	}
