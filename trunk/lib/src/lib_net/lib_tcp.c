@@ -1,8 +1,8 @@
 #include "lib_include.h"
 #include "lib_file.h"
-#include "lib_net_util.h"
+#include "lib_net/lib_net_util.h"
 #include "lib_log.h"
-#include "lib_tcp.h"
+#include "lib_net/lib_tcp.h"
 
 int ice::lib_tcp_t::set_reuse_addr( int s )
 {

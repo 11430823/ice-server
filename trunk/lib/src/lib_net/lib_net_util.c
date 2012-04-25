@@ -1,6 +1,6 @@
 #include "lib_include.h"
 #include "lib_util.h"
-#include "lib_net_util.h"
+#include "lib_net/lib_net_util.h"
 #include "lib_file.h"
 
 int ice::lib_net_util_t::eai_to_errno( int eai )

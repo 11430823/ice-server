@@ -16,6 +16,9 @@
 
 #include "lib_list.h"
 
+extern struct timeval now;
+extern struct tm      tm_cur;
+
 /**
  * @brief   回调函数的类型。如果回调函数返回0，则表示定时器到期时要删除该定时器，反之，则不删除。
  */

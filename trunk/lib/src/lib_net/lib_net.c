@@ -1,6 +1,6 @@
 #include "lib_include.h"
 #include "lib_file.h"
-#include "lib_net.h"
+#include "lib_net/lib_net.h"
 
 ice::lib_net_t::lib_net_t()
 {

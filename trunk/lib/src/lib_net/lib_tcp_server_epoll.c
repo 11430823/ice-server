@@ -4,8 +4,8 @@
 #include "lib_time.h"
 #include "lib_timer.h"
 #include "lib_linux_version.h"
-#include "lib_tcp_server_epoll.h"
-#include "lib_tcp_client.h"
+#include "lib_net/lib_tcp_server_epoll.h"
+#include "lib_net/lib_tcp_client.h"
 
 const uint32_t RECV_BUF_LEN = 1024*8;//8K
 

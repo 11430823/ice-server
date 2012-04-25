@@ -15,6 +15,8 @@ public:
 public:
 	service_t(){}
 	void run(bind_config_elem_t* bind_elem, int n_inited_bc);
+	uint32_t get_bind_elem_id();
+	const char* get_bind_elem_name();
 protected:
 private:
 };

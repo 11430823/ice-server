@@ -1,7 +1,7 @@
 #include "lib_include.h"
 #include "lib_file.h"
-#include "lib_net_util.h"
-#include "lib_tcp_server.h"
+#include "lib_net/lib_net_util.h"
+#include "lib_net/lib_tcp_server.h"
 
 int ice::lib_tcp_srv_t::accept( struct sockaddr_in& peer, bool block )
 {

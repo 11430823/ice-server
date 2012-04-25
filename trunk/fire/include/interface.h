@@ -10,8 +10,8 @@
 
 #include <stdint.h>
 
-#include <lib_tcp_server.h>
-#include <lib_tcp_client.h>
+#include <lib_net/lib_tcp_server.h>
+#include <lib_net/lib_tcp_client.h>
 
 namespace fire{
 	int s2peer(ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_t len);
