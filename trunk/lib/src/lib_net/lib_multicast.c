@@ -5,23 +5,6 @@
 
 #include "lib_net/lib_multicast.h"
 
-int ice::lib_multicast_t::exit_multicast( int s )
-{
-	ip_mreq_source mreq;
-	::setsockopt(s, IPPROTO_IP, IP_DROP_MEMBERSHIP, (char*)&mreq, sizeof(mreq));
-	return 0;
-}
-
-int ice::lib_multicast_t::refuse_multicast( int s )
-{
-	ip_mreq_source mreq;
-	mreq.imr_interface.s_addr   =   inet_addr( "127.0.0.1 "); //自身地址
-	mreq.imr_multiaddr.s_addr   =   inet_addr( "239.8.7.6 "); //加入组播的地址
-	mreq.imr_sourceaddr.s_addr = inet_addr("192.168.0.111");//阻止的地址
-	::setsockopt(s, IPPROTO_IP, IP_BLOCK_SOURCE, (char*)&mreq, sizeof(mreq));
-	return 0;
-}
-
 int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_port, const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if)
 {
 	this->mcast_ip = mcast_ip;
@@ -36,11 +19,10 @@ int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_por
 
 	lib_file_t::set_io_block(this->fd, false);
 
-	struct sockaddr_in mcast_addr;
-	memset(&mcast_addr, 0, sizeof(mcast_addr));
-	mcast_addr.sin_family = AF_INET;
-	::inet_pton(AF_INET, this->mcast_ip.c_str(), &(mcast_addr.sin_addr));
-	mcast_addr.sin_port = htons(this->mcast_port);
+	memset(&this->mcast_addr, 0, sizeof(this->mcast_addr));
+	this->mcast_addr.sin_family = AF_INET;
+	::inet_pton(AF_INET, this->mcast_ip.c_str(), &(this->mcast_addr.sin_addr));
+	this->mcast_addr.sin_port = htons(this->mcast_port);
 
 	lib_tcp_t::set_reuse_addr(this->fd);
 
@@ -57,17 +39,47 @@ int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_por
 			errno, strerror(errno), this->mcast_outgoing_if.c_str()));
 	}
 
-	if (::bind(this->fd, (struct sockaddr*)&mcast_addr, sizeof(mcast_addr)) == -1) {
+	if (::bind(this->fd, (struct sockaddr*)&this->mcast_addr, sizeof(this->mcast_addr)) == -1) {
 		ERROR_RETURN(-1, ("failed to bind mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	// Join the Multicast Group
 	struct group_req req;
 	req.gr_interface = if_nametoindex(this->mcast_incoming_if.c_str());
-	memcpy(&req.gr_group, &mcast_addr, sizeof mcast_addr);
+	memcpy(&req.gr_group, &this->mcast_addr, sizeof(this->mcast_addr));
 	if (-1 == ::setsockopt(this->fd, IPPROTO_IP, MCAST_JOIN_GROUP, &req, sizeof(req))) {
 		ERROR_RETURN(-1, ("failed to join mcast grp [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	return 0;
+}
+
+void ice::lib_addr_multicast_t::pack_this_service_info( uint32_t svr_id,
+		const char* svr_name, const char* svr_ip, uint16_t svr_port, E_ADDR_MCAST_PKG_TYPE pkg_type)
+{
+	char* data = new char[sizeof(this->hdr) + sizeof(this->pkg)];
+	this->hdr.pkg_type = pkg_type;
+	this->hdr.proto_type = MCAST_NOTIFY_ADDR;
+	this->pkg.svr_id     = svr_id;
+	strcpy(this->pkg.name, svr_name);
+	strcpy(this->pkg.ip, svr_ip);
+	this->pkg.port = svr_port;
+	memcpy(data, &(this->hdr), sizeof(this->hdr));
+	memcpy(data + sizeof(this->hdr), &(this->pkg), sizeof(this->pkg));
+	this->send(data, sizeof(this->hdr) + sizeof(this->pkg));
+	safe_delete_arr(data);
+}
+
+ice::lib_addr_multicast_t::addr_mcast_pkg_t::addr_mcast_pkg_t()
+{
+	this->svr_id = 0;
+	memset(this->name, 0, sizeof(this->name));
+	memset(this->ip, 0, sizeof(this->ip));
+	this->port = 0;
+}
+
+ice::mcast_pkg_header_t::mcast_pkg_header_t()
+{
+	this->pkg_type = 0;
+	this->proto_type = 0;
 }
