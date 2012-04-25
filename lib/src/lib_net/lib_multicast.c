@@ -1,5 +1,7 @@
 #include "lib_include.h"
-#include "lib_multicast.h"
+#include "lib_log.h"
+#include "lib_net/lib_tcp.h"
+#include "lib_net/lib_multicast.h"
 
 int ice::lib_multicast_t::join_multicast( int s )
 {
@@ -27,17 +29,12 @@ int ice::lib_multicast_t::refuse_multicast( int s )
 	return 0;
 }
 
-ice::lib_multicast_t::lib_multicast_t()
-{
-
-}
-
 static struct sockaddr_in mcast_addr;
 int ice::lib_multicast_t::create(const char* ip, uint16_t port, const char* outgoing_ip, const char* incoming_ip)
 {
 	this->fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 	if (-1 == this->fd) {
-		ERROR_RETURN(("failed to create mcast_fd [err=%d, %s]", errno, strerror(errno)), -1);
+		ERROR_RETURN(-1, ("failed to create mcast_fd [err:%d, %s]", errno, strerror(errno)));
 	}
 
 	memset(&mcast_addr, 0, sizeof(mcast_addr));
@@ -49,19 +46,19 @@ int ice::lib_multicast_t::create(const char* ip, uint16_t port, const char* outg
 
 	int loop = 1;
 	if (-1 == ::setsockopt(this->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop))){
-		ERROR_RETURN(("failed to set ip_multicast_loop: [err:%d, %s]", errno, strerror(errno)), -1);
+		ERROR_RETURN(-1, ("failed to set ip_multicast_loop: [err:%d, %s]", errno, strerror(errno)));
 	}
 
 	// Set Default Interface For Outgoing Multicasts
 	in_addr_t ipaddr;
 	::inet_pton(AF_INET, outgoing_ip, &ipaddr);
 	if (::setsockopt(this->fd, IPPROTO_IP, IP_MULTICAST_IF, &ipaddr, sizeof ipaddr) == -1) {
-		ERROR_RETURN(("failed to set outgoing interface: err=%d %s %s",
-			errno, strerror(errno), outgoing_ip), -1);
+		ERROR_RETURN(-1, ("failed to set outgoing interface: err=%d %s %s",
+			errno, strerror(errno), outgoing_ip));
 	}
 
 	if (::bind(this->fd, (struct sockaddr*)&mcast_addr, sizeof mcast_addr) == -1) {
-		ERROR_RETURN(("Failed to Bind `mcast_fd`: err=%d %s", errno, strerror(errno)), -1);
+		ERROR_RETURN(-1, ("Failed to Bind `mcast_fd`: err=%d %s", errno, strerror(errno)));
 	}
 
 	// Join the Multicast Group
@@ -75,5 +72,6 @@ int ice::lib_multicast_t::create(const char* ip, uint16_t port, const char* outg
 	}
 	*/
 
-	return do_add_conn(mcast_fd, fd_type_mcast, &mcast_addr, 0);
+	//return do_add_conn(mcast_fd, fd_type_mcast, &mcast_addr, 0);
+	return 0;
 }

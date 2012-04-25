@@ -7,6 +7,7 @@
 *********************************************************************/
 
 #pragma once
+
 #include <stdint.h>
 #include <iostream>
 #include <sstream>
@@ -195,7 +196,7 @@ namespace ice{
 	 * @param p 需要生成哈希值的字符串
 	 * @return 字符串对应的哈希值
 	 */
-	uint32_t gen_u32_hash(const char* p)
+	static inline uint32_t gen_u32_hash(const char* p)
 	{
 		uint32_t h = 0;
 		while (*p) {

@@ -67,3 +67,13 @@ fail:
 	ice::lib_log_t::destroy();
 	exit(0);
 }
+
+uint32_t service_t::get_bind_elem_id()
+{
+	return this->bind_elem->id;
+}
+
+const char* service_t::get_bind_elem_name()
+{
+	return this->bind_elem->name.c_str();
+}

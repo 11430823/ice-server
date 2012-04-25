@@ -1,10 +1,12 @@
 #include <string.h>
-#include <lib_tcp_client.h>
-#include <lib_tcp.h>
-#include <lib_tcp_server_epoll.h>
+
+#include <lib_net/lib_tcp_client.h>
+#include <lib_net/lib_tcp.h>
+#include <lib_net/lib_tcp_server_epoll.h>
 #include <lib_log.h>
 
 #include "net_tcp.h"
+#include "service.h"
 #include "interface.h"
 
 int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_t len )
@@ -36,10 +38,10 @@ ice::lib_tcp_peer_info_t* fire::connect( const char* ip, uint16_t port )
 
 uint32_t fire::get_server_id()
 {
-	return g_service.bind_elem->id;
+	return g_service.get_bind_elem_id();
 }
 
 const char* fire::get_server_name()
 {
-	return g_service.bind_elem->name.c_str();
+	return g_service.get_bind_elem_name();
 }

@@ -12,7 +12,7 @@
 #include <lib_util.h>
 #include <lib_log.h>
 #include <lib_file.h>
-#include <lib_tcp_server.h>
+#include <lib_net/lib_tcp_server.h>
 
 #include "bind_conf.h"
 #include "bench_conf.h"

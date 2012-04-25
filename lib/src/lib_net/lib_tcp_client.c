@@ -1,7 +1,7 @@
 #include <lib_log.h>
 
 #include "lib_include.h"
-#include "lib_tcp_client.h"
+#include "lib_net/lib_tcp_client.h"
 
 ice::lib_tcp_peer_info_t::lib_tcp_peer_info_t()
 {
