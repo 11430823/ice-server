@@ -126,11 +126,6 @@ extern "C" void on_svr_conn_closed(int fd)
 extern "C" void	on_mcast_pkg(const void* data, int len)
 {
 	INFO_LOG("[len:%d]", len);
-// 	uint32_t cmd;
-// 	uint32_t val;
-// 	memcpy((void*)&cmd, data, sizeof(cmd));
-// 	memcpy((void*)&val, (char*)data + sizeof(cmd), sizeof(val));
-// 	KINFO_LOG(0, "[cmd=%u, val=%u]", cmd, val);
 }
 
 

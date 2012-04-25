@@ -11,6 +11,16 @@
 #include "lib_net.h"
 
 namespace ice{
+
+#pragma pack(1)
+	struct mcast_pkg_header_t {
+		uint16_t	pkg_type;   // for mcast_notify_addr: 1st, syn
+		uint16_t	proto_type; // mcast_notify_addr...
+		char		body[];
+		mcast_pkg_header_t();
+	};
+#pragma pack()
+
 	class lib_multicast_t : public lib_net_t
 	{
 		PROTECTED_RW_DEFAULT(std::string, mcast_incoming_if);//组播 接收
@@ -23,7 +33,8 @@ namespace ice{
 		}
 		virtual ~lib_multicast_t(){}
 		virtual int send(const void* buf, int total){
-			return 0;
+			//todo man sendto 查看有什么需要注意的
+			return ::sendto(this->fd, buf, total, 0, (sockaddr*)&(this->mcast_addr), sizeof(this->mcast_addr));
 		}
 		virtual int recv(void* buf, int bufsize){
 			return 0;
@@ -39,14 +50,46 @@ namespace ice{
 		*/
 		int create(const std::string& mcast_ip, uint16_t mcast_port, const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if);
 	protected:
-
+		sockaddr_in mcast_addr;
 	private:
 		lib_multicast_t(const lib_multicast_t& cr);
 		lib_multicast_t& operator=(const lib_multicast_t& cr);
 	private:
-		//退出组播//TODO 未测试
-		int exit_multicast(int s);
-		//拒绝组播//TODO 未测试
-		int refuse_multicast(int s);
+		
 	};
+
+	class lib_addr_multicast_t : public lib_multicast_t
+	{
+		enum {
+			MCAST_NOTIFY_ADDR   = 0,
+		};
+
+		enum E_ADDR_MCAST_PKG_TYPE{
+			ADDR_MCAST_1ST_PKG	= 1,
+			ADDR_MCAST_SYN_PKG	= 2
+		};
+#pragma pack(1)
+		struct addr_mcast_pkg_t {
+			uint32_t	svr_id;
+			char		name[16];
+			char		ip[16];
+			uint16_t	port;
+			addr_mcast_pkg_t();
+		};
+#pragma pack()
+	public:
+		lib_addr_multicast_t(){}
+		virtual ~lib_addr_multicast_t(){}
+		void pack_this_service_info(uint32_t svr_id, const char* svr_name,
+			const char* svr_ip, uint16_t svr_port, E_ADDR_MCAST_PKG_TYPE pkg_type = ADDR_MCAST_SYN_PKG);
+	protected:
+		
+	private:
+		lib_addr_multicast_t(const lib_addr_multicast_t& cr);
+		lib_addr_multicast_t& operator=(const lib_addr_multicast_t& cr);
+		mcast_pkg_header_t hdr;
+		addr_mcast_pkg_t   pkg;
+	};
+	
+
 }//end namespace ice

@@ -26,10 +26,16 @@ class bench_conf_t
 	PRIVATE_R_DEFAULT(std::string, daemon_tcp_ip);//守护进程地址//默认为0
 	PRIVATE_R_DEFAULT(uint16_t, daemon_tcp_port);//守护进程端口//默认为0
 	PRIVATE_R_DEFAULT(uint32_t, daemon_tcp_max_fd_num);//守护进程打开fd的最大数量//默认为0
+
 	PRIVATE_R_DEFAULT(std::string, mcast_incoming_if);//组播 接收//默认为0
 	PRIVATE_R_DEFAULT(std::string, mcast_outgoing_if);//组播 发送//默认为0
 	PRIVATE_R_DEFAULT(std::string, mcast_ip);//239.X.X.X组播地址//默认为0
 	PRIVATE_R_DEFAULT(uint32_t, mcast_port);//239.X.X.X组播端口//默认为0
+
+	PRIVATE_R_DEFAULT(std::string, addr_mcast_incoming_if);//地址信息 组播 接收//默认为0
+	PRIVATE_R_DEFAULT(std::string, addr_mcast_outgoing_if);//地址信息 组播 发送//默认为0
+	PRIVATE_R_DEFAULT(std::string, addr_mcast_ip);//239.X.X.X地址信息 组播地址//默认为0
+	PRIVATE_R_DEFAULT(uint32_t, addr_mcast_port);//239.X.X.X地址信息 组播端口//默认为0
 public:
 	bench_conf_t();
 public:

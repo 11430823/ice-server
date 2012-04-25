@@ -22,6 +22,7 @@ public:
 protected:
 private:
 	ice::lib_multicast_t mcast;
+	ice::lib_addr_multicast_t addr_mcast;
 };
 
 extern service_t g_service;
