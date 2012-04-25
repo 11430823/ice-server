@@ -34,9 +34,9 @@ int ice::lib_tcp_t::recv( void* buf, int bufsize )
 	return HANDLE_EINTR(::recv(this->fd, buf, bufsize, 0));
 }
 
-const char* ice::lib_tcp_t::get_ip_str()
+std::string ice::lib_tcp_t::get_ip_str()
 {
-	return lib_net_t::ip2str(this->ip);
+	return this->ip2str(this->ip);
 }
 
 int ice::lib_tcp_t::connect( const char* ip, uint16_t port, int timeout, bool block )

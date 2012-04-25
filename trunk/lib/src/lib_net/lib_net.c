@@ -47,9 +47,10 @@ uint32_t ice::lib_net_t::ip2int( const char* ip )
 	return inet_addr(ip);
 }
 
-const char* ice::lib_net_t::ip2str( uint32_t ip )
+std::string ice::lib_net_t::ip2str( uint32_t ip )
 {
 	struct in_addr a;
 	a.s_addr = ip;
-	return inet_ntoa(a);
+	std::string s = inet_ntoa(a);
+	return s;
 }

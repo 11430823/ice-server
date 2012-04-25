@@ -29,7 +29,7 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
+		//ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
 	}
 	return 0;
 }
@@ -54,7 +54,7 @@ extern "C" int on_fini(int isparent)
   */
 extern "C" void on_events()
 {
-	ice::handle_timer();
+	//ice::handle_timer();
 }
 
 /**
@@ -98,7 +98,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
   */
 extern "C" void on_srv_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
-	TRACE_LOG("[fd:%d, ip:%s, port:%u]", peer_fd_info->get_fd(), peer_fd_info->get_ip_str(), peer_fd_info->get_port());
+	TRACE_LOG("[fd:%d, ip:%s, port:%u]", peer_fd_info->get_fd(), peer_fd_info->get_ip_str().c_str(), peer_fd_info->get_port());
 	fire::s2peer(peer_fd_info, pkg, pkglen);
 }
 
@@ -125,7 +125,12 @@ extern "C" void on_svr_conn_closed(int fd)
  */
 extern "C" void	on_mcast_pkg(const void* data, int len)
 {
-
+	INFO_LOG("[len:%d]", len);
+// 	uint32_t cmd;
+// 	uint32_t val;
+// 	memcpy((void*)&cmd, data, sizeof(cmd));
+// 	memcpy((void*)&val, (char*)data + sizeof(cmd), sizeof(val));
+// 	KINFO_LOG(0, "[cmd=%u, val=%u]", cmd, val);
 }
 
 

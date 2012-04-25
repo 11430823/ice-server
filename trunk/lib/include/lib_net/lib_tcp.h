@@ -31,7 +31,7 @@ namespace ice{
 
 		virtual int recv(void* buf, int bufsize);
 
-		const char* get_ip_str();
+		std::string get_ip_str();
 
 		/**
 		* @brief Create a TCP connection

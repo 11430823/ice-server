@@ -54,6 +54,7 @@ namespace ice{
 		lib_tcp_server_epoll_t& operator=(const lib_tcp_server_epoll_t& cr);
 
 		void handle_peer_msg(lib_tcp_peer_info_t& fd_info);
+		void handle_peer_mcast_msg(lib_tcp_peer_info_t& fd_info);
 		void handle_listen();
 		int handle_send(lib_tcp_peer_info_t& fd_info);
 	};

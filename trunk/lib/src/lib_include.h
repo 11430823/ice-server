@@ -31,3 +31,4 @@ purpose:	基本头文件
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <netdb.h>
+#include <net/if.h>
