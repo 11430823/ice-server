@@ -77,6 +77,10 @@ int bench_conf_t::load()
 	get_val(this->daemon_tcp_ip, key, "net", "daemon_tcp_ip");
 	get_val(this->daemon_tcp_port, key, "net", "daemon_tcp_port");
 	get_val(this->daemon_tcp_max_fd_num, key, "net", "daemon_tcp_max_fd_num");
+	get_val(this->mcast_incoming_if, key, "multicast", "mcast_incoming_if");
+	get_val(this->mcast_outgoing_if, key, "multicast", "mcast_outgoing_if");
+	get_val(this->mcast_ip, key, "multicast", "mcast_ip");
+	get_val(this->mcast_port, key, "multicast", "mcast_port");
 ret:
 	if (key){
 		g_key_file_free(key);
@@ -96,6 +100,7 @@ bench_conf_t::bench_conf_t()
 	this->restart_cnt_max = 20;
 	this->daemon_tcp_port = 0;
 	this->daemon_tcp_max_fd_num = 20000;
+	this->mcast_port = 0;
 }
 
 std::string bench_conf_t::get_strval(const char* key, const char* name) const

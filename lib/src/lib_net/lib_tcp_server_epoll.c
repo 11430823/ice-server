@@ -86,6 +86,8 @@ int ice::lib_tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 					this->handle_peer_msg(fd_info);			
 				} else if (FD_TYPE_SVR == fd_info.fd_type){
 					this->handle_peer_msg(fd_info);	
+				} else if (FD_TYPE_MCAST == fd_info.fd_type){
+					this->handle_peer_mcast_msg(fd_info);
 				}
 			}
 			if (EPOLLHUP & evs[i].events){
@@ -250,7 +252,7 @@ ice::lib_tcp_peer_info_t* ice::lib_tcp_server_epoll_t::add_connect( int fd, E_FD
 	}
 
 	TRACE_LOG("time now:%u, fd:%d, fd type:%d, ip:%s, port:%u", 
-		cfi.get_last_tm(), fd, fd_type, cfi.get_ip_str(), cfi.get_port());
+		cfi.get_last_tm(), fd, fd_type, cfi.get_ip_str().c_str(), cfi.get_port());
 	return &cfi;
 }
 
@@ -277,7 +279,7 @@ void ice::lib_tcp_server_epoll_t::handle_peer_msg( lib_tcp_peer_info_t& fd_info 
 			}
 		}
 	}else if (0 == ret || -1 == ret){
-		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.get_port());
+		ERROR_LOG("close socket by peer [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str().c_str(), fd_info.get_port());
 		this->close_peer(fd_info);
 	}
 }
@@ -293,7 +295,7 @@ void ice::lib_tcp_server_epoll_t::handle_listen()
 	}else{
 		TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
 			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), peer_fd);
-		this->add_connect(peer_fd, ice::FD_TYPE_CLI, lib_net_t::ip2str(peer.sin_addr.s_addr), peer.sin_port);
+		this->add_connect(peer_fd, ice::FD_TYPE_CLI, this->ip2str(peer.sin_addr.s_addr).c_str(), peer.sin_port);
 	}
 }
 
@@ -339,12 +341,21 @@ void ice::lib_tcp_server_epoll_t::close_peer( lib_tcp_peer_info_t& fd_info, bool
 {
 	if (do_calback){
 		if (FD_TYPE_CLI == fd_info.fd_type){
-			ERROR_LOG("close socket cli [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.get_port());
+			ERROR_LOG("close socket cli [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str().c_str(), fd_info.get_port());
 			this->on_functions->on_cli_conn_closed(fd_info.get_fd());
 		} else if (FD_TYPE_SVR == fd_info.fd_type){
-			ERROR_LOG("close socket svr [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str(), fd_info.get_port());
+			ERROR_LOG("close socket svr [fd:%d, ip:%s, port:%u]", fd_info.get_fd(), fd_info.get_ip_str().c_str(), fd_info.get_port());
 			this->on_functions->on_svr_conn_closed(fd_info.get_fd());
 		}
 	}
 	fd_info.close();
+}
+
+void ice::lib_tcp_server_epoll_t::handle_peer_mcast_msg( lib_tcp_peer_info_t& fd_info )
+{
+	recv_peer_msg(fd_info);
+	if (fd_info.recv_buf.get_write_pos() > 0){
+		this->on_functions->on_mcast_pkg(fd_info.recv_buf.get_data(), fd_info.recv_buf.get_write_pos());
+		fd_info.recv_buf.pop_front(fd_info.recv_buf.get_write_pos());
+	}
 }
