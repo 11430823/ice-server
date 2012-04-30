@@ -41,7 +41,7 @@ namespace ice{
 		// Returns:   void ()
 		//************************************
 		void clean(){
-			safe_free(this->data);
+			SAFE_FREE(this->data);
 			this->init_data();
 		}
 	private:

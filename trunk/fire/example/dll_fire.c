@@ -128,5 +128,12 @@ extern "C" void	on_mcast_pkg(const void* data, int len)
 	INFO_LOG("[len:%d]", len);
 }
 
+/**
+ * @brief	Called to process multicast packages from the specified `add_mcast_ip` and `add_mcast_port`. Called once for each package.
+ */
+extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/)
+{
+	INFO_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
+}
 
 

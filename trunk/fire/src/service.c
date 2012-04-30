@@ -75,8 +75,10 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		} else {
 			g_net_server.get_server_epoll()->add_connect(this->addr_mcast.get_fd(),
 				ice::FD_TYPE_ADDR_MCAST, g_bench_conf.get_addr_mcast_ip().c_str(), g_bench_conf.get_addr_mcast_port());
-			this->addr_mcast.pack_this_service_info(g_service.get_bind_elem_id(), 
-				g_service.get_bind_elem_name(), g_service.bind_elem->ip.c_str(), g_service.bind_elem->port, lib_addr_multicast_t::ADDR_MCAST_1ST_PKG);
+			this->addr_mcast.mcast_notify_addr(g_service.get_bind_elem_id(), 
+				g_service.get_bind_elem_name(), g_service.bind_elem->ip.c_str(),
+				g_service.bind_elem->port, ice::lib_addr_multicast_t::ADDR_MCAST_1ST_PKG);
+			g_net_server.get_server_epoll()->set_addr_mcast(&this->addr_mcast);
 		}
 	}
 
