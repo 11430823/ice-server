@@ -7,8 +7,12 @@
 *********************************************************************/
 #pragma  once
 
+#include <map>
+#include <string>
+#include <sys/epoll.h>
+
+#include <lib_net/lib_tcp_server.h>
 #include <lib_util.h>
-#include <lib_net/lib_tcp_server_epoll.h>
 #include <lib_net/lib_multicast.h>
 
 struct on_functions_tcp_server_epoll : public ice::on_functions_tcp_srv 

@@ -11,7 +11,6 @@
 #include <sys/epoll.h>
 
 #include <lib_util.h>
-#include <lib_net/lib_tcp_server_epoll.h>
 
 #include "net_tcp.h"
 
