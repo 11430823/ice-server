@@ -35,8 +35,9 @@ namespace {
 		::sprintf(core_name, "core.%d", pid);
 		::rename("core", core_name);
 	}
-
 }//end of namespace
+
+
 
 int dll_t::register_plugin()
 {
@@ -50,23 +51,25 @@ int dll_t::register_plugin()
 	}
 
 	DLFUNC(this->handle, this->functions.on_get_pkg_len, "on_get_pkg_len",
-		ice::on_functions_tcp_server_epoll::ON_GET_PKG_LEN);
+		on_functions_tcp_server_epoll::ON_GET_PKG_LEN);
 	DLFUNC(this->handle, this->functions.on_cli_pkg, "on_cli_pkg",
-		ice::on_functions_tcp_server_epoll::ON_CLI_PKG);
+		on_functions_tcp_server_epoll::ON_CLI_PKG);
  	DLFUNC(this->handle, this->functions.on_srv_pkg, "on_srv_pkg",
-		ice::on_functions_tcp_server_epoll::ON_SRV_PKG);
+		on_functions_tcp_server_epoll::ON_SRV_PKG);
  	DLFUNC(this->handle, this->functions.on_cli_conn_closed, "on_cli_conn_closed",
-		ice::on_functions_tcp_server_epoll::ON_CLI_CONN_CLOSED);
+		on_functions_tcp_server_epoll::ON_CLI_CONN_CLOSED);
  	DLFUNC(this->handle, this->functions.on_svr_conn_closed, "on_svr_conn_closed",
-		ice::on_functions_tcp_server_epoll::ON_SVR_CONN_CLOSED);
+		on_functions_tcp_server_epoll::ON_SVR_CONN_CLOSED);
    	DLFUNC(this->handle, this->functions.on_init, "on_init",
-		ice::on_functions_tcp_server_epoll::ON_INIT);
+		on_functions_tcp_server_epoll::ON_INIT);
   	DLFUNC(this->handle, this->functions.on_fini, "on_fini",
-		ice::on_functions_tcp_server_epoll::ON_FINI);
+		on_functions_tcp_server_epoll::ON_FINI);
   	DLFUNC(this->handle, this->functions.on_events, "on_events",
-		ice::on_functions_tcp_server_epoll::ON_EVENTS);
+		on_functions_tcp_server_epoll::ON_EVENTS);
 	DLFUNC(this->handle, this->functions.on_mcast_pkg, "on_mcast_pkg",
-		ice::on_functions_tcp_server_epoll::ON_MCAST_PKG);
+		on_functions_tcp_server_epoll::ON_MCAST_PKG);
+	DLFUNC(this->handle, this->functions.on_addr_mcast_pkg, "on_addr_mcast_pkg",
+		on_functions_tcp_server_epoll::ON_ADDR_MCAST_PKG);
 	ret_code = 0;
 
 out:

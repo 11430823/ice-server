@@ -13,13 +13,15 @@
 #include <lib_util.h>
 #include <lib_net/lib_tcp_server_epoll.h>
 
+#include "net_tcp.h"
+
 class dll_t
 {
 	PRIVATE_R_DEFAULT(void*, handle);
 public:
 	dll_t();
 	virtual ~dll_t();
-	ice::on_functions_tcp_server_epoll functions;
+	on_functions_tcp_server_epoll functions;
 	/**
 	 * @brief	注册插件
 	 * @return	int
@@ -31,8 +33,10 @@ public:
 	 * @return	int
 	 */
 	static int on_pipe_event(int fd, epoll_event& r_evs);
+
 protected:
 private:
 };
 
 extern dll_t g_dll;
+

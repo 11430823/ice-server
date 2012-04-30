@@ -55,20 +55,30 @@
 	public:		const varType& get_##varName(void) { return this->varName; } \
 	public:		void set_##varName(const varType& var) { this->varName = var; }
 
-#define safe_delete(p__){\
+#define SAFE_DELETE(p__){\
 		delete p__;\
 		p__ = NULL;\
 	}
 
-#define safe_delete_arr(p__){\
+#define SAFE_DELETE_ARR(p__){\
 		delete [](p__);\
 		(p__) = NULL;\
 	}
 
-#define safe_free(p__){\
+#define SAFE_FREE(p__){\
 		free (p__);\
 		(p__) = NULL;\
 	}
+
+//处理可被系统中断的函数返回EINTR时循环处理.(函数返回值必须为int)
+//example:int nRes = HANDLE_EINTR(::close(s));
+#define HANDLE_EINTR(x) ({\
+	typeof(x) __eintr_code__;\
+	do {\
+	__eintr_code__ = x;\
+	} while(unlikely(__eintr_code__ < 0 && EINTR == errno));\
+	__eintr_code__;\
+	})
 
 namespace ice{
 	#define SUCC 0
@@ -94,15 +104,7 @@ namespace ice{
 	#define FOREACH_PREV(container, it) \
 		for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
 
-	//处理可被系统中断的函数返回EINTR时循环处理.(函数返回值必须为int)
-	//example:int nRes = HANDLE_EINTR(::close(s));
-	#define HANDLE_EINTR(x) ({\
-		typeof(x) __eintr_code__;\
-		do {\
-			__eintr_code__ = x;\
-		} while(unlikely(__eintr_code__ < 0 && EINTR == errno));\
-		__eintr_code__;\
-	})
+
 	//************************************
 	// Brief:     由字符串转换为所需类型
 	// Returns:   void
@@ -156,7 +158,7 @@ namespace ice{
 		template <typename T>
 		void operator() (const T* ptr) const{
 			if (ptr){
-				safe_delete(ptr);
+				SAFE_DELETE(ptr);
 			}
 		}
 	};
@@ -168,7 +170,7 @@ namespace ice{
 		template <typename Ty1, typename Ty2>
 		void operator() (const std::pair<Ty1, Ty2> &ptr) const{
 			if (ptr.second){
-				safe_delete(ptr.second);
+				SAFE_DELETE(ptr.second);
 			}		
 		}
 	};
