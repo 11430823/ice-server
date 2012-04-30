@@ -81,7 +81,11 @@ namespace ice{
 
 		/*! Called to process multicast packages from the specified `mcast_ip` and `mcast_port`. Called once for each package. */
 		typedef void (*ON_MCAST_PKG)(const void* pkg, int len);
-		ON_MCAST_PKG on_mcast_pkg;//todo 调用的地方.
+		ON_MCAST_PKG on_mcast_pkg;
+
+		/*! Called to process multicast packages from the specified `addr_mcast_ip` and `addr_mcast_port`. Called once for each package. */
+		typedef void (*ON_ADDR_MCAST_PKG)(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/);
+		ON_ADDR_MCAST_PKG on_addr_mcast_pkg;
 		on_functions_tcp_srv();
 	};
 
