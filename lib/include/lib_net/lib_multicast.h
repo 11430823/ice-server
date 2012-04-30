@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "lib_net.h"
+#include "lib_udp.h"
 
 namespace ice{
 
@@ -21,7 +21,7 @@ namespace ice{
 	};
 #pragma pack()
 
-	class lib_multicast_t : public lib_net_t
+	class lib_multicast_t : public lib_udp_t
 	{
 		PROTECTED_RW_DEFAULT(std::string, mcast_incoming_if);//组播 接收
 		PROTECTED_RW_DEFAULT(std::string, mcast_outgoing_if);//组播 发送
@@ -32,13 +32,6 @@ namespace ice{
 			this->mcast_port = 0;
 		}
 		virtual ~lib_multicast_t(){}
-		virtual int send(const void* buf, int total){
-			//todo man sendto 查看有什么需要注意的
-			return ::sendto(this->fd, buf, total, 0, (sockaddr*)&(this->mcast_addr), sizeof(this->mcast_addr));
-		}
-		virtual int recv(void* buf, int bufsize){
-			return 0;
-		}
 
 		/**
 		* @brief	创建组播
@@ -48,25 +41,25 @@ namespace ice{
 		* @param	const std::string & mcast_outgoing_if 发送
 		* @return	int 0:成功
 		*/
-		int create(const std::string& mcast_ip, uint16_t mcast_port, const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if);
+		int create(const std::string& mcast_ip, uint16_t mcast_port,
+			const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if);
 	protected:
-		sockaddr_in mcast_addr;
 	private:
 		lib_multicast_t(const lib_multicast_t& cr);
 		lib_multicast_t& operator=(const lib_multicast_t& cr);
 	private:
-		
 	};
 
 	class lib_addr_multicast_t : public lib_multicast_t
 	{
+	public:
 		enum {
 			MCAST_NOTIFY_ADDR   = 0,
 		};
 
 		enum E_ADDR_MCAST_PKG_TYPE{
-			ADDR_MCAST_1ST_PKG	= 1,
-			ADDR_MCAST_SYN_PKG	= 2
+			ADDR_MCAST_1ST_PKG	= 1,//启动时第一次发包
+			ADDR_MCAST_SYN_PKG	= 2//平时同步用包
 		};
 #pragma pack(1)
 		struct addr_mcast_pkg_t {
@@ -80,7 +73,7 @@ namespace ice{
 	public:
 		lib_addr_multicast_t(){}
 		virtual ~lib_addr_multicast_t(){}
-		void pack_this_service_info(uint32_t svr_id, const char* svr_name,
+		void mcast_notify_addr(uint32_t svr_id, const char* svr_name,
 			const char* svr_ip, uint16_t svr_port, E_ADDR_MCAST_PKG_TYPE pkg_type = ADDR_MCAST_SYN_PKG);
 	protected:
 		
