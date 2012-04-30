@@ -19,10 +19,10 @@ int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_por
 
 	lib_file_t::set_io_block(this->fd, false);
 
-	memset(&this->mcast_addr, 0, sizeof(this->mcast_addr));
-	this->mcast_addr.sin_family = AF_INET;
-	::inet_pton(AF_INET, this->mcast_ip.c_str(), &(this->mcast_addr.sin_addr));
-	this->mcast_addr.sin_port = htons(this->mcast_port);
+	memset(&this->addr, 0, sizeof(this->addr));
+	this->addr.sin_family = AF_INET;
+	::inet_pton(AF_INET, this->mcast_ip.c_str(), &(this->addr.sin_addr));
+	this->addr.sin_port = htons(this->mcast_port);
 
 	lib_tcp_t::set_reuse_addr(this->fd);
 
@@ -39,14 +39,14 @@ int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_por
 			errno, strerror(errno), this->mcast_outgoing_if.c_str()));
 	}
 
-	if (::bind(this->fd, (struct sockaddr*)&this->mcast_addr, sizeof(this->mcast_addr)) == -1) {
+	if (::bind(this->fd, (struct sockaddr*)&this->addr, sizeof(this->addr)) == -1) {
 		ERROR_RETURN(-1, ("failed to bind mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	// Join the Multicast Group
 	struct group_req req;
 	req.gr_interface = if_nametoindex(this->mcast_incoming_if.c_str());
-	memcpy(&req.gr_group, &this->mcast_addr, sizeof(this->mcast_addr));
+	memcpy(&req.gr_group, &this->addr, sizeof(this->addr));
 	if (-1 == ::setsockopt(this->fd, IPPROTO_IP, MCAST_JOIN_GROUP, &req, sizeof(req))) {
 		ERROR_RETURN(-1, ("failed to join mcast grp [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
@@ -54,7 +54,7 @@ int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_por
 	return 0;
 }
 
-void ice::lib_addr_multicast_t::pack_this_service_info( uint32_t svr_id,
+void ice::lib_addr_multicast_t::mcast_notify_addr( uint32_t svr_id,
 		const char* svr_name, const char* svr_ip, uint16_t svr_port, E_ADDR_MCAST_PKG_TYPE pkg_type)
 {
 	char* data = new char[sizeof(this->hdr) + sizeof(this->pkg)];
@@ -67,7 +67,7 @@ void ice::lib_addr_multicast_t::pack_this_service_info( uint32_t svr_id,
 	memcpy(data, &(this->hdr), sizeof(this->hdr));
 	memcpy(data + sizeof(this->hdr), &(this->pkg), sizeof(this->pkg));
 	this->send(data, sizeof(this->hdr) + sizeof(this->pkg));
-	safe_delete_arr(data);
+	SAFE_DELETE_ARR(data);
 }
 
 ice::lib_addr_multicast_t::addr_mcast_pkg_t::addr_mcast_pkg_t()
