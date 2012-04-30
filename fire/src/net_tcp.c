@@ -1,5 +1,4 @@
 #include <string.h>
-#include <sys/epoll.h>
 
 #include <lib_util.h>
 #include <lib_log.h>
