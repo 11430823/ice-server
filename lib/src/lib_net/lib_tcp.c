@@ -22,6 +22,7 @@ int ice::lib_tcp_t::send( const void* buf, int total )
 			} else if (EAGAIN == errno || EWOULDBLOCK == errno) {
 				break;
 			} else {
+				ALERT_LOG("send err [err_code:%u, err_msg:%s]", errno, ::strerror(errno));
 				return -1;
 			}
 		}

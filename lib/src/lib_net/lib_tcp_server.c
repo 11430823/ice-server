@@ -111,7 +111,7 @@ ice::lib_tcp_srv_t::~lib_tcp_srv_t()
 			}
 			cfi.close();
 		}
-		safe_delete_arr(this->peer_fd_infos);
+		SAFE_DELETE_ARR(this->peer_fd_infos);
 	}
 	lib_file_t::close_fd(this->listen_fd);
 }
@@ -127,4 +127,5 @@ ice::on_functions_tcp_srv::on_functions_tcp_srv()
 	this->on_fini = 0;
 	this->on_get_pkg_len = 0;
 	this->on_mcast_pkg = 0;
+	this->on_addr_mcast_pkg = 0;
 }
