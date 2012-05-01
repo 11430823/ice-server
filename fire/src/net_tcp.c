@@ -86,6 +86,7 @@ int tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 	while(check_run_fn()){
 		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
 		ice::renew_now();
+		g_addr_mcast.syn_info();
 		this->on_functions->on_events();
 		if (0 == event_num){
 			//time out
@@ -123,7 +124,6 @@ int tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 				} else if (ice::FD_TYPE_MCAST == fd_info.fd_type){
 					this->handle_peer_mcast_msg(fd_info);
 				} else if (ice::FD_TYPE_ADDR_MCAST == fd_info.fd_type){
-					//todo 添加地址同步广播包的处理
 					this->handle_peer_add_mcast_msg(fd_info);
 				}
 				
@@ -175,7 +175,6 @@ tcp_server_epoll_t::tcp_server_epoll_t(uint32_t max_events_num)
 	this->epoll_wait_time_out = -1;
 	this->on_pipe_event = NULL;
 	this->on_functions = NULL;
-	this->addr_mcast = NULL;
 }
 
 int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize)
@@ -194,18 +193,18 @@ int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_nu
 	ice::lib_file_t::set_io_block(this->listen_fd, false);
 #endif
 
-	int ret = lib_tcp_t::set_reuse_addr(this->listen_fd);
+	int ret = ice::lib_tcp_t::set_reuse_addr(this->listen_fd);
 	if (-1 == ret){
 		ice::lib_file_t::close_fd(this->listen_fd);
 		return -1;
 
 	}
-	ret = lib_net_t::set_recvbuf(this->listen_fd, bufsize);
+	ret = ice::lib_net_t::set_recvbuf(this->listen_fd, bufsize);
 	if (-1 == ret){
 		ice::lib_file_t::close_fd(this->listen_fd);
 		return -1;
 	}
-	ret = lib_net_t::set_sendbuf(this->listen_fd, bufsize);
+	ret = ice::lib_net_t::set_sendbuf(this->listen_fd, bufsize);
 	if(-1 == ret){
 		ice::lib_file_t::close_fd(this->listen_fd);
 		return -1;
@@ -237,7 +236,7 @@ int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_nu
 
 int tcp_server_epoll_t::create()
 {
-	if ((this->fd = epoll_create(this->cli_fd_value_max)) < 0) {
+	if ((this->fd = ::epoll_create(this->cli_fd_value_max)) < 0) {
 		ALERT_LOG("EPOLL_CREATE FAILED [ERROR:%s]", strerror (errno));
 		return -1;
 	}
@@ -401,43 +400,36 @@ void tcp_server_epoll_t::handle_peer_add_mcast_msg( ice::lib_tcp_peer_info_t& fd
 {
 	recv_peer_msg(fd_info);
 	if (fd_info.recv_buf.get_write_pos() > 0){
-		ice::mcast_pkg_header_t* hdr = (ice::mcast_pkg_header_t*)fd_info.recv_buf.get_data();
-		ice::lib_addr_multicast_t::addr_mcast_pkg_t* add_mcast_info = (ice::lib_addr_multicast_t::addr_mcast_pkg_t*)hdr->body;
+		mcast_pkg_header_t* hdr = (mcast_pkg_header_t*)fd_info.recv_buf.get_data();
+		addr_mcast_pkg_t* add_mcast_info = (addr_mcast_pkg_t*)hdr->body;
 		std::string strname = add_mcast_info->name;
-		ADDR_MCAST_MAP::iterator it = this->addr_mcast_map.find(strname);
-		if (hdr->pkg_type == ice::lib_addr_multicast_t::ADDR_MCAST_1ST_PKG){
-			if (this->addr_mcast_map.end() != it){
+		addr_mcast_t::ADDR_MCAST_MAP::iterator it = g_addr_mcast.addr_mcast_map.find(strname);
+		if (hdr->pkg_type == addr_mcast_t::ADDR_MCAST_1ST_PKG){
+			if (g_addr_mcast.addr_mcast_map.end() != it){
 				ALERT_LOG("addr mcast svr name conflict [name:%s, ip:%s, port:%u, id:%u]", 
 					add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, add_mcast_info->svr_id);
 				return;
 			} else {
-				addr_mcast_syn_info_t syn_info;
+				addr_mcast_t::addr_mcast_syn_info_t syn_info;
 				syn_info.addr_mcast_info = *add_mcast_info;
-				this->addr_mcast_map[strname] = syn_info;
-				this->addr_mcast->mcast_notify_addr(g_service.get_bind_elem_id(),
-					g_service.get_bind_elem_name(), g_service.bind_elem->ip.c_str(), g_service.bind_elem->port);
+				g_addr_mcast.addr_mcast_map[strname] = syn_info;
+				g_addr_mcast.mcast_notify_addr();
 			}
 		}
 		
-		if (this->addr_mcast_map.end() != it){
-			addr_mcast_syn_info_t& syn_info = it->second;
+		if (g_addr_mcast.addr_mcast_map.end() != it){
+			addr_mcast_t::addr_mcast_syn_info_t& syn_info = it->second;
 			syn_info.syn_time = ice::get_now_tv()->tv_sec;
 		} else {//或许是超时后发来的数据包
 			WARN_LOG("addr mcast recv syn pkg timeout or waring [name:%s, ip:%s, port:%u, id:%u]", 
 				add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, add_mcast_info->svr_id);
-			addr_mcast_syn_info_t syn_info;
+			addr_mcast_t::addr_mcast_syn_info_t syn_info;
 			syn_info.addr_mcast_info = *add_mcast_info;
-			this->addr_mcast_map[strname] = syn_info;
-			this->addr_mcast->mcast_notify_addr(g_service.get_bind_elem_id(),
-				g_service.get_bind_elem_name(), g_service.bind_elem->ip.c_str(), g_service.bind_elem->port);
+			g_addr_mcast.addr_mcast_map[strname] = syn_info;
+			g_addr_mcast.mcast_notify_addr();
 		}
 		this->on_functions->on_addr_mcast_pkg(add_mcast_info->svr_id, 
 			add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, 1);
 		fd_info.recv_buf.pop_front(fd_info.recv_buf.get_write_pos());
 	}
-}
-
-tcp_server_epoll_t::addr_mcast_syn_info_t::addr_mcast_syn_info_t()
-{
-	syn_time = ice::get_now_tv()->tv_sec;
 }

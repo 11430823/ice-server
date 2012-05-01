@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <lib_net/lib_multicast.h>
-
 class service_t
 {
 public:
@@ -21,8 +19,6 @@ public:
 	const char* get_bind_elem_name();
 protected:
 private:
-	ice::lib_multicast_t mcast;
-	ice::lib_addr_multicast_t addr_mcast;
 };
 
 extern service_t g_service;
