@@ -13,28 +13,20 @@
 
 #include <lib_net/lib_tcp_server.h>
 #include <lib_util.h>
-#include <lib_net/lib_multicast.h>
+
+#include "mcast.h"
 
 struct on_functions_tcp_server_epoll : public ice::on_functions_tcp_srv 
 {
 };
+
 class tcp_server_epoll_t : public ice::lib_tcp_srv_t
 {
-	struct addr_mcast_syn_info_t 
-	{
-		ice::lib_addr_multicast_t::addr_mcast_pkg_t addr_mcast_info;
-		uint32_t syn_time;
-		addr_mcast_syn_info_t();
-	};
-	
 public:
 	typedef int (*ON_PIPE_EVENT)(int fd, epoll_event& r_evs);
 	PRIVATE_RW_DEFAULT(ON_PIPE_EVENT, on_pipe_event);
 	PRIVATE_RW_DEFAULT(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
 	PRIVATE_R_DEFAULT(on_functions_tcp_server_epoll*, on_functions);//回调函数
-	PRIVATE_RW_DEFAULT(ice::lib_addr_multicast_t*, addr_mcast);//地址组播
-	typedef std::map<std::string, addr_mcast_syn_info_t> ADDR_MCAST_MAP;
-	ADDR_MCAST_MAP addr_mcast_map;//地址广播信息
 public:
 	tcp_server_epoll_t(uint32_t max_events_num);
 	virtual ~tcp_server_epoll_t();
@@ -52,7 +44,8 @@ public:
 	*/
 	virtual int listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize);
 	virtual int run(CHECK_RUN check_run_fn);
-	virtual ice::lib_tcp_peer_info_t* add_connect(int fd, ice::E_FD_TYPE fd_type, const char* ip, uint16_t port);
+	virtual ice::lib_tcp_peer_info_t* add_connect(int fd, 
+		ice::E_FD_TYPE fd_type, const char* ip, uint16_t port);
 public:
 	int mod_events(int fd, uint32_t flag);
 	int add_events(int fd, uint32_t flag);

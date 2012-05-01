@@ -54,31 +54,28 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 
 	//创建组播
 	if (!g_bench_conf.get_mcast_ip().empty()){
-		if (0 != this->mcast.create(g_bench_conf.get_mcast_ip(), 
+		if (0 != g_mcast.create(g_bench_conf.get_mcast_ip(), 
 			g_bench_conf.get_mcast_port(), g_bench_conf.get_mcast_incoming_if(),
 			g_bench_conf.get_mcast_outgoing_if())){
 			ALERT_LOG("mcast.create err");
 			return;
 		}else{
-			g_net_server.get_server_epoll()->add_connect(this->mcast.get_fd(),
+			g_net_server.get_server_epoll()->add_connect(g_mcast.get_fd(),
 				ice::FD_TYPE_MCAST, g_bench_conf.get_mcast_ip().c_str(), g_bench_conf.get_mcast_port());
 		}
 	}
 
 	//创建地址信息组播
 	if (!g_bench_conf.get_addr_mcast_ip().empty()){
-		if (0 != this->addr_mcast.create(g_bench_conf.get_addr_mcast_ip(),
+		if (0 != g_addr_mcast.create(g_bench_conf.get_addr_mcast_ip(),
 			g_bench_conf.get_addr_mcast_port(), g_bench_conf.get_addr_mcast_incoming_if(),
 			g_bench_conf.get_addr_mcast_outgoing_if())){
 			ALERT_LOG("addr mcast.create err");
 			return;
 		} else {
-			g_net_server.get_server_epoll()->add_connect(this->addr_mcast.get_fd(),
+			g_net_server.get_server_epoll()->add_connect(g_addr_mcast.get_fd(),
 				ice::FD_TYPE_ADDR_MCAST, g_bench_conf.get_addr_mcast_ip().c_str(), g_bench_conf.get_addr_mcast_port());
-			this->addr_mcast.mcast_notify_addr(g_service.get_bind_elem_id(), 
-				g_service.get_bind_elem_name(), g_service.bind_elem->ip.c_str(),
-				g_service.bind_elem->port, ice::lib_addr_multicast_t::ADDR_MCAST_1ST_PKG);
-			g_net_server.get_server_epoll()->set_addr_mcast(&this->addr_mcast);
+			g_addr_mcast.mcast_notify_addr(addr_mcast_t::ADDR_MCAST_1ST_PKG);
 		}
 	}
 

@@ -5,7 +5,8 @@
 
 #include "lib_net/lib_multicast.h"
 
-int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_port, const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if)
+int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
+								 const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if)
 {
 	this->mcast_ip = mcast_ip;
 	this->mcast_port = mcast_port;
@@ -54,32 +55,3 @@ int ice::lib_multicast_t::create(const std::string& mcast_ip, uint16_t mcast_por
 	return 0;
 }
 
-void ice::lib_addr_multicast_t::mcast_notify_addr( uint32_t svr_id,
-		const char* svr_name, const char* svr_ip, uint16_t svr_port, E_ADDR_MCAST_PKG_TYPE pkg_type)
-{
-	char* data = new char[sizeof(this->hdr) + sizeof(this->pkg)];
-	this->hdr.pkg_type = pkg_type;
-	this->hdr.proto_type = MCAST_NOTIFY_ADDR;
-	this->pkg.svr_id     = svr_id;
-	strcpy(this->pkg.name, svr_name);
-	strcpy(this->pkg.ip, svr_ip);
-	this->pkg.port = svr_port;
-	memcpy(data, &(this->hdr), sizeof(this->hdr));
-	memcpy(data + sizeof(this->hdr), &(this->pkg), sizeof(this->pkg));
-	this->send(data, sizeof(this->hdr) + sizeof(this->pkg));
-	SAFE_DELETE_ARR(data);
-}
-
-ice::lib_addr_multicast_t::addr_mcast_pkg_t::addr_mcast_pkg_t()
-{
-	this->svr_id = 0;
-	memset(this->name, 0, sizeof(this->name));
-	memset(this->ip, 0, sizeof(this->ip));
-	this->port = 0;
-}
-
-ice::mcast_pkg_header_t::mcast_pkg_header_t()
-{
-	this->pkg_type = 0;
-	this->proto_type = 0;
-}
