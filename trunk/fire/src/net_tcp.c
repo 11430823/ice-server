@@ -6,6 +6,7 @@
 #include <lib_timer.h>
 #include <lib_time.h>
 
+#include "daemon.h"
 #include "service.h"
 #include "bind_conf.h"
 #include "net_tcp.h"
@@ -86,7 +87,9 @@ int tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 	while(check_run_fn()){
 		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
 		ice::renew_now();
-		g_addr_mcast.syn_info();
+		if (!g_is_parent){
+			g_addr_mcast.syn_info();
+		}
 		this->on_functions->on_events();
 		if (0 == event_num){
 			//time out
@@ -404,10 +407,13 @@ void tcp_server_epoll_t::handle_peer_add_mcast_msg( ice::lib_tcp_peer_info_t& fd
 		addr_mcast_pkg_t* add_mcast_info = (addr_mcast_pkg_t*)hdr->body;
 		std::string strname = add_mcast_info->name;
 		addr_mcast_t::ADDR_MCAST_MAP::iterator it = g_addr_mcast.addr_mcast_map.find(strname);
+		TRACE_LOG("type:%u, ip:%s, name:%s, port:%u, id:%u", hdr->pkg_type,
+			add_mcast_info->ip, add_mcast_info->name, add_mcast_info->port, add_mcast_info->svr_id);
 		if (hdr->pkg_type == addr_mcast_t::ADDR_MCAST_1ST_PKG){
 			if (g_addr_mcast.addr_mcast_map.end() != it){
 				ALERT_LOG("addr mcast svr name conflict [name:%s, ip:%s, port:%u, id:%u]", 
 					add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, add_mcast_info->svr_id);
+				fd_info.recv_buf.pop_front(fd_info.recv_buf.get_write_pos());
 				return;
 			} else {
 				addr_mcast_t::addr_mcast_syn_info_t syn_info;
@@ -420,9 +426,7 @@ void tcp_server_epoll_t::handle_peer_add_mcast_msg( ice::lib_tcp_peer_info_t& fd
 		if (g_addr_mcast.addr_mcast_map.end() != it){
 			addr_mcast_t::addr_mcast_syn_info_t& syn_info = it->second;
 			syn_info.syn_time = ice::get_now_tv()->tv_sec;
-		} else {//或许是超时后发来的数据包
-			WARN_LOG("addr mcast recv syn pkg timeout or waring [name:%s, ip:%s, port:%u, id:%u]", 
-				add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, add_mcast_info->svr_id);
+		} else {
 			addr_mcast_t::addr_mcast_syn_info_t syn_info;
 			syn_info.addr_mcast_info = *add_mcast_info;
 			g_addr_mcast.addr_mcast_map[strname] = syn_info;

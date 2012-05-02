@@ -35,7 +35,7 @@ void addr_mcast_t::mcast_notify_addr( E_ADDR_MCAST_PKG_TYPE pkg_type )
 	this->send(data, sizeof(this->hdr) + sizeof(this->pkg));
 	SAFE_DELETE_ARR(data);
 
-	this->next_notify_sec = ice::lib_random_t::random(20,30) + ice::get_now_tv()->tv_sec;
+	this->next_notify_sec = ice::lib_random_t::random(20, 30) + ice::get_now_tv()->tv_sec;
 }
 
 void addr_mcast_t::syn_info()
@@ -44,7 +44,7 @@ void addr_mcast_t::syn_info()
 	ADDR_MCAST_MAP::iterator it = this->addr_mcast_map.begin();
 	for (; this->addr_mcast_map.end() != it;){
 		addr_mcast_syn_info_t& info = it->second;
-		if (ice::get_now_tv()->tv_sec - info.syn_time > ADDR_MCAST_SYN_TIME_OUT_SEC){
+		if ((ice::get_now_tv()->tv_sec - info.syn_time) > ADDR_MCAST_SYN_TIME_OUT_SEC){
 			g_dll.functions.on_addr_mcast_pkg(info.addr_mcast_info.svr_id, info.addr_mcast_info.name,
 				info.addr_mcast_info.ip, info.addr_mcast_info.port, 0);
 			this->addr_mcast_map.erase(it++);
