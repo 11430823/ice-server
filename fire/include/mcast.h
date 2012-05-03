@@ -15,56 +15,52 @@
 
 #pragma pack(1)
 struct mcast_pkg_header_t {
-	uint16_t	pkg_type;   // for mcast_notify_addr: 1st, syn
-	uint16_t	proto_type; // mcast_notify_addr...
+	uint32_t	cmd;   // for mcast_notify_addr: 1st, syn
 	char		body[];
 	mcast_pkg_header_t();
 };
 
-struct addr_mcast_pkg_t {
+enum E_MCAST_CMD{
+	MCAST_CMD_ADDR_1ST	= 1,//启动时第一次发包
+	MCAST_CMD_ADDR_SYN	= 2//平时同步用包
+};
+
+struct mcast_cmd_addr_1st_t {
 	uint32_t	svr_id;
 	char		name[16];
 	char		ip[16];
 	uint16_t	port;
-	addr_mcast_pkg_t();
+	mcast_cmd_addr_1st_t();
 };
-#pragma pack()
+typedef mcast_cmd_addr_1st_t mcast_cmd_addr_syn_t;
 
-enum E_MCAST_NOTIFY_TYPE{
-	MCAST_NOTIFY_ADDR   = 0,
-};
+#pragma pack()
 
 class addr_mcast_t : public ice::lib_mcast_t
 {
 public:
-	enum E_ADDR_MCAST_PKG_TYPE{
-		ADDR_MCAST_1ST_PKG	= 1,//启动时第一次发包
-		ADDR_MCAST_SYN_PKG	= 2//平时同步用包
-	};
-	struct addr_mcast_syn_info_t 
-	{
-		addr_mcast_pkg_t addr_mcast_info;
-		uint32_t syn_time;
-		addr_mcast_syn_info_t();
-	};
-	typedef std::map<std::string, addr_mcast_syn_info_t> ADDR_MCAST_MAP;
-	ADDR_MCAST_MAP addr_mcast_map;//地址广播信息
-
-public:
 	addr_mcast_t();
 	virtual ~addr_mcast_t(){}
-	void mcast_notify_addr(E_ADDR_MCAST_PKG_TYPE pkg_type = ADDR_MCAST_SYN_PKG);
+	void mcast_notify_addr(E_MCAST_CMD pkg_type = MCAST_CMD_ADDR_SYN);
 	void syn_info();
+	void handle_msg(ice::lib_active_buf_t& fd_info);
 protected:
-
 private:
 	addr_mcast_t(const addr_mcast_t& cr);
 	addr_mcast_t& operator=(const addr_mcast_t& cr);
+
+	struct addr_mcast_pkg_t {
+		char		ip[16];
+		uint16_t	port;
+		uint32_t syn_time;
+		addr_mcast_pkg_t();
+	};
 	mcast_pkg_header_t hdr;
-	addr_mcast_pkg_t   pkg;
 	time_t next_notify_sec;//下一次通知信息的时间
-
-
+	typedef std::map<uint32_t, addr_mcast_pkg_t> ADDR_MCAST_SVR_MAP;//KEY:svr_id,  val:svr_info
+	typedef std::map<std::string, ADDR_MCAST_SVR_MAP> ADDR_MCAST_MAP;
+	ADDR_MCAST_MAP addr_mcast_map;//地址广播信息
+	void add_svr_info(mcast_cmd_addr_1st_t& svr);
 };
 
 extern addr_mcast_t g_addr_mcast;
