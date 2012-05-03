@@ -26,12 +26,12 @@ int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
 	this->addr.sin_port = htons(this->mcast_port);
 
 	lib_tcp_t::set_reuse_addr(this->fd);
-#if 0//组播自己可收到
+
 	int loop = 1;
 	if (-1 == ::setsockopt(this->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop))){
 		ERROR_RETURN(-1, ("failed to set ip_multicast_loop [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
-#endif
+
 	// set default interface for outgoing multicasts
 	in_addr_t ipaddr;
 	::inet_pton(AF_INET, this->mcast_outgoing_if.c_str(), &ipaddr);

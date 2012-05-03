@@ -75,7 +75,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		} else {
 			g_net_server.get_server_epoll()->add_connect(g_addr_mcast.get_fd(),
 				ice::FD_TYPE_ADDR_MCAST, g_bench_conf.get_addr_mcast_ip().c_str(), g_bench_conf.get_addr_mcast_port());
-			g_addr_mcast.mcast_notify_addr(addr_mcast_t::ADDR_MCAST_1ST_PKG);
+			g_addr_mcast.mcast_notify_addr(MCAST_CMD_ADDR_1ST);
 		}
 	}
 

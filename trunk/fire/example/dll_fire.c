@@ -125,7 +125,7 @@ extern "C" void on_svr_conn_closed(int fd)
  */
 extern "C" void	on_mcast_pkg(const void* data, int len)
 {
-	INFO_LOG("[len:%d]", len);
+	TRACE_LOG("[len:%d]", len);
 }
 
 /**
@@ -133,7 +133,7 @@ extern "C" void	on_mcast_pkg(const void* data, int len)
  */
 extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/)
 {
-	INFO_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
+	TRACE_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
 }
 
 

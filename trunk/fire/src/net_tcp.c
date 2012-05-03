@@ -13,39 +13,9 @@
 
 net_server_t g_net_server;
 
-int net_server_t::create(uint32_t max_fd_num)
-{
-	this->server_epoll = new tcp_server_epoll_t(max_fd_num);
-	if (NULL == this->server_epoll){
-		ALERT_LOG("new tcp_server_epoll err [maxevents:%u]", max_fd_num);
-		return -1;
-	}
-	int ret = 0;
-	if (0 != (ret = this->server_epoll->create())){
-		ALERT_LOG("new tcp_server_epoll create err [ret:%d]", ret);
-		this->destroy();
-		return -1;
-	}
-
-	return 0;
-}
-
-int net_server_t::destroy()
-{
-	SAFE_DELETE(this->server_epoll);
-	return 0;
-}
-
-net_server_t::net_server_t( void )
-{
-	this->server_epoll = NULL;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
-const uint32_t RECV_BUF_LEN = 1024*8;//8K
-
 namespace {
+
+	const uint32_t RECV_BUF_LEN = 1024*8;//8K
 	/**
 	 * @brief	接收对方消息
 	 * @param	ice::lib_tcp_client_t & cli_info
@@ -79,6 +49,33 @@ namespace {
 
 }//end namespace 
 
+int net_server_t::create(uint32_t max_fd_num)
+{
+	this->server_epoll = new tcp_server_epoll_t(max_fd_num);
+	if (NULL == this->server_epoll){
+		ALERT_LOG("new tcp_server_epoll err [maxevents:%u]", max_fd_num);
+		return -1;
+	}
+	int ret = 0;
+	if (0 != (ret = this->server_epoll->create())){
+		ALERT_LOG("new tcp_server_epoll create err [ret:%d]", ret);
+		this->destroy();
+		return -1;
+	}
+
+	return 0;
+}
+
+int net_server_t::destroy()
+{
+	SAFE_DELETE(this->server_epoll);
+	return 0;
+}
+
+net_server_t::net_server_t( void )
+{
+	this->server_epoll = NULL;
+}
 
 int tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 {
@@ -403,37 +400,7 @@ void tcp_server_epoll_t::handle_peer_add_mcast_msg( ice::lib_tcp_peer_info_t& fd
 {
 	recv_peer_msg(fd_info);
 	if (fd_info.recv_buf.get_write_pos() > 0){
-		mcast_pkg_header_t* hdr = (mcast_pkg_header_t*)fd_info.recv_buf.get_data();
-		addr_mcast_pkg_t* add_mcast_info = (addr_mcast_pkg_t*)hdr->body;
-		std::string strname = add_mcast_info->name;
-		addr_mcast_t::ADDR_MCAST_MAP::iterator it = g_addr_mcast.addr_mcast_map.find(strname);
-		TRACE_LOG("type:%u, ip:%s, name:%s, port:%u, id:%u", hdr->pkg_type,
-			add_mcast_info->ip, add_mcast_info->name, add_mcast_info->port, add_mcast_info->svr_id);
-		if (hdr->pkg_type == addr_mcast_t::ADDR_MCAST_1ST_PKG){
-			if (g_addr_mcast.addr_mcast_map.end() != it){
-				ALERT_LOG("addr mcast svr name conflict [name:%s, ip:%s, port:%u, id:%u]", 
-					add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, add_mcast_info->svr_id);
-				fd_info.recv_buf.pop_front(fd_info.recv_buf.get_write_pos());
-				return;
-			} else {
-				addr_mcast_t::addr_mcast_syn_info_t syn_info;
-				syn_info.addr_mcast_info = *add_mcast_info;
-				g_addr_mcast.addr_mcast_map[strname] = syn_info;
-				g_addr_mcast.mcast_notify_addr();
-			}
-		}
-		
-		if (g_addr_mcast.addr_mcast_map.end() != it){
-			addr_mcast_t::addr_mcast_syn_info_t& syn_info = it->second;
-			syn_info.syn_time = ice::get_now_tv()->tv_sec;
-		} else {
-			addr_mcast_t::addr_mcast_syn_info_t syn_info;
-			syn_info.addr_mcast_info = *add_mcast_info;
-			g_addr_mcast.addr_mcast_map[strname] = syn_info;
-			g_addr_mcast.mcast_notify_addr();
-		}
-		this->on_functions->on_addr_mcast_pkg(add_mcast_info->svr_id, 
-			add_mcast_info->name, add_mcast_info->ip, add_mcast_info->port, 1);
+		g_addr_mcast.handle_msg(fd_info.recv_buf);
 		fd_info.recv_buf.pop_front(fd_info.recv_buf.get_write_pos());
 	}
 }
