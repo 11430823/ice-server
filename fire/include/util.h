@@ -11,3 +11,17 @@
 const int LISTEN_NUM = 1024;
 const int SEND_RECV_BUF = 32 * 1024;
 const int EPOLL_TIME_OUT = 100;
+
+//////////////////////////////////////////////////////////////////////////
+/*
+*  2. 增加了异步连接到服务端的接口：asyn_connect_to_svr和asyn_connect_to_service
+
+
+1. 加入了close_svr接口，用于关闭主动发起的连接
+
+
+2. 进程core掉时，会发包给短信报警服务器
+
+
+
+1. work进程监听udp 接口*/

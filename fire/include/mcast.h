@@ -44,6 +44,7 @@ public:
 	void mcast_notify_addr(E_MCAST_CMD pkg_type = MCAST_CMD_ADDR_SYN);
 	void syn_info();
 	void handle_msg(ice::lib_active_buf_t& fd_info);
+	bool get_1st_svr_ip_port(const char* svr_name, std::string& ip, uint16_t& port);
 protected:
 private:
 	addr_mcast_t(const addr_mcast_t& cr);
@@ -59,6 +60,7 @@ private:
 	time_t next_notify_sec;//下一次通知信息的时间
 	typedef std::map<uint32_t, addr_mcast_pkg_t> ADDR_MCAST_SVR_MAP;//KEY:svr_id,  val:svr_info
 	typedef std::map<std::string, ADDR_MCAST_SVR_MAP> ADDR_MCAST_MAP;
+public:
 	ADDR_MCAST_MAP addr_mcast_map;//地址广播信息
 	void add_svr_info(mcast_cmd_addr_1st_t& svr);
 };

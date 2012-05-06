@@ -70,6 +70,8 @@ int dll_t::register_plugin()
 		on_functions_tcp_server_epoll::ON_MCAST_PKG);
 	DLFUNC(this->handle, this->functions.on_addr_mcast_pkg, "on_addr_mcast_pkg",
 		on_functions_tcp_server_epoll::ON_ADDR_MCAST_PKG);
+	DLFUNC(this->handle, this->functions.on_udp_pkg, "on_udp_pkg",
+		on_functions_tcp_server_epoll::ON_UDP_PKG);
 	ret_code = 0;
 
 out:

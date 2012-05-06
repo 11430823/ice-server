@@ -22,7 +22,7 @@ extern struct tm      tm_cur;
 /**
  * @brief   回调函数的类型。如果回调函数返回0，则表示定时器到期时要删除该定时器，反之，则不删除。
  */
-typedef int (*timer_cb_func_t)(void*, void*);
+typedef int (*ON_TIMER_FUN)(void*, void*);
 
 /**
  * @brief   秒级定时器。
@@ -34,8 +34,7 @@ struct timer_struct_t {
 	time_t				expire;
 	void*				owner;
 	void*				data;
-	timer_cb_func_t		function;
-	int					func_indx;
+	ON_TIMER_FUN		function;
 };
 
 /**
@@ -47,8 +46,7 @@ struct micro_timer_struct_t {
 	struct timeval		tv;
 	void*				owner;
 	void*				data;
-	timer_cb_func_t		function;
-	int					func_indx;
+	ON_TIMER_FUN		function;
 };
 
 /**
@@ -95,7 +93,7 @@ namespace ice{
 	 * @return 指向新添加/替换的秒级定时器的指针。
 	 * @see    ADD_TIMER_EVENT, REMOVE_TIMER, remove_timers, REMOVE_TIMERS
 	 */
-	timer_struct_t* add_event(list_head_t* head, timer_cb_func_t func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
+	timer_struct_t* add_event(list_head_t* head, ON_TIMER_FUN func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag);
 
 	/**
 	 * @brief  修改秒级定时器tmr的到期时间。注意：绝对不能在定时器的回调函数中修改该定时器的到期时间！
@@ -123,7 +121,7 @@ namespace ice{
 	 * @return 指向新添加的微秒级定时器的指针。
 	 * @see    REMOVE_MICRO_TIMER, remove_micro_timers, REMOVE_TIMERS
 	 */
-	micro_timer_struct_t* add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data);
+	micro_timer_struct_t* add_micro_event(ON_TIMER_FUN func, const struct timeval* tv, void* owner, void* data);
 
 	void remove_micro_timer(micro_timer_struct_t *t, int freed);
 
@@ -185,7 +183,7 @@ namespace ice{
  * @see    add_event
  */
 #define ADD_TIMER_EVENT(owner_, func_, data_, exptm_) \
-		add_event( &((owner_)->timer_list), (func_), (owner_), (data_), (exptm_), timer_add_new_timer)
+	ice::add_event( &((owner_)->timer_list), (func_), (owner_), (data_), (exptm_), timer_add_new_timer)
 
 /**
  * @def    REMOVE_TIMER
@@ -194,7 +192,7 @@ namespace ice{
  * @see    add_event, ADD_TIMER_EVENT, remove_timers
  */
 #define REMOVE_TIMER(timer_) \
-		do_remove_timer((timer_), 0)
+		ice::do_remove_timer((timer_), 0)
 
 /**
  * @def    REMOVE_MICRO_TIMER
@@ -203,7 +201,7 @@ namespace ice{
  * @see    add_micro_event, remove_micro_timers, REMOVE_TIMERS
  */
 #define REMOVE_MICRO_TIMER(timer_) \
-		remove_micro_timer((timer_), 0)
+		ice::remove_micro_timer((timer_), 0)
 /**
  * @def    REMOVE_TIMERS
  * @brief  删除owner_指向的结构体中timer_list成员变量中的所有定时器（对应秒级定时器），并释放内存；
@@ -212,6 +210,6 @@ namespace ice{
  * @see    ADD_TIMER_EVENT, remove_timers, add_micro_event, remove_micro_timers
  */
 #define REMOVE_TIMERS(owner_) \
-		remove_timers(&((owner_)->timer_list)), remove_micro_timers((owner_))
+	ice::remove_timers(&((owner_)->timer_list)), ice::remove_micro_timers((owner_))
 
 
