@@ -135,6 +135,22 @@ void addr_mcast_t::add_svr_info( mcast_cmd_addr_1st_t& svr )
 	this->addr_mcast_map[svr.name][svr.svr_id] = syn_info;
 }
 
+bool addr_mcast_t::get_1st_svr_ip_port( const char* svr_name, std::string& ip, uint16_t& port )
+{
+	FOREACH(this->addr_mcast_map, it){
+		if (it->first == svr_name){
+			ADDR_MCAST_SVR_MAP& am = it->second;
+			FOREACH(am, it2){
+				addr_mcast_pkg_t& ampt = it2->second;
+				ip = ampt.ip;
+				port = ampt.port;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 mcast_cmd_addr_1st_t::mcast_cmd_addr_1st_t()
 {
 	memset(this, 0, sizeof(*this));

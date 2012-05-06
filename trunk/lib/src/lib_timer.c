@@ -27,8 +27,8 @@ namespace {
 	static inline int  find_min_idx(time_t diff, int max_idx);
 	static inline void set_min_exptm(time_t exptm, int idx);
 
-	static inline timer_struct_t* find_event(list_head_t* head, timer_cb_func_t func);
-	static inline timer_struct_t* find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expire);
+	static inline timer_struct_t* find_event(list_head_t* head, ON_TIMER_FUN func);
+	static inline timer_struct_t* find_event_with_expire(list_head_t* head, ON_TIMER_FUN function, time_t expire);
 	void scan_timer_list(const int idx)
 	{
 		int    i;
@@ -87,7 +87,7 @@ namespace {
 		}
 	}
 
-	inline timer_struct_t* find_event(list_head_t* head, timer_cb_func_t function)
+	inline timer_struct_t* find_event(list_head_t* head, ON_TIMER_FUN function)
 	{
 		timer_struct_t* t;
 
@@ -99,7 +99,7 @@ namespace {
 		return NULL;
 	}
 
-	inline timer_struct_t* find_event_with_expire(list_head_t* head, timer_cb_func_t function, time_t expire)
+	inline timer_struct_t* find_event_with_expire(list_head_t* head, ON_TIMER_FUN function, time_t expire)
 	{
 		timer_struct_t* t;
 
@@ -139,7 +139,7 @@ void ice::destroy_timer()
 	}
 }
 
-timer_struct_t* ice::add_event(list_head_t* head, timer_cb_func_t function, void* owner,
+timer_struct_t* ice::add_event(list_head_t* head, ON_TIMER_FUN function, void* owner,
 						  void* data, time_t expire, E_TIMER_CHG_MODE flag)
 {
 	timer_struct_t* timer;
@@ -160,7 +160,6 @@ new_timer:
 	INIT_LIST_HEAD(&timer->sprite_list);
 	INIT_LIST_HEAD(&timer->entry);
 	timer->function  = function;
-	timer->func_indx = 0;
 	timer->expire    = expire;
 	timer->owner     = owner;
 	timer->data      = data;
@@ -211,12 +210,11 @@ void ice::mod_expire_time(timer_struct_t* t, time_t expiretime)
 	set_min_exptm(t->expire, j);
 }
 
-micro_timer_struct_t* ice::add_micro_event(timer_cb_func_t func, const struct timeval* tv, void* owner, void* data)
+micro_timer_struct_t* ice::add_micro_event(ON_TIMER_FUN func, const struct timeval* tv, void* owner, void* data)
 {
 	micro_timer_struct_t* timer = (micro_timer_struct_t*)g_slice_alloc(sizeof *timer);
 	INIT_LIST_HEAD(&timer->entry);
 	timer->function  = func;
-	timer->func_indx = 0;
 	timer->tv        = *tv;
 	timer->owner     = owner;
 	timer->data      = data;
@@ -278,7 +276,6 @@ void ice::do_remove_timer(timer_struct_t* t, int freed)
 		g_slice_free1(sizeof *t, t);
 	} else {
 		t->function = 0;
-		t->func_indx = 0;
 	}
 }
 
@@ -300,7 +297,6 @@ void ice::remove_micro_timer(micro_timer_struct_t *t, int freed)
 		g_slice_free1(sizeof *t, t);
 	} else {
 		t->function = 0;
-		t->func_indx = 0;
 	}
 }
 

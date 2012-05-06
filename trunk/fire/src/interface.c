@@ -6,6 +6,7 @@
 
 #include "net_tcp.h"
 #include "service.h"
+#include "daemon.h"
 #include "interface.h"
 
 int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_t len )
@@ -35,6 +36,19 @@ ice::lib_tcp_peer_info_t* fire::connect( const char* ip, uint16_t port )
 	return NULL;
 }
 
+ice::lib_tcp_peer_info_t* fire::connect( const char* svr_name )
+{
+	std::string ip;
+	uint16_t port = 0;
+	if (!g_addr_mcast.get_1st_svr_ip_port(svr_name, ip, port)){
+		ERROR_LOG("[svr_name:%s]", svr_name);
+		return NULL;
+	}
+	
+	return fire::connect(ip.c_str(), port);
+}
+
+
 uint32_t fire::get_server_id()
 {
 	return g_service.get_bind_elem_id();
@@ -43,4 +57,9 @@ uint32_t fire::get_server_id()
 const char* fire::get_server_name()
 {
 	return g_service.get_bind_elem_name();
+}
+
+bool fire::is_parent()
+{
+	return g_is_parent;
 }
