@@ -101,8 +101,9 @@ namespace ice{
 	#define FOREACH(container, it) \
 		for(typeof((container).begin()) it = (container).begin(); (it) != (container).end(); ++(it))
 
-	#define FOREACH_PREV(container, it) \
-		for(typeof((container).begin()) it = (container).end(); (it) != (container).begin(); --(it))
+	//¿¿
+	#define FOREACH_REVERSE(cotainer, it) \
+		for(typeof((container).rbegin()) it = (container).rbegin(); (it) != (container).rend(); ++(it))
 
 
 	//************************************
