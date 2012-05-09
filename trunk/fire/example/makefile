@@ -1,13 +1,12 @@
 EXE=liblogic.so
 CC=g++
 
-#±àÒëÑ¡Ïî
+#ç¼–è¯‘é€‰é¡¹
 ICE_LIB_PATH=../../lib/
 ICE_LIBS_FLAG=-Wl,-rpath,$(ICE_LIB_PATH)
 FLAG=-Wall -fPIC -MMD -shared -DDEBUG -DENABLE_TRACE_LOG -g -O0 -o
-#FLAG=-Wall -fPIC -MMD -shared -DDEBUG -g -O0 -o
 
-#°üº¬µÄÍ·ÎÄ¼ş
+#åŒ…å«çš„å¤´æ–‡ä»¶
 INCLUDES=-I/usr/include/ -I../include/ -I../../lib/include/
 GLIB_INCLUDES=-I/usr/include/glib-2.0/ -I/usr/lib/glib-2.0/include/ 
 
@@ -15,7 +14,7 @@ LIBS=-L/usr/lib/ -L$(ICE_LIB_PATH)
 
 LINK=-lglib-2.0 -lice $(ICE_LIBS_FLAG)
 
-#±àÒëµÄ´úÂëÎÄ¼ş
+#ç¼–è¯‘çš„ä»£ç æ–‡ä»¶
 LOCAL_SRCS =$(wildcard ./*.c)
 OTHER_SRCS =
 

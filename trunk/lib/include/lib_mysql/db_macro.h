@@ -87,7 +87,7 @@ inline double atof_safe (char *str)
         MYSQL_ROW  row;\
         int list_size;\
         int i;\
-        this->db->id=this->id;\
+        this->db->set_id(this->id);\
         if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
             *p_count=mysql_num_rows(res);\
             *pp_list =(typeof(*pp_list))this->dbser_return_buf;\
@@ -119,7 +119,7 @@ inline double atof_safe (char *str)
 		typeof(item_list)&_item_list=item_list;\
 		MYSQL_RES *res;\
 		MYSQL_ROW  row;\
-        this->db->id=this->id;\
+        this->db->set_id(this->id);\
 		if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
 			typeof(item_list[0]) item ;\
 			while((row = mysql_fetch_row(res))){\
@@ -144,7 +144,7 @@ inline double atof_safe (char *str)
 	{ 	MYSQL_RES *res;\
 		MYSQL_ROW  row;\
 		int i;\
-        this->db->id=this->id;\
+        this->db->set_id(this->id);\
 		if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
 			*p_count=mysql_num_rows(res);\
 			if ((*pp_list =( typeof(*pp_list))malloc(\
@@ -176,7 +176,7 @@ inline double atof_safe (char *str)
 		typeof(item_list)&_item_list=item_list;\
 		MYSQL_RES *res;\
 		MYSQL_ROW  row;\
-        this->db->id=this->id;\
+        this->db->set_id(this->id);\
 		if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
 			typeof(item_list[0]) item ;\
 			while((row = mysql_fetch_row(res))){\
@@ -199,7 +199,7 @@ inline double atof_safe (char *str)
 		MYSQL_RES *res;\
 		MYSQL_ROW row;\
 		int rowcount;\
-        this->db->id=this->id;\
+        this->db->set_id(this->id);\
 		ret =this->db->exec_query_sql(sqlstr,&res);\
 		if (ret==DB_SUCC){\
 			rowcount=mysql_num_rows(res);\

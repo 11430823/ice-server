@@ -16,8 +16,8 @@
  * =====================================================================================
  */
 
-#include <Csync_user_data.h>
-#include <proto_header.h>
+#include "Csync_user_data.h"
+#include "proto_header.h"
 
 Csync_user_data::Csync_user_data(mysql_interface * db, char * db_old_ip,short db_old_port ):tcp(db_old_ip,db_old_port,1,10),user_table(db)
 {

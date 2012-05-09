@@ -17,8 +17,8 @@
  */
 
 #include "Citem_change_log.h"
-#include <dbser/db_error_base.h> 
-#include <dbser/db_macro.h> 
+#include "db_error_base.h" 
+#include "db_macro.h"
 
 Citem_change_log::Citem_change_log(mysql_interface * db,const char * db_name, const char * table_name	)
 	:CtableRoute(db , db_name , table_name,"" )

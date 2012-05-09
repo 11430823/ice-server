@@ -18,7 +18,7 @@
 #ifndef  CITEM_CHANGE_LOG_INC
 #define  CITEM_CHANGE_LOG_INC
 
-#include "CtableRoute.h"
+#include "lib_mysql/CtableRoute.h"
 
 
 enum item_change_log_opt_type {

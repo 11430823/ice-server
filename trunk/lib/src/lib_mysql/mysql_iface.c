@@ -20,6 +20,7 @@ stru_db_cache_state g_db_cache_state;//全局的状态
 mysql_interface::mysql_interface (std::string h, std::string user, std::string pass,
 								  uint16_t port,const char * a_unix_socket)
 {
+	this->id = 0;
 	this->host = h;
 	this->user = user;
 	this->pass = pass;
@@ -34,40 +35,41 @@ mysql_interface::mysql_interface (std::string h, std::string user, std::string p
 	}
 
 	this->is_log_sql = false;
-	this->is_only_exec_select_sql=0;
-	this->is_select_db_succ=true;
+
 	DEBUG_LOG("DB conn msg [%s][%s][%s][%s]", this->host.c_str(), 
 		this->user.c_str(), this->pass.c_str(), this->unix_socket);
 	connect_server ();
 }
-void  mysql_interface::show_error_log(const char* cmd ) 
+
+void  mysql_interface::show_error_log(const char* sql) 
 {
-		DEBUG_LOG(" sqlerr:no[%d]:msg[%s]:sql[%s]",
-				this->get_errno(),this->get_error(), cmd);
+	ERROR_LOG("sqlerr[errno:%d, error:%s, sql:%s]", this->get_errno(), this->get_error(), sql);
 }
+
 mysql_interface::~mysql_interface ()
 {
-	mysql_close (&handle);
+	mysql_close(&handle);
 }
 
 int mysql_interface::connect_server ()
 {
-	//CLIENT_FOUND_ROWS		
-	//让update返回的影响行数是查到的行数
 	char * us;
 	if (this->unix_socket[0]=='\0'){
 		us=NULL;	
 	}else{
 		us=this->unix_socket;
 	}
-	
-	if (!mysql_real_connect(&handle, this->host.c_str(), this->user.c_str(), this->pass.c_str(), NULL, this->port, us , CLIENT_FOUND_ROWS ))
+	//CLIENT_FOUND_ROWS	//Return the number of found (matched) rows, not the number of changed rows.
+	unsigned long flag = CLIENT_FOUND_ROWS;
+	if (!mysql_real_connect(&this->handle, this->host.c_str(), this->user.c_str(), this->pass.c_str(), NULL, this->port, us, flag))
 	{
-		DEBUG_LOG("DB connect is err [%d]\n",this->get_errno());
+		ERROR_LOG("db connect is err [%d]\n", this->get_errno());
 		return DB_ERR;
 	}
-	DEBUG_LOG("DB connect is ok [%d]\n",this->get_errno());
-	mysql_autocommit(&handle,F);
+	DEBUG_LOG("db connect is ok [%d]\n", this->get_errno());
+
+	//关闭自动提交.提高性能.但是一定要手动提交.
+	mysql_autocommit(&this->handle, 0);
 
 	return SUCC;
 }
@@ -90,10 +92,6 @@ int mysql_interface::exec_query_sql (const char *cmd, MYSQL_RES **result)
 int 
 mysql_interface::exec_update_sql(const char *cmd ,int * affected_rows)
 {
- 	if (this->is_only_exec_select_sql ){
-		return DB_CANNOT_UPDATE_ERR;
-	};
-
 	if (!this->execsql(cmd)){
 		*affected_rows= mysql_affected_rows(&(this->handle));
 		if (!this->is_log_sql){
@@ -107,51 +105,33 @@ mysql_interface::exec_update_sql(const char *cmd ,int * affected_rows)
 
 }
 
-int mysql_interface::execsql(const char* cmd)
+int mysql_interface::execsql(const char* sql)
 {
-	int ret;
-
 	if (this->is_log_sql){
-		KDEBUG_LOG(this->id ,"SQL:[%s;]",cmd );
+		KDEBUG_LOG(this->id ,"sql:[%s]", sql);
 	}
 
-	ret=mysql_query (&handle, cmd );
-	if (!ret){ //SUCC
+	int ret = mysql_query(&handle, sql);
+	if (0 == ret){//SUCC
 		return ret;
-	}
-	if (this->get_errno()==CR_SERVER_GONE_ERROR )
-	{ //server go away, must reconnect
-	  if (this->connect_server()==DB_SUCC){
-		return  mysql_query (&handle, cmd ); 	 
-	  }else{
-		return this->get_errno(); 
-	  }
-
+	} else if (CR_SERVER_GONE_ERROR == this->get_errno()){//server go away, must reconnect
+		if (0 == this->connect_server()){
+			ret = mysql_query(&handle, sql);
+			if (0 != ret){
+				ret = this->get_errno(); 
+			}
+		}else{
+			ret = this->get_errno(); 
+		}
 	}else{
-		this->show_error_log(cmd);
-		return this->get_errno();
+		this->show_error_log(sql);
+		ret = this->get_errno();
 	}	
+	return ret;
 }
 
 int mysql_interface::select_db (char *db_name )
 {
-	if (this->is_test_env ) {
-		if(strncmp(this->select_db_name_fix.c_str(),db_name,
-					this->select_db_name_fix.length())!=0){
-			DEBUG_LOG("select db ERROR :[%s], you set it is [%s] ",
-				   	db_name,this->select_db_name_fix.c_str()  );	
-			this->is_select_db_succ=false;
-			return  NO_DEFINE_ERR;
-		}
-		if (this->select_db_name!="" && this->select_db_name !=db_name ){
-			//两次select 的db名字不一致
-			DEBUG_LOG("select db ERROR :select [%s], the prev select [%s] ",
-				   	db_name,this->select_db_name.c_str());	
-			this->is_select_db_succ=false;
-			return  NO_DEFINE_ERR;
-		}
-	}
-
 	int ret=mysql_select_db(&this->handle ,db_name);
 	if (ret!=SUCC) {
 		this->show_error_log(db_name );

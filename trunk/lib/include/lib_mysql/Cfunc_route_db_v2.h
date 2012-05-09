@@ -43,9 +43,6 @@ protected:
     bool sync_user_data_flag;/*当前是否处于同步数据状态 */
     int ret;/*用于保存操作返回值，只是为了方便 */
 
-	//是不是测试环境
-	bool is_test_env;
-
 	//db 连接
 	mysql_interface *db;
 	//在线同步
@@ -60,16 +57,6 @@ public:
 	{
 		this->db=db;
 		this->sync_user_data_flag=config_get_intval("SYNC_USER_DATA_FLAG",0);
-		const char *ip= get_ip_ex(0x01);
-		if ( strncmp( ip,"10.",3 )==0 ) {
-			this->is_test_env=true;
-			DEBUG_LOG("EVN: TEST ");
-		}else{
-			this->is_test_env=false;
-			DEBUG_LOG("EVN: PRODUCTION ");
-		}
-		this->db->set_is_test_env(this->is_test_env );
-
 	}
 
 	//设置命令对应的db名字前缀
@@ -90,19 +77,6 @@ public:
 
 		std::map<uint32_t, stru_db_name>::iterator cmd_db_it; 
 		cmd_db_it=this->cmd_db_map.find(route_db_id);
-		
-		if ( this->is_test_env ){
-			if(  cmd_db_it!=this->cmd_db_map.end()) {
-				this->db->set_select_db_str_fix(cmd_db_it->second.db_name );
-			}else{
-				if (this->cmd_db_map.empty() ){//如果还没有设定，全部通过
-					this->db->set_select_db_str_fix("");
-				}else{
-					DEBUG_LOG(" NO FIND :db_name :cmdid=%04X, need add g_cmd_db_list ",(uint32_t )cmdid  );
-					return NO_DEFINE_ERR;
-				}
-			}
-		}
 	
 		//处理在线分裂数据通过
 		if (this->sync_user_data_flag ){//是否打开同步标志
@@ -114,13 +88,7 @@ public:
 		//调用相关DB处理函数
 		this->ret=9999;
 		this->ret=(((Croute_func*)this)->*(p_func))(
-				userid,c_in ,c_out);	
-
-		if (this->is_test_env && !this->db->get_is_select_db_succ() ){
-			//调用了非注册的DB
-			DEBUG_LOG("ERROR: use fail db name");
-			return NO_DEFINE_ERR;	
-		}
+				userid,c_in ,c_out);
 
 		if (is_commit){
 			//提交数据
