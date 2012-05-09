@@ -1,5 +1,5 @@
-#ifndef MYSQL_IFACE_H
-#define MYSQL_IFACE_H
+
+#pragma once
 
 #include <stdlib.h>
 #include <inttypes.h>
@@ -9,18 +9,19 @@
 #include <mysql/mysqld_error.h>
 #include <mysql/errmsg.h>
 
+#include <lib_util.h>
+
 #include "db_error_base.h" 
 #include "benchapi.h" 
 
 class mysql_interface {
+	PRIVATE_R_DEFAULT(std::string, host);
+	PRIVATE_R_DEFAULT(std::string, user);
+	PRIVATE_R_DEFAULT(std::string, pass);
+	PRIVATE_R_DEFAULT(uint16_t, port);
+	PRIVATE_RW_DEFAULT(bool, is_log_sql);//是否可以将sql打印到日志中
 private:
-	char	host[16];
-	char	user[16];
-	char	pass[16];
-	char 	unix_socket[255];
-	unsigned int port;
-	//是否可以将sql打印到debug 日志中
-	int  is_log_debug_sql;
+	char unix_socket[255];
 	//
 	bool is_test_env;
 	std::string select_db_name_fix;
@@ -38,7 +39,7 @@ private:
 public:
 	MYSQL	handle; 
 	uint32_t id;
-	mysql_interface ( const char *h, const char *u, const char *p, unsigned int port=3306,
+	mysql_interface ( std::string h, std::string user, std::string pass, uint16_t port=3306,
 		  const char * a_unix_socket=NULL );	
 	~mysql_interface ();
 	inline bool get_is_select_db_succ(){
@@ -55,7 +56,6 @@ public:
 	const int get_errno() { return mysql_errno(&handle); }
 	const char*  get_error() { return mysql_error(&handle); }
 	void  show_error_log(const char *cmd); 
-	void  set_is_log_debug_sql(int value ); 
 	void  set_is_only_exec_select_sql(int value ){
 		this->is_only_exec_select_sql=value;
 	};
@@ -73,4 +73,3 @@ public:
 	int exec_update_sql(const char *cmd, int* affected_rows );
 
 };
-#endif
