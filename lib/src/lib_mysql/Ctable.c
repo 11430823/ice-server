@@ -47,7 +47,7 @@ int Ctable::exec_insert_sql_get_auto_increment_id(char * sql_str, int existed_er
  	int dbret;
 	int acount; 
 
-	this->db->id=this->id;
+	this->db->set_id(this->id);
 	if ((dbret=this->db->exec_update_sql(sql_str,&acount ))==DB_SUCC)
 	{
 		*p_increment_id=mysql_insert_id(&(this->db->handle));
@@ -69,7 +69,7 @@ int Ctable::exec_update_sql(char * sql_str, int nofind_err )
 {
 	int acount; 
 	int dbret; 
-	this->db->id=this->id;
+	this->db->set_id(this->id);
 	if ((dbret=this->db->exec_update_sql(sql_str,&acount ))==DB_SUCC)
 	{
 		if (acount ==1){
@@ -85,7 +85,7 @@ int Ctable::exec_update_sql(char * sql_str, int nofind_err )
 
 int  Ctable::record_is_existed(char * sql_str,  bool * p_existed)
 {
-	this->db->id=this->id;
+	this->db->set_id(this->id);
 	*p_existed=false;
 	STD_QUERY_ONE_BEGIN(sql_str, SUCC);
 		*p_existed=true;
@@ -94,7 +94,7 @@ int  Ctable::record_is_existed(char * sql_str,  bool * p_existed)
 
 int Ctable::exec_insert_sql(char * sql_str, int existed_err )
 {
-	this->db->id=this->id;
+	this->db->set_id(this->id);
  	int dbret;
 	int acount; 
 	if ((dbret=this->db->exec_update_sql(sql_str,&acount ))==DB_SUCC)
@@ -111,7 +111,7 @@ int Ctable::exec_update_list_sql(char * sql_str, int nofind_err )
 {
 	int dbret;
 	int acount; 
-	this->db->id=this->id;
+	this->db->set_id(this->id);
 	if ((dbret=this->db->exec_update_sql(sql_str,&acount ))==DB_SUCC)
 	{
 		return DB_SUCC;
@@ -123,7 +123,7 @@ int Ctable::select_data( char *&_p_result,	uint32_t &_pkg_len,
 		MYSQL_RES* &res , uint32_t * p_count)
 {
 
-	this->db->id=this->id;
+	this->db->set_id(this->id);
 
 	if (( this->db->exec_query_sql(sqlstr,&res))!=DB_SUCC){
 		return DB_ERR;
