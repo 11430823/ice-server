@@ -16,6 +16,8 @@
  * =====================================================================================
  */
 
+#include <lib_log.h>
+
 #include "Citem_change_log.h"
 #include "db_error_base.h" 
 #include "db_macro.h"

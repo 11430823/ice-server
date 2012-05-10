@@ -19,8 +19,8 @@
 
 #ifndef  CBIG_CACHE_INC
 #define  CBIG_CACHE_INC
-#include <libtaomee++/utils/tcpip.h>
-#include <libtaomee++/utils/strings.hpp>
+//#include <libtaomee++/utils/tcpip.h>
+//#include <libtaomee++/utils/strings.hpp>
 #include "proto_header.h" 
 
 #define BIG_CACHE_VERSION     0x01

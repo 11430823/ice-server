@@ -1,9 +1,14 @@
 #include <string.h>
 #include <stdio.h>
+
+#include <mysql/mysqld_error.h>
+#include <mysql/errmsg.h>
+
+#include <lib_log.h>
+
+#include "db_error_base.h" 
 #include "mysql_iface.h"
 
-#define			T		 				1
-#define		 	F				   		0
 #define safe_copy_string(dst,src) { \
 	if (src){\
 		strncpy (dst, src, sizeof(dst) - 1); \
@@ -53,11 +58,9 @@ mysql_interface::~mysql_interface ()
 
 int mysql_interface::connect_server ()
 {
-	char * us;
-	if (this->unix_socket[0]=='\0'){
-		us=NULL;	
-	}else{
-		us=this->unix_socket;
+	char* us = NULL;
+	if ('\0' != this->unix_socket[0]){
+		us = this->unix_socket;
 	}
 	//CLIENT_FOUND_ROWS	//Return the number of found (matched) rows, not the number of changed rows.
 	unsigned long flag = CLIENT_FOUND_ROWS;
@@ -71,38 +74,28 @@ int mysql_interface::connect_server ()
 	//关闭自动提交.提高性能.但是一定要手动提交.
 	mysql_autocommit(&this->handle, 0);
 
-	return SUCC;
+	return 0;
 }
 
-int mysql_interface::exec_query_sql (const char *cmd, MYSQL_RES **result)
+int mysql_interface::exec_query_sql (const char* sql, MYSQL_RES** result)
 {
-	if (!this->execsql(cmd)){
-		if((*result = mysql_store_result (&handle))!=NULL){
-			return  DB_SUCC;
+	if (0 == this->execsql(sql)){
+		if(NULL == (*result = mysql_store_result(&this->handle))){
+			this->show_error_log(sql);
 		} else {
-			this->show_error_log(cmd);
-			return DB_ERR;
+			return 0;
 		}
-
-	} else {
-		return DB_ERR;
 	}
+	return DB_ERR;
 }
 
-int 
-mysql_interface::exec_update_sql(const char *cmd ,int * affected_rows)
+int mysql_interface::exec_update_sql(const char* sql,int* affected_rows)
 {
-	if (!this->execsql(cmd)){
-		*affected_rows= mysql_affected_rows(&(this->handle));
-		if (!this->is_log_sql){
-			INFO_LOG("D[%d][%s;]",*affected_rows,cmd );
-		}
-		 return DB_SUCC;
+	if (0 == this->execsql(sql)){
+		*affected_rows = mysql_affected_rows(&(this->handle));
+		return 0;
 	}
-	else {
-		return this->get_errno();
-	}
-
+	return this->get_errno();
 }
 
 int mysql_interface::execsql(const char* sql)
@@ -130,11 +123,11 @@ int mysql_interface::execsql(const char* sql)
 	return ret;
 }
 
-int mysql_interface::select_db (char *db_name )
+int mysql_interface::select_db (char* db_name )
 {
-	int ret=mysql_select_db(&this->handle ,db_name);
-	if (ret!=SUCC) {
-		this->show_error_log(db_name );
+	int ret = mysql_select_db(&this->handle, db_name);
+	if (0 != ret) {
+		this->show_error_log(db_name);
 	}
 	return this->get_errno();
 }

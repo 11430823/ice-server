@@ -10,9 +10,10 @@ LINK=-lxml2 -lglib-2.0
 LOCAL_SRCS=$(wildcard ./*.c)
 #LOCAL_INCLUDES=$(wildcard ../include/*.h)
 LOCAL_SRCS_NET=$(wildcard ./lib_net/*.c)
+LOCAL_SRCS_PROTO=$(wildcard ./lib_proto/*.c)
 
 $(EXE):
-	$(CC) $(LOCAL_SRCS) $(LOCAL_SRCS_NET) $(INCLUDES) $(GLIB_INCLUDES) $(LINK) $(FLAG) $@
+	$(CC) $(LOCAL_SRCS) $(LOCAL_SRCS_NET) $(LOCAL_SRCS_PROTO) $(INCLUDES) $(GLIB_INCLUDES) $(LINK) $(FLAG) $@
 	cp -f $@ ../
 	rm $@
 install:
