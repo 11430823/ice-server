@@ -15,9 +15,12 @@
  *
  * =====================================================================================
  */
+
+#include <mysql/mysqld_error.h>
+
+#include <lib_log.h>
+
 #include "Ctable.h"
-
-
 
 Ctable::Ctable(mysql_interface * db, const char * dbname, const char * tablename ) 
 { 

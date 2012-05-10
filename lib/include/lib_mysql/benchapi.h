@@ -9,9 +9,8 @@ extern "C" {
 #include <sys/types.h>
 #include <arpa/inet.h>
 
-#include <libtaomee/log.h>
-#include <libtaomee/conf_parser/config.h>
-#include <libtaomee/inet/tcp.h>
+//#include <libtaomee/conf_parser/config.h>
+//#include <libtaomee/inet/tcp.h>
 
 #undef __attr_cdecl__
 #define __attr_cdecl__ __attribute__((__cdecl__))

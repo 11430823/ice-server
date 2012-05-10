@@ -43,7 +43,7 @@ inline double atof_safe (char *str)
 #define STD_OPEN_AUTOCOMMIT()	   mysql_autocommit(&(this->db->handle), T)
 #define STD_ROLLBACK()  mysql_rollback(&(this->db->handle))
 #define STD_CLOSE_AUTOCOMMIT(nret) {\
-		if (mysql_autocommit(&(this->db->handle), F)==DB_SUCC){\
+		if (mysql_autocommit(&(this->db->handle), 0)==DB_SUCC){\
 				nret = DB_SUCC;\
 		}else {\
 				nret = DB_ERR;\

@@ -1,9 +1,12 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <lib_log.h>
 #include <bench_conf.h>
 #include <interface.h>
+
+#include <lib_mysql/mysql_iface.h>
 
 #include <lib_timer.h>
 
@@ -19,6 +22,9 @@ struct cli_proto_head_t {
 };
 #pragma pack()
 
+mysql_interface* g_db = NULL;
+Croute_func* g_route_func = NULL;
+
 /**
   * @brief Initialize service
   *
@@ -31,6 +37,16 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======server start======");
 		//ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
 		//ice::lib_tcp_peer_info_t* s = connect("switch");// 使用连接时再创建,启动时因无同步地址广播,无法获取IP,PORT
+
+		g_db = new mysql_interface(g_bench_conf.get_strval("dbser", "ip"),
+			g_bench_conf.get_strval("dbser", "user"),
+			g_bench_conf.get_strval("dbser", "passwd"),
+			::atoi(g_bench_conf.get_strval("dbser", "port").c_str()),
+			g_bench_conf.get_strval("dbser", "unix_socket").c_str());
+ 		g_db->set_is_log_sql(::atoi(g_bench_conf.get_strval("dbser", "is_log_sql").c_str()));
+
+		g_route_func = new Croute_func(g_db);
+
 	}
 	return 0;
 }
@@ -45,6 +61,8 @@ extern "C" int on_fini(int isparent)
 		DEBUG_LOG("======daemon done======");
 	}else{
 		DEBUG_LOG("======server done======");
+		SAFE_DELETE(g_db);
+		SAFE_DELETE(g_route_func);
 	}
 	return 0;
 }

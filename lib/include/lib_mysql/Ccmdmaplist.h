@@ -22,9 +22,8 @@
 #include<iostream>
 #include <algorithm>
 #include <string.h>
-extern "C" {
-#include <libtaomee/log.h>
-}
+
+#include <lib_log.h>
 
 using namespace std;
 /**

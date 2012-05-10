@@ -1,6 +1,7 @@
 #-lpthread 是多线程库支持
 
-MYSQL_FLAGS=-lmysqlclient -I/usr/include/mysql/ -L/usr/lib/mysql/
+MYSQL_FLAGS=
+#-lmysqlclient -I/usr/include/mysql/ -L/usr/lib/mysql/
 
 EXE=libicemysql.so
 CC=g++
@@ -19,7 +20,7 @@ LIBS=-L/usr/lib/ -L$(ICE_LIB_PATH)
 LINK=-lglib-2.0 -lice $(ICE_LIBS_FLAG)
 
 $(EXE):
-	$(CC) $(LOCAL_SRCS) $(INCLUDES) $(GLIB_INCLUDES) $(LIBS) $(LINK) $(FLAG) $@
+	$(CC) $(LOCAL_SRCS) $(INCLUDES) $(GLIB_INCLUDES) $(LIBS) $(LINK) $(MYSQL_FLAGS) $(FLAG) $@
 	cp -f $@ ../../
 	rm $@
 install:

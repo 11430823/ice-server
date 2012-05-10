@@ -27,7 +27,7 @@
 #include <db_macro.h>
 #include <proto_header.h>
 
-#define  GEN_SQLSTR(sqlstr,...)  snprintf( sqlstr, sizeof(sqlstr),__VA_ARGS__ )
+#define  GEN_SQLSTR(sqlstr,...)  snprintf(sqlstr, sizeof(sqlstr), __VA_ARGS__)
 class Ctable {
 	protected:
 		char sqlstr[8192*2]; 
