@@ -23,7 +23,7 @@ struct cli_proto_head_t {
 #pragma pack()
 
 mysql_interface* g_db = NULL;
-Croute_func* g_route_func = NULL;
+//Croute_func* g_route_func = NULL;
 
 /**
   * @brief Initialize service
@@ -45,7 +45,7 @@ extern "C" int on_init(int isparent)
 			g_bench_conf.get_strval("dbser", "unix_socket").c_str());
  		g_db->set_is_log_sql(::atoi(g_bench_conf.get_strval("dbser", "is_log_sql").c_str()));
 
-		g_route_func = new Croute_func(g_db);
+		//g_route_func = new Croute_func(g_db);
 
 	}
 	return 0;
@@ -62,7 +62,7 @@ extern "C" int on_fini(int isparent)
 	}else{
 		DEBUG_LOG("======server done======");
 		SAFE_DELETE(g_db);
-		SAFE_DELETE(g_route_func);
+		//SAFE_DELETE(g_route_func);
 	}
 	return 0;
 }

@@ -16,15 +16,14 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#ifdef  likely
-#undef  likely
-#endif
+#ifndef likely
 #define likely(x)  __builtin_expect(!!(x), 1)
-
-#ifdef  unlikely
-#undef  unlikely
 #endif
+
+#ifndef unlikely
 #define unlikely(x)  __builtin_expect(!!(x), 0)
+#endif
+
 
 //////////////////////////////////////////////////////////////////////////
 //使用宏管理成员变量

@@ -13,7 +13,7 @@
 class Ctable {
 	protected:
 		char sqlstr[8192*2]; 
-		mysql_interface * db;
+		mysql_interface* db;
 		char db_name[50];
 		char table_name[50];
 		//: db.table 
@@ -21,7 +21,6 @@ class Ctable {
 		char dbser_return_buf[PROTO_MAX_SIZE];
 		//用于保存主键值，缓存中使用,一般在get_table_name 中同步设置
 		uint32_t id;
-		bool 	use_cache;
 	public:
 		virtual char*  get_table_name();
 
