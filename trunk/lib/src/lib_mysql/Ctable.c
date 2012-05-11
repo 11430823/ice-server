@@ -24,7 +24,6 @@
 
 Ctable::Ctable(mysql_interface * db, const char * dbname, const char * tablename ) 
 { 
-	this->use_cache=true;
 	this->db=db;
 	strcpy (this->table_name,tablename );
 	strcpy (this->db_name,dbname );
