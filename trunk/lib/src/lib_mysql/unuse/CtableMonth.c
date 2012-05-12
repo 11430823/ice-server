@@ -1,27 +1,9 @@
-/*
- * =====================================================================================
- *
- *       Filename:  CtableMonth.cpp
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  2007年11月06日 19时52分56秒 CST
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  xcwen (xcwen), xcwenn@gmail.com
- *        Company:  TAOMEE
- *
- * =====================================================================================
- */
 #include "CtableMonth.h"
-
 
 
 CtableMonth::CtableMonth(mysql_interface * db,const char * db_name_pre,  
 	const	char * table_name_pre,const char* id_name ) :CtableRoute(
-	db,db_name_pre,table_name_pre,id_name)
+	db,db_name_pre,table_name_pre)
 { 
 
 }

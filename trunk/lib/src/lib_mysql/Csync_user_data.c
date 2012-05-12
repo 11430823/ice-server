@@ -49,7 +49,7 @@ int  Csync_user_data::sync_data(const uint32_t userid,uint16_t get_sql_date_cmdi
 		break;
 	}
 
-	ret=this->user_table.record_is_existed(this->sql_str,&is_existed );
+	ret=this->user_table.record_is_existed(this->sql_str, is_existed );
 	if (ret!=SUCC) return ret;
 	if (is_existed){//记录存在
 		DEBUG_LOG("record find :%s",this->sql_str );

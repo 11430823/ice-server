@@ -1,3 +1,4 @@
+#sudo apt-get install libmysqlclient-dev
 #-lpthread 是多线程库支持
 
 MYSQL_FLAGS=
