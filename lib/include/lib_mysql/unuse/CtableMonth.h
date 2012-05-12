@@ -1,28 +1,9 @@
-/*
- * =====================================================================================
- * 
- *       Filename:  CtableMonth.h
- * 
- *    Description:  
- * 
- *        Version:  1.0
- *        Created:  2007年11月06日 19时52分58秒 CST
- *       Revision:  none
- *       Compiler:  gcc
- * 
- *         Author:  xcwen (xcwen), xcwenn@gmail.com
- *        Company:  TAOMEE
- * 
- * =====================================================================================
- */
-
 #ifndef  CTABLEMONTH_INCL
 #define  CTABLEMONTH_INCL
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "CtableRoute.h"
-
 
 class CtableMonth : public CtableRoute {
 	protected:

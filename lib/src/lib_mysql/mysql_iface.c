@@ -18,10 +18,6 @@
 	}\
 }
 
-#include "proto_header.h"
-stru_db_cache_state g_db_cache_state;//全局的状态
-
-
 mysql_interface::mysql_interface (std::string h, std::string user, std::string pass,
 								  uint16_t port,const char * a_unix_socket)
 {
@@ -34,7 +30,7 @@ mysql_interface::mysql_interface (std::string h, std::string user, std::string p
 	mysql_init(&handle);
 
 	if (a_unix_socket!=NULL) {
-		safe_copy_string (this->unix_socket , a_unix_socket );
+		safe_copy_string(this->unix_socket , a_unix_socket);
 	}else{
 		this->unix_socket[0]='\0';
 	}
@@ -123,7 +119,7 @@ int mysql_interface::execsql(const char* sql)
 	return ret;
 }
 
-int mysql_interface::select_db (char* db_name )
+int mysql_interface::select_db(char* db_name)
 {
 	int ret = mysql_select_db(&this->handle, db_name);
 	if (0 != ret) {

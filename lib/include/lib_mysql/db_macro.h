@@ -20,7 +20,7 @@
 #include "db_error_base.h" 
 #include "proto_header.h" 
 #include <mysql/mysql.h> 
-#include <libtaomee/conf_parser/config.h>
+
 #define GET_ROUTE(cmdid) ((cmdid&0x8000)?(70+((cmdid&0x7E00)>>6)+((cmdid &0x00E0)>>5)):(cmdid>>9))
 
 #define set_mysql_string(dst,src,n)	mysql_real_escape_string(  \
@@ -194,31 +194,30 @@ inline double atof_safe (char *str)
     }
 
 
-#define STD_QUERY_ONE_BEGIN( sqlstr, no_finderr ) {\
+#define STD_QUERY_ONE_BEGIN(sqlstr, no_find_err) {\
 		uint32_t ret;\
-		MYSQL_RES *res;\
+		MYSQL_RES* res;\
 		MYSQL_ROW row;\
 		int rowcount;\
         this->db->set_id(this->id);\
-		ret =this->db->exec_query_sql(sqlstr,&res);\
-		if (ret==DB_SUCC){\
-			rowcount=mysql_num_rows(res);\
-			if (rowcount!=1) { \
-	 			mysql_free_result(res);		 \
-				DEBUG_LOG("no select a record [%u]",no_finderr );\
-				return no_finderr;	 \
-			}else { \
-				row= mysql_fetch_row(res); \
-				int _fi	 ; _fi=-1;
-	
-
+		ret = this->db->exec_query_sql(sqlstr, &res);\
+		if (0 == ret){\
+			rowcount = mysql_num_rows(res);\
+			if (1 != rowcount) {\
+	 			mysql_free_result(res);\
+				DEBUG_LOG("no select a record [no_find_err:%u]", no_find_err);\
+				return no_find_err;\
+			}else {\
+				row = mysql_fetch_row(res);\
+				int _fi;\
+				_fi = -1;
 
 #define STD_QUERY_ONE_END()\
 				mysql_free_result(res);\
-				return DB_SUCC;\
+				return 0;\
 			}\
-		}else { \
-			return DB_ERR;	 \
+		}else {\
+			return DB_ERR;\
 		}\
 	}
 
@@ -259,16 +258,6 @@ inline uint32_t hash_str(const char * key )
 	for(h=0, p = (unsigned char *)key; *p ; p++)
 		h = 31 * h + *p; 
 	return h;
-}
-
-
-inline const char * config_get_strval_with_def(const char* key,const char* def ="" ){
-    const char *  v= config_get_strval(key)  ;
-    if ( v!=NULL){
-        return  v;
-    }else{
-        return def;
-    }
 }
 
 inline char * set_space_end(char * src, int len  )
