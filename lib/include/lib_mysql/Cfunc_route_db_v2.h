@@ -19,7 +19,6 @@
 #ifndef  CFUNC_ROUTE_DB_V2_INC
 #define  CFUNC_ROUTE_DB_V2_INC
 #include "mysql_iface.h"
-#include "Csync_user_data.h"
 #include "Cfunc_route_cmd_v2.h"
 #include <map>
 #include <libtaomee++/utils/tcpip.h>
@@ -45,15 +44,11 @@ protected:
 
 	//db 连接
 	mysql_interface *db;
-	//在线同步
-	Csync_user_data sync_user_data;
 	//命令所操作的db设置 
 	std::map<uint32_t, stru_db_name > cmd_db_map;
 public:
 	inline Cfunc_route_db_v2(mysql_interface * db ):
-		db(db), sync_user_data(db,
-			config_get_strval("SYNC_USER_DATA_DB_OLD_IP"),
-			config_get_intval("SYNC_USER_DATA_DB_OLD_PORT",0) )
+		db(db)
 	{
 		this->db=db;
 		this->sync_user_data_flag=config_get_intval("SYNC_USER_DATA_FLAG",0);

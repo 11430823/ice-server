@@ -25,11 +25,11 @@
 #include "db_error_base.h"
 
 //------------------定义与Ccmdmap相关的私有结构---begin
-#define  DEAL_FUN_ARG char *recvbuf, char **sendbuf, int *sndlen 
+#define  DEAL_FUN_ARG char* recvbuf, char** sendbuf, int* sndlen 
 class Croute_func;
 //定义调用函数的指针类型
-typedef   int(Croute_func::*P_DEALFUN_T)(DEAL_FUN_ARG );
-typedef   struct pri_stru_check_len<P_DEALFUN_T > PRI_STRU  ;
+typedef   int(Croute_func::*P_DEALFUN_T)(DEAL_FUN_ARG);
+typedef   struct pri_stru_check_len<P_DEALFUN_T > PRI_STRU;
 typedef   Ccmdmap < PRI_STRU > 		CMD_MAP ;
 
 //填充命令
