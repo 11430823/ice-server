@@ -19,7 +19,6 @@
 #ifndef  CFUNC_ROUTE_BASE_INC
 #define  CFUNC_ROUTE_BASE_INC
 #include "mysql_iface.h"
-#include "Csync_user_data.h"
 #include "Cfunc_route_cmd.h"
 /*
  * =====================================================================================
@@ -35,13 +34,9 @@ protected:
     int ret;/*用于保存操作返回值，只是为了方便 */
 	//db 连接
 	mysql_interface *db;
-	//在线同步
-	Csync_user_data sync_user_data;
 public:
 	inline Cfunc_route_base(mysql_interface * db ):
-		db(db), sync_user_data(db,
-			config_get_strval("SYNC_USER_DATA_DB_OLD_IP"),
-			config_get_intval("SYNC_USER_DATA_DB_OLD_PORT",0) )
+		db(db)
 	{
 		this->db=db;
 		this->sync_user_data_flag=config_get_intval("SYNC_USER_DATA_FLAG",0);
