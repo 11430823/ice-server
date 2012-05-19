@@ -18,10 +18,11 @@
 
 #ifndef  CFUNC_ROUTE_DB_V2_INC
 #define  CFUNC_ROUTE_DB_V2_INC
+
 #include "mysql_iface.h"
 #include "Cfunc_route_cmd_v2.h"
 #include <map>
-#include <libtaomee++/utils/tcpip.h>
+//#include <libtaomee++/utils/tcpip.h>
 /*
  * =====================================================================================
  *        Class:  Cfunc_route_db_v2
@@ -65,7 +66,7 @@ public:
 	}
 
 
-	virtual int deal_func(uint16_t cmdid, userid_t userid, Cmessage * c_in, Cmessage * c_out ,P_DEALFUN_T p_func ,bool is_commit )
+	virtual int deal_func(uint32_t cmdid, userid_t userid, Cmessage * c_in, Cmessage * c_out ,P_DEALFUN_T p_func ,bool is_commit )
 	{
 		//设置当前命令要处理db
 		uint32_t route_db_id=GET_ROUTE(cmdid);

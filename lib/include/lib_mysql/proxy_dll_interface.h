@@ -81,13 +81,13 @@ struct stru_proxy_interface_out{
 	};
 
 	//设置发给server端的报文非buf的部分的值 
-	void set_send_to_server_without_buf( uint16_t cmdid ,uint32_t userid, uint32_t private_size )
+	void set_send_to_server_without_buf( uint32_t cmdid ,uint32_t userid, uint32_t private_size )
 	{
 		this->send_pkg_flag=FLAG_SEND_TO_SERVER;
 		PROTO_HEADER *ph=(PROTO_HEADER*)(this->send_server_buf);
 		memset(ph,0,PROTO_HEADER_SIZE);
 		ph->proto_length=PROTO_HEADER_SIZE+private_size ;
-		ph->cmd_id=cmdid ;
+		ph->cmd=cmdid ;
 		ph->id=userid;
 	};
 };

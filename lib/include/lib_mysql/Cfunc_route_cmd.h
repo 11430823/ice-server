@@ -192,7 +192,7 @@ public:
 	virtual  int deal(char *recvbuf, int rcvlen, char **sendbuf, int *sndlen )
 	{
 		PRI_STRU * p_pri_stru;
-		uint16_t cmdid=((PROTO_HEADER*)recvbuf)->cmd_id;
+		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
 		userid_t userid=((PROTO_HEADER*)recvbuf)->id;
 		if((p_pri_stru =this->cmdmaplist.getitem(cmdid))!=NULL){
 			DEBUG_LOG("I:%04X:%d", cmdid, userid );

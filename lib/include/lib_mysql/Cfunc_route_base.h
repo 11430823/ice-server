@@ -30,7 +30,6 @@
 class Cfunc_route_base:public Cfunc_route_cmd
 {
 protected: 
-    bool sync_user_data_flag;/*当前是否处于同步数据状态 */
     int ret;/*用于保存操作返回值，只是为了方便 */
 	//db 连接
 	mysql_interface *db;
@@ -39,14 +38,13 @@ public:
 		db(db)
 	{
 		this->db=db;
-		this->sync_user_data_flag=config_get_intval("SYNC_USER_DATA_FLAG",0);
 	}
 
 
 	inline  virtual int deal(char *recvbuf, int rcvlen, char **sendbuf, int *sndlen )
 	{
 		PRI_STRU * p_pri_stru;
-		uint16_t cmdid=((PROTO_HEADER*)recvbuf)->cmd_id;
+		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
 		userid_t userid=((PROTO_HEADER*)recvbuf)->id;
 		if((p_pri_stru =this->cmdmaplist.getitem(cmdid))!=NULL){
 			DEBUG_LOG("I:%04X:%d", cmdid, userid );
@@ -66,12 +64,6 @@ public:
 				return PROTO_LEN_ERR;
 			}
 	
-			//处理在线分裂数据
-			if (this->sync_user_data_flag ){//是否打开同步标志
-				ret=this->do_sync_data(userid,cmdid);
-				if (ret!=SUCC) return ret;
-			}
-	
 			this->ret=9999;
 			//调用相关DB处理函数
 			this->ret=(((Croute_func*)this)->*(p_pri_stru->p_deal_fun))(recvbuf, sendbuf, sndlen );	
@@ -87,7 +79,6 @@ public:
 		}
 	}
 
-	virtual int  do_sync_data(uint32_t userid, uint16_t cmdid) { return SUCC; }
 	virtual ~Cfunc_route_base (){ }
 	
 }; /* -----  end of class  Cfunc_route_base  ----- */
