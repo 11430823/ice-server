@@ -20,11 +20,10 @@
 #define  CFUNC_ROUTE_cmd_v2_INC
 
 #include  <assert.h>
-extern "C" {
-#include  <libtaomee/log.h>
-}
+
+#include "../lib_log.h"
 #include  "proto_header.h"
-#include  "libtaomee++/proto/proto_base.h"
+//#include  "libtaomee++/proto/proto_base.h"
 #include  "db_error_base.h"
 #include  <set>
 #define  BIND_PROTO_CMD(cmdid,cmd_name,struct_in,struct_out,md5_tag,bind_bitmap ) \
@@ -91,7 +90,7 @@ protected:
  	collect_proto_t collect_proto;
 
 	//哪些命令是聚合命令
-	std::set<uint16_t> collect_cmd_set;        
+	std::set<uint32_t> collect_cmd_set;        
 	
 
 	/**
@@ -129,7 +128,7 @@ public:
 	uint16_t err_cmdid;//出错的命令号
 	std::vector <collect_cmd_item_t>	 collect_cmd_list;
 	*/	
-		uint16_t cmdid=((PROTO_HEADER*)recvbuf)->cmd_id;
+		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
 		userid_t userid=((PROTO_HEADER*)recvbuf)->id;
 
 		static byte_array_t ba;
@@ -161,7 +160,7 @@ public:
 			if((p_cmd_item =this->get_cmd_item(item.cmdid ))!=NULL){
 				KDEBUG_LOG ( userid ,"I:%04X",  item.cmdid );
 				//检查md5值,md5_tags 放在上送报文的result中
-				uint32_t md5_value=((PROTO_HEADER*)recvbuf)->result;
+				uint32_t md5_value=((PROTO_HEADER*)recvbuf)->ret;
 				if (md5_value!=0 ){//==0,表示不用md5_tags检查
 					if (p_cmd_item->md5_tag!=md5_value){
 						KDEBUG_LOG(userid,"CMD_MD5_TAG_ERR:DB:%u,client:%u",
@@ -241,7 +240,7 @@ public:
 		
 	}
 	
-	virtual int deal_func(uint16_t cmdid, userid_t userid, Cmessage * c_in, Cmessage * c_out ,P_DEALFUN_T p_func ,bool is_commit )
+	virtual int deal_func(uint32_t cmdid, userid_t userid, Cmessage * c_in, Cmessage * c_out ,P_DEALFUN_T p_func ,bool is_commit )
 	{
 		//调用相关处理函数
 		this->ret=9999;
@@ -257,7 +256,7 @@ public:
 
 	int deal(char *recvbuf, int rcvlen, char **sendbuf, int *sndlen )
 	{
-		uint16_t cmdid=((PROTO_HEADER*)recvbuf)->cmd_id;
+		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
 		if(this->collect_cmd_set.find(cmdid)!=this->collect_cmd_set.end()){
 			//是聚合命令
 			return do_collect_cmd_list(recvbuf, rcvlen, sendbuf, sndlen );
@@ -273,13 +272,13 @@ public:
 	int deal_one_cmd(char *recvbuf, int rcvlen, char **sendbuf, int *sndlen )
 	{
 		stru_cmd_item_t * p_cmd_item;
-		uint16_t cmdid=((PROTO_HEADER*)recvbuf)->cmd_id;
+		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
 		userid_t userid=((PROTO_HEADER*)recvbuf)->id;
 
 		if((p_cmd_item =this->get_cmd_item(cmdid))!=NULL){
 			KDEBUG_LOG ( userid ,"I:%04X", cmdid );
 			//检查md5值,md5_tags 放在上送报文的result中
-			uint32_t md5_value=((PROTO_HEADER*)recvbuf)->result;
+			uint32_t md5_value=((PROTO_HEADER*)recvbuf)->ret;
 			if (md5_value!=0 ){//==0,表示不用md5_tags检查
 				if (p_cmd_item->md5_tag!=md5_value){
 					KDEBUG_LOG(userid,"CMD_MD5_TAG_ERR:DB:%u,client:%u",
