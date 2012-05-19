@@ -1,23 +1,9 @@
-/*
- * =====================================================================================
- * 
- *       Filename:  func_route_base.h
- * 
- *    Description:  
- * 
- *        Version:  1.0
- *        Created:  2007年11月02日 16时40分57秒 CST
- *       Revision:  none
- *       Compiler:  gcc
- * 
- *         Author:  xcwen (xcwen), xcwenn@gmail.com
- *        Company:  TAOMEE
- * 
- * =====================================================================================
- */
+
 
 #ifndef  CFUNC_ROUTE_cmd_INC
 #define  CFUNC_ROUTE_cmd_INC
+#include <lib_util.h>
+
 #include "Ccmdmaplist.h"
 #include  <assert.h>
 #include "Ccmdmap_private_checklen.h"
@@ -149,20 +135,10 @@ typedef   Ccmdmap < PRI_STRU > 		CMD_MAP ;
 	} 
 #endif
 
-
-
-/*
- * =====================================================================================
- *        Class:  Cfunc_route_base
- *  Description:  
- * =====================================================================================
- */
-
 class Cfunc_route_cmd
 {
+	PROTECTED_R_DEFAULT(int, ret);/*用于保存操作返回值，只是为了方便 */
 protected: 
-    int ret;/*用于保存操作返回值，只是为了方便 */
-
 	Ccmdmaplist<CMD_MAP>  cmdmaplist;		
 	/**
 	 * 功能:从deal_fun 统一初始化
@@ -175,7 +151,8 @@ protected:
 		}
 	}
 public:
-	inline Cfunc_route_cmd() {
+	Cfunc_route_cmd() {
+		this->ret = 0;
 	}
 
 	inline bool set_cmd_max_limit_per_minute(uint16_t cmdid ,uint32_t max_limit )
