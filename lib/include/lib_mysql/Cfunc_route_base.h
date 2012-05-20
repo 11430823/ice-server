@@ -9,43 +9,30 @@
 #pragma once
 
 #include <lib_util.h>
-#include <lib_msgbuf.h>
 
 #include "mysql_iface.h"
 #include "Cfunc_route_cmd.h"
+#include "proto_header.h"
 
 
 
-//////////////////////////////////////////////////////////////////////////
-//接收客户端的数据
-class recv_data_cli_t : public ice::lib_recv_data_t{
-public:
-	recv_data_cli_t(const void* recvdata, int readpos = 0)
-		:ice::lib_recv_data_t(recvdata, readpos){
-	}
-public:
-	//前4个字节是整个包长度
-	uint32_t get_len(){
-		return (ice::lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
-	}
-	uint32_t remain_len() {
-		return get_len() - this->read_pos;
-	}
-protected:
-private:
-	recv_data_cli_t(const recv_data_cli_t& cr); // 拷贝构造函数
-	recv_data_cli_t& operator=( const recv_data_cli_t& cr); // 赋值函数
-};
+class Croute_func;
 
-class Cfunc_route_base : public Cfunc_route_cmd
+class Cfunc_route_base
 {
 	PROTECTED_R_DEFAULT(mysql_interface*, db);//db 连接
+	PROTECTED_R_DEFAULT(int, ret);/*用于保存操作返回值，只是为了方便 */
+	PROTECTED_R_DEFAULT(Ccmdmap, cmd_map);
+	PROTECTED_R_DEFAULT(send_data_cli_t, send_data);
 public:
 	Cfunc_route_base(mysql_interface* db){
 		this->db = db;
+		this->ret = 0;
+		//todo 清理 send_data
 	}
 
-	inline virtual int deal(void* recvbuf, int rcvlen, char** sendbuf, int* sndlen){
+	inline virtual int deal(const void* recvbuf, int rcvlen, char** sendbuf, int* sndlen){
+		//todo 清理send_data
 		recv_data_cli_t in(recvbuf);
 		cli_proto_head_t head;
 		in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
@@ -55,7 +42,7 @@ public:
 	
 			this->ret=9999;
 			//调用相关DB处理函数
-			this->ret=(((Croute_func*)this)->p_pri_stru)(recvbuf, sendbuf, sndlen );	
+			this->ret = (p_pri_stru)(head, in, sendbuf, sndlen);	
 			//提交数据
 			if (mysql_commit(&(this->db->handle))!=DB_SUCC){
 				this->db->show_error_log("db:COMMIT:err");

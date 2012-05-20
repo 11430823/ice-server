@@ -10,20 +10,10 @@
 
 #include <lib_timer.h>
 
-#pragma pack(1)
-/* SERVER和CLIENT的协议包头格式 */
-struct cli_proto_head_t {
-	uint32_t len; /* 协议的长度 */
-	uint32_t cmd; /* 协议的命令号 */
-	uint32_t id; /* 账号 */
-	uint32_t seq_num;/* 序列号 */
-	uint32_t ret; /* S->C, 错误码 */
-	uint8_t body[]; /* 包体信息 */
-};
-#pragma pack()
+#include "rount_func.h"
 
 mysql_interface* g_db = NULL;
-//Croute_func* g_route_func = NULL;
+Croute_func* g_route_func = NULL;
 
 /**
   * @brief Initialize service
@@ -45,7 +35,7 @@ extern "C" int on_init(int isparent)
 			g_bench_conf.get_strval("dbser", "unix_socket").c_str());
  		g_db->set_is_log_sql(::atoi(g_bench_conf.get_strval("dbser", "is_log_sql").c_str()));
 
-		//g_route_func = new Croute_func(g_db);
+		g_route_func = new Croute_func(g_db);
 
 	}
 	return 0;
@@ -62,7 +52,7 @@ extern "C" int on_fini(int isparent)
 	}else{
 		DEBUG_LOG("======server done======");
 		SAFE_DELETE(g_db);
-		//SAFE_DELETE(g_route_func);
+		SAFE_DELETE(g_route_func);
 	}
 	return 0;
 }
@@ -108,8 +98,21 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	/* 返回非零，断开FD的连接 */ 
 	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
-		head->len, head->cmd, head->seq_num, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
-	fire::s2peer(peer_fd_info, pkg, pkglen);
+		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
+	char *out;
+	int outlen = 0;
+	int ret = g_route_func->deal(pkg, pkglen, &out, &outlen);
+	if (0 == ret){
+		fire::s2peer(peer_fd_info, out, outlen);
+	} else {
+		cli_proto_head_t err_out;
+		err_out.cmd = head->cmd;
+		err_out.id = head->id;
+		err_out.len = sizeof(err_out);
+		err_out.ret = ret;
+		err_out.seq = head->seq;
+		fire::s2peer(peer_fd_info, (void*)&err_out, sizeof(err_out));
+	}
 	return 0;
 }
 
