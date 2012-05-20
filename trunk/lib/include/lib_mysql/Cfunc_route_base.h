@@ -49,26 +49,13 @@ public:
 		recv_data_cli_t in(recvbuf);
 		cli_proto_head_t head;
 		in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
-		PRI_STRU* p_pri_stru;
-		if((p_pri_stru = this->cmdmaplist.getitem(head.cmd))!=NULL){
+		PRI_STRU p_pri_stru;
+		if((p_pri_stru = this->cmd_map.get_cmd_fun(head.cmd))!=NULL){
 			DEBUG_LOG("I:%04X:%d", head.cmd, head.id);
-			//检查协议频率
-			if (! p_pri_stru->exec_cmd_limit.add_count() ){
-				DEBUG_LOG("cmd max err:cmdid %u, max_count:%u ",
-					head.cmd,p_pri_stru->exec_cmd_limit.limit_max_count_per_min);
-			
-				return CMD_EXEC_MAX_PER_MINUTE_ERR;
-			}
-			//检查报文长度
-			if (! p_pri_stru->check_proto_size(rcvlen - PROTO_HEADER_SIZE) ){
-				DEBUG_LOG("len err pre [%u] send [%d]",
-				uint32_t (p_pri_stru->predefine_len+PROTO_HEADER_SIZE ),rcvlen );
-				return PROTO_LEN_ERR;
-			}
 	
 			this->ret=9999;
 			//调用相关DB处理函数
-			this->ret=(((Croute_func*)this)->*(p_pri_stru->p_deal_fun))(recvbuf, sendbuf, sndlen );	
+			this->ret=(((Croute_func*)this)->p_pri_stru)(recvbuf, sendbuf, sndlen );	
 			//提交数据
 			if (mysql_commit(&(this->db->handle))!=DB_SUCC){
 				this->db->show_error_log("db:COMMIT:err");
