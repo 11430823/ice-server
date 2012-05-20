@@ -13,7 +13,7 @@ struct cli_proto_head_t {
 	uint32_t len; /* 协议的长度 */
 	uint32_t cmd; /* 协议的命令号 */
 	uint32_t id; /* 账号 */
-	uint32_t seq_num;/* 序列号 */
+	uint32_t seq;/* 序列号 */
 	uint32_t ret; /* S->C, 错误码 */
 	uint8_t body[]; /* 包体信息 */
 };
@@ -141,7 +141,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	/* 返回非零，断开FD的连接 */ 
 	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
-		head->len, head->cmd, head->seq_num, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
+		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
 	fire::s2peer(peer_fd_info, pkg, pkglen);
 	return 0;
 }

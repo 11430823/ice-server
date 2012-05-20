@@ -1,52 +1,8 @@
-libdbser.so: dll_fire.c ../../lib/include/lib_log.h \
-  ../../fire/include/bench_conf.h ../../lib/include/lib_util.h \
-  ../../fire/include/interface.h \
-  ../../lib/include/lib_net/lib_tcp_server.h \
-  ../../lib/include/lib_net/lib_tcp.h ../../lib/include/lib_net/lib_net.h \
-  ../../lib/include/lib_file.h ../../lib/include/lib_net/lib_tcp_client.h \
-  ../../lib/include/lib_net/lib_net_util.h ../../lib/include/lib_memory.h \
-  ../../lib/include/lib_mysql/mysql_iface.h ../../lib/include/lib_timer.h \
-  /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
-  /usr/include/glib-2.0/glib/gtypes.h \
-  /usr/lib/glib-2.0/include/glibconfig.h \
-  /usr/include/glib-2.0/glib/gmacros.h \
-  /usr/include/glib-2.0/glib/garray.h \
-  /usr/include/glib-2.0/glib/gasyncqueue.h \
-  /usr/include/glib-2.0/glib/gthread.h \
-  /usr/include/glib-2.0/glib/gerror.h /usr/include/glib-2.0/glib/gquark.h \
-  /usr/include/glib-2.0/glib/gutils.h \
-  /usr/include/glib-2.0/glib/gatomic.h \
-  /usr/include/glib-2.0/glib/gbacktrace.h \
-  /usr/include/glib-2.0/glib/gbase64.h \
-  /usr/include/glib-2.0/glib/gbookmarkfile.h \
-  /usr/include/glib-2.0/glib/gcache.h /usr/include/glib-2.0/glib/glist.h \
-  /usr/include/glib-2.0/glib/gmem.h /usr/include/glib-2.0/glib/gslice.h \
-  /usr/include/glib-2.0/glib/gchecksum.h \
-  /usr/include/glib-2.0/glib/gcompletion.h \
-  /usr/include/glib-2.0/glib/gconvert.h \
-  /usr/include/glib-2.0/glib/gdataset.h \
-  /usr/include/glib-2.0/glib/gdate.h /usr/include/glib-2.0/glib/gdir.h \
-  /usr/include/glib-2.0/glib/gfileutils.h \
-  /usr/include/glib-2.0/glib/ghash.h /usr/include/glib-2.0/glib/ghook.h \
-  /usr/include/glib-2.0/glib/giochannel.h \
-  /usr/include/glib-2.0/glib/gmain.h /usr/include/glib-2.0/glib/gslist.h \
-  /usr/include/glib-2.0/glib/gstring.h \
-  /usr/include/glib-2.0/glib/gunicode.h \
-  /usr/include/glib-2.0/glib/gkeyfile.h \
-  /usr/include/glib-2.0/glib/gmappedfile.h \
-  /usr/include/glib-2.0/glib/gmarkup.h \
-  /usr/include/glib-2.0/glib/gmessages.h \
-  /usr/include/glib-2.0/glib/gnode.h /usr/include/glib-2.0/glib/goption.h \
-  /usr/include/glib-2.0/glib/gpattern.h \
-  /usr/include/glib-2.0/glib/gprimes.h \
-  /usr/include/glib-2.0/glib/gqsort.h /usr/include/glib-2.0/glib/gqueue.h \
-  /usr/include/glib-2.0/glib/grand.h /usr/include/glib-2.0/glib/grel.h \
-  /usr/include/glib-2.0/glib/gregex.h \
-  /usr/include/glib-2.0/glib/gscanner.h \
-  /usr/include/glib-2.0/glib/gsequence.h \
-  /usr/include/glib-2.0/glib/gshell.h /usr/include/glib-2.0/glib/gspawn.h \
-  /usr/include/glib-2.0/glib/gstrfuncs.h \
-  /usr/include/glib-2.0/glib/gtestutils.h \
-  /usr/include/glib-2.0/glib/gthreadpool.h \
-  /usr/include/glib-2.0/glib/gtimer.h /usr/include/glib-2.0/glib/gtree.h \
-  /usr/include/glib-2.0/glib/gurifuncs.h ../../lib/include/lib_list.h
+libdbser.so: tool.c tool.h ../../lib/include/lib_mysql/CtableRoute.h \
+ ../../lib/include/lib_mysql/Ctable.h \
+ ../../lib/include/lib_mysql/db_macro.h \
+ ../../lib/include/lib_mysql/db_error_base.h \
+ ../../lib/include/lib_mysql/proto_header.h \
+ ../../lib/include/lib_msgbuf.h ../../lib/include/lib_byte_swap.h \
+ ../../lib/include/lib_packer.h ../../lib/include/lib_log.h \
+ ../../lib/include/lib_mysql/mysql_iface.h ../../lib/include/lib_util.h

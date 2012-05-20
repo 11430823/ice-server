@@ -4,21 +4,17 @@
 
 #include <map>
 #include <algorithm>
-#include  <assert.h>
+#include <assert.h>
 
 #include <lib_util.h>
-
-
-
 
 #include "proto_header.h"
 #include "db_error_base.h"
 
-class Croute_func;
-#define  DEAL_FUN_ARG char* recvbuf, char** sendbuf, int* sndlen 
+#define  DEAL_FUN_ARG cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen
 
 //定义调用函数的指针类型
-typedef int(Croute_func::*P_DEALFUN_T)(DEAL_FUN_ARG);
+typedef int (*P_DEALFUN_T)(DEAL_FUN_ARG);
 typedef P_DEALFUN_T PRI_STRU;
 
 class Ccmdmap
@@ -39,24 +35,6 @@ public:
 	}
 };
 
-//填充命令
-#define FILL_CMD_WITH_PRI_IN_EX(  type , cmd_max_limit )  \
-		{ type##_cmd,{MUST_EQ,sizeof( type##_in),&Croute_func::type,{0,0,cmd_max_limit } }}	
-
-#define FILL_CMD_WITHOUT_PRI_IN_EX( type, cmd_max_limit  )  \
-		{ type##_cmd,{MUST_EQ,0,&Croute_func::type,{0,0,cmd_max_limit } }}	
-
-#define FILL_CMD_WITH_PRI_IN_GE_EX( type,cmd_max_limit )  \
-		{ type##_cmd,{MUST_GE ,sizeof( type##_in_header), &Croute_func::type,{0,0,cmd_max_limit } }}	
-
-//填充命令
-#define FILL_CMD_WITH_PRI_IN(  type  )   FILL_CMD_WITH_PRI_IN_EX(type, 0)
-
-#define FILL_CMD_WITHOUT_PRI_IN( type  )    FILL_CMD_WITHOUT_PRI_IN_EX (type,0)
-
-#define FILL_CMD_WITH_PRI_IN_GE( type )    FILL_CMD_WITH_PRI_IN_GE_EX(type,0)
-
-
 #define SET_SNDBUF(private_len)  \
 	if (!(set_std_return (sendbuf,sndlen,  (PROTO_HEADER*)recvbuf, SUCC, (private_len)))){ \
 		DEBUG_LOG("set_std_return:private size err [%d]",int(private_len));\
@@ -70,26 +48,6 @@ public:
 	}\
 	return ret;\
 }
-
-//用于输入长度为变长的情况下，长度的验正
-#define CHECK_PRI_IN_LEN_WITHOUT_HEADER(pri_len) {\
-	if ( PRI_IN_LEN != (sizeof(*p_in)+(pri_len)) ){\
-		DEBUG_LOG("check size err [%u][%u]", uint32_t (PRI_IN_LEN) ,\
-				uint32_t (sizeof(*p_in)+(pri_len))	);\
-		return PROTO_LEN_ERR; \
-	}	\
-}
-
-//用于输入长度为变长的情况下，长度的验正
-#define CHECK_PRI_IN_LEN_WITHOUT_HEADER_EX(pri_len, max_len){\
-	if ( PRI_IN_LEN>(sizeof(*p_in)+max_len) || PRI_IN_LEN != (sizeof(*p_in)+(pri_len))   ){\
-		DEBUG_LOG("check size err  in[%u] need [%u] max [%d] ", uint32_t (PRI_IN_LEN) ,\
-				uint32_t ((sizeof(*p_in)+(pri_len))) , max_len	);\
-		return PROTO_LEN_ERR; \
-	}	\
-}
-
-
 
 #define STD_RETURN_WITH_BUF(ret,_buf,_count ) { \
 	if (ret==SUCC){ \
@@ -155,35 +113,3 @@ public:
 		return ret;\
 	} 
 #endif
-
-class Cfunc_route_cmd
-{
-	PROTECTED_R_DEFAULT(int, ret);/*用于保存操作返回值，只是为了方便 */
-protected: 
-	Ccmdmap cmd_map;
-
-public:
-	Cfunc_route_cmd() {
-		this->ret = 0;
-	}
-
-	virtual  int deal(char *recvbuf, int rcvlen, char **sendbuf, int *sndlen )
-	{
-		PRI_STRU p_pri_stru;
-		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
-		userid_t userid=((PROTO_HEADER*)recvbuf)->id;
-		if((p_pri_stru = this->cmd_map.get_cmd_fun(cmdid))!=NULL){
-			DEBUG_LOG("I:%04X:%d", cmdid, userid );
-	
-			this->ret=9999;
-			//调用相关DB处理函数
-			this->ret=(((Croute_func*)this)->p_pri_stru)(recvbuf, sendbuf, sndlen);	
-			return this->ret;
-		}else{
-			DEBUG_LOG("cmd no define  cmdid[%04X]",cmdid );
-			return  CMDID_NODEFINE_ERR;
-		}
-	}
-	virtual ~Cfunc_route_cmd(){}
-};
-

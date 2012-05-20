@@ -19,7 +19,9 @@
 #define db_macro
 #include "db_error_base.h" 
 #include "proto_header.h" 
-#include <mysql/mysql.h> 
+#include <mysql/mysql.h>
+
+#include <lib_log.h>
 
 #define GET_ROUTE(cmdid) ((cmdid&0x8000)?(70+((cmdid&0x7E00)>>6)+((cmdid &0x00E0)>>5)):(cmdid>>9))
 
@@ -71,10 +73,10 @@ inline double atof_safe (char *str)
 		memcpy(dst,row[_fi],res->lengths[_fi] ): memcpy(dst,row[_fi],max_len)
 
 //得到int
-#define INT_CPY_NEXT_FIELD(value )  (value)=atoi_safe(NEXT_FIELD )
+#define INT_CPY_NEXT_FIELD(value)  (value)=atoi_safe(NEXT_FIELD)
 
 //得到double的值
-#define DOUBLE_CPY_NEXT_FIELD(value )  (value)=atof_safe(NEXT_FIELD )
+#define DOUBLE_CPY_NEXT_FIELD(value )  (value)=atof_safe(NEXT_FIELD)
 
 
 

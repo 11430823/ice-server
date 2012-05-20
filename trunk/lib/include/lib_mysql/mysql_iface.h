@@ -28,7 +28,7 @@ public:
 	MYSQL handle;
 	mysql_interface (std::string h, std::string user, std::string pass, uint16_t port = 3306,
 		const char * a_unix_socket = NULL);
-	~mysql_interface();
+	virtual ~mysql_interface();
 	void show_error_log(const char* sql);
 	int select_db(char* db_name); 
 	int exec_query_sql (const char* sql, MYSQL_RES** result);
