@@ -1,22 +1,43 @@
 
 
-#ifndef  CFUNC_ROUTE_cmd_INC
-#define  CFUNC_ROUTE_cmd_INC
+#pragma once
+
+#include <map>
+#include <algorithm>
+#include  <assert.h>
+
 #include <lib_util.h>
 
-#include "Ccmdmaplist.h"
-#include  <assert.h>
-#include "Ccmdmap_private_checklen.h"
+
+
+
 #include "proto_header.h"
 #include "db_error_base.h"
 
-//------------------定义与Ccmdmap相关的私有结构---begin
-#define  DEAL_FUN_ARG char* recvbuf, char** sendbuf, int* sndlen 
 class Croute_func;
+#define  DEAL_FUN_ARG char* recvbuf, char** sendbuf, int* sndlen 
+
 //定义调用函数的指针类型
-typedef   int(Croute_func::*P_DEALFUN_T)(DEAL_FUN_ARG);
-typedef   struct pri_stru_check_len<P_DEALFUN_T > PRI_STRU;
-typedef   Ccmdmap < PRI_STRU > 		CMD_MAP ;
+typedef int(Croute_func::*P_DEALFUN_T)(DEAL_FUN_ARG);
+typedef P_DEALFUN_T PRI_STRU;
+
+class Ccmdmap
+{
+private:
+	typedef std::map<uint32_t, PRI_STRU> CMD_MAP;
+	CMD_MAP cmd_map;
+public:
+	PRI_STRU get_cmd_fun(uint32_t cmd){
+		CMD_MAP::iterator it = this->cmd_map.find(cmd);
+		if (this->cmd_map.end() != it){
+			return it->second;
+		}
+		return NULL;
+	}
+	void insert_cmd_fun(uint32_t cmd, PRI_STRU deal_fun){
+		cmd_map[cmd] = deal_fun;
+	}
+};
 
 //填充命令
 #define FILL_CMD_WITH_PRI_IN_EX(  type , cmd_max_limit )  \
@@ -139,67 +160,30 @@ class Cfunc_route_cmd
 {
 	PROTECTED_R_DEFAULT(int, ret);/*用于保存操作返回值，只是为了方便 */
 protected: 
-	Ccmdmaplist<CMD_MAP>  cmdmaplist;		
-	/**
-	 * 功能:从deal_fun 统一初始化
-	 * count:数组中元素的个数.
-	 */
-	inline void initlist(CMD_MAP * deal_fun, int count ){
-		for (int i=0;i<count;i++ ){
-			assert( this->cmdmaplist.v_cmdmap[ (*(deal_fun+i)).cmd_id].cmd_id==0 );
-			this->cmdmaplist.v_cmdmap[ (*(deal_fun+i)).cmd_id]=*(deal_fun+i);
-		}
-	}
+	Ccmdmap cmd_map;
+
 public:
 	Cfunc_route_cmd() {
 		this->ret = 0;
 	}
 
-	inline bool set_cmd_max_limit_per_minute(uint16_t cmdid ,uint32_t max_limit )
-	{
-		PRI_STRU * p_pri_stru;
-		if((p_pri_stru =this->cmdmaplist.getitem(cmdid))!=NULL){
-			p_pri_stru->exec_cmd_limit.limit_max_count_per_min=max_limit;
-			return true;
-		}else{
-			return false;
-		}
-	}
-
 	virtual  int deal(char *recvbuf, int rcvlen, char **sendbuf, int *sndlen )
 	{
-		PRI_STRU * p_pri_stru;
+		PRI_STRU p_pri_stru;
 		uint32_t cmdid=((PROTO_HEADER*)recvbuf)->cmd;
 		userid_t userid=((PROTO_HEADER*)recvbuf)->id;
-		if((p_pri_stru =this->cmdmaplist.getitem(cmdid))!=NULL){
+		if((p_pri_stru = this->cmd_map.get_cmd_fun(cmdid))!=NULL){
 			DEBUG_LOG("I:%04X:%d", cmdid, userid );
-			//检查协议频率
-			if (! p_pri_stru->exec_cmd_limit.add_count() ){
-				DEBUG_LOG("cmd max err:cmdid %u, max_count:%u ",
-					cmdid,p_pri_stru->exec_cmd_limit.limit_max_count_per_min);
-			
-				return CMD_EXEC_MAX_PER_MINUTE_ERR;
-			}
-
-			//检查报文长度
-			if (! p_pri_stru->check_proto_size(rcvlen - PROTO_HEADER_SIZE) ){
-				DEBUG_LOG("len err pre [%u] send [%d]",
-				uint32_t (p_pri_stru->predefine_len+PROTO_HEADER_SIZE) ,rcvlen );
-				return PROTO_LEN_ERR;
-			}
 	
 			this->ret=9999;
 			//调用相关DB处理函数
-			this->ret=(((Croute_func*)this)->*(p_pri_stru->p_deal_fun))(recvbuf, sendbuf, sndlen );	
+			this->ret=(((Croute_func*)this)->p_pri_stru)(recvbuf, sendbuf, sndlen);	
 			return this->ret;
 		}else{
 			DEBUG_LOG("cmd no define  cmdid[%04X]",cmdid );
 			return  CMDID_NODEFINE_ERR;
 		}
 	}
-	virtual ~Cfunc_route_cmd (){ }
-	
-}; /* -----  end of class  Cfunc_route_base  ----- */
-
-#endif   /* ----- #ifndef CFUNC_ROUTE_cmd_INC  ----- */
+	virtual ~Cfunc_route_cmd(){}
+};
 
