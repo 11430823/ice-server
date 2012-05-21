@@ -13,7 +13,7 @@
 #include "rount_func.h"
 
 mysql_interface* g_db = NULL;
-Croute_func* g_route_func = NULL;
+Cfunc_route* g_route_func = NULL;
 
 /**
   * @brief Initialize service
@@ -35,7 +35,7 @@ extern "C" int on_init(int isparent)
 			g_bench_conf.get_strval("dbser", "unix_socket").c_str());
  		g_db->set_is_log_sql(::atoi(g_bench_conf.get_strval("dbser", "is_log_sql").c_str()));
 
-		g_route_func = new Croute_func(g_db);
+		g_route_func = new Cfunc_route(g_db);
 
 	}
 	return 0;
