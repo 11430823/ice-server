@@ -18,12 +18,12 @@
 
 class mysql_interface 
 {
-	PRIVATE_R_DEFAULT(std::string, host);
-	PRIVATE_R_DEFAULT(std::string, user);
-	PRIVATE_R_DEFAULT(std::string, pass);
-	PRIVATE_R_DEFAULT(uint16_t, port);
-	PRIVATE_RW_DEFAULT(bool, is_log_sql);//是否可以将sql打印到日志中
-	PRIVATE_RW_DEFAULT(uint32_t, id);
+	PRIVATE_R(std::string, host);
+	PRIVATE_R(std::string, user);
+	PRIVATE_R(std::string, pass);
+	PRIVATE_R(uint16_t, port);
+	PRIVATE_RW(bool, is_log_sql);//是否可以将sql打印到日志中
+	PRIVATE_RW(uint32_t, id);
 public:
 	MYSQL handle;
 	mysql_interface (std::string h, std::string user, std::string pass, uint16_t port = 3306,

@@ -27,32 +27,36 @@
 
 //////////////////////////////////////////////////////////////////////////
 //使用宏管理成员变量
-#define PROTECTED_R_DEFAULT(varType, varName)\
+#define PROTECTED_R(varType, varName)\
 	protected:	varType varName;\
-	public:		varType get_##varName(void) { return this->varName; }
+	public:		varType get_##varName(void){return this->varName;}
 
-#define PROTECTED_RW_DEFAULT(varType, varName)\
+#define PROTECTED_RW(varType, varName)\
 	protected:	varType varName;\
-	public:		varType get_##varName(void) { return this->varName; } \
-	public:		void set_##varName(varType var) { this->varName = var; }
+	public:		varType get_##varName(void){return this->varName;}\
+	public:		void set_##varName(varType var){this->varName = var;}
 
-#define PRIVATE_R_DEFAULT(varType, varName)\
-	private:	varType varName;\
-	public:		varType get_##varName(void) { return this->varName; }
+#define PROTECTED_R_REF(varType, varName)\
+	protected:	varType varName;\
+	public:		const varType& get_##varName(void){return this->varName;}
 
-#define PRIVATE_R_BY_REF_DEFAULT(varType, varName)\
+#define PRIVATE_R(varType, varName)\
 	private:	varType varName;\
-	public:		const varType& get_##varName(void) { return this->varName; }
+	public:		varType get_##varName(void){return this->varName;}
 
-#define PRIVATE_RW_DEFAULT(varType, varName)\
+#define PRIVATE_R_REF(varType, varName)\
 	private:	varType varName;\
-	public:		varType get_##varName(void) { return this->varName; } \
-	public:		void set_##varName(varType var) { this->varName = var; }
+	public:		const varType& get_##varName(void){return this->varName;}
 
-#define PRIVATE_RW_BY_REF_DEFAULT(varType, varName)\
+#define PRIVATE_RW(varType, varName)\
 	private:	varType varName;\
-	public:		const varType& get_##varName(void) { return this->varName; } \
-	public:		void set_##varName(const varType& var) { this->varName = var; }
+	public:		varType get_##varName(void){return this->varName;} \
+	public:		void set_##varName(varType var){this->varName = var;}
+
+#define PRIVATE_RW_REF(varType, varName)\
+	private:	varType varName;\
+	public:		const varType& get_##varName(void){return this->varName;} \
+	public:		void set_##varName(const varType& var){this->varName = var;}
 
 #define SAFE_DELETE(p__){\
 		delete p__;\

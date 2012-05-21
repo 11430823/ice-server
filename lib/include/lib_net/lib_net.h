@@ -13,7 +13,7 @@
 namespace ice{
 	class lib_net_t
 	{
-		PROTECTED_RW_DEFAULT(int, fd);
+		PROTECTED_RW(int, fd);
 	public:
 		lib_net_t();
 		virtual ~lib_net_t();

@@ -65,9 +65,9 @@ class send_data_cli_t : public ice::lib_send_data_t<cli_proto_head_t>
 {
 public:
 	send_data_cli_t()
-		:ice::lib_send_data_t<cli_proto_head_t>(send_data){
+		: ice::lib_send_data_t<cli_proto_head_t>(send_data){
 	}
-	virtual void set_header(const cli_proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
+	virtual void set_head(const cli_proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
 		const uint32_t all_len = this->write_pos;
 		this->write_pos = 0;
 		*this<<all_len
@@ -80,7 +80,7 @@ public:
 protected:
 private:
 	static const uint32_t PACK_DEFAULT_SIZE = 8192;//去掉包头,大概相等
-	uint8_t send_data[PACK_DEFAULT_SIZE];
+	char send_data[PACK_DEFAULT_SIZE];
 	send_data_cli_t(const send_data_cli_t& cr); // 拷贝构造函数
 	send_data_cli_t& operator=( const send_data_cli_t& cr); // 赋值函数
 };

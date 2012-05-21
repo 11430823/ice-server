@@ -24,8 +24,8 @@ const uint32_t DB_TABLE_NAME_MAX_LEN = DB_NAME_MAX_LEN + TABLE_NAME_MAX_LEN;
 
 class Ctable
 {
-	PROTECTED_RW_DEFAULT(mysql_interface*, db);
-	PROTECTED_RW_DEFAULT(uint32_t, id);//用于保存主键值，缓存中使用,一般在get_table_name 中同步设置
+	PROTECTED_RW(mysql_interface*, db);
+	PROTECTED_RW(uint32_t, id);//用于保存主键值，缓存中使用,一般在get_table_name 中同步设置
 protected:
 	char sqlstr[SQL_STR_MAX_LEN];
 	char db_name[DB_NAME_MAX_LEN];
