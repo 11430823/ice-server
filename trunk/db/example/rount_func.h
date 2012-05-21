@@ -12,10 +12,18 @@
 
 #include "tool.h"
 
-class Croute_func : public Cfunc_route_base
+#define TOOL_ADD_CMD 1
+#define TOOL_REDUCE_CMD 2
+#define TOOL_GET_ALL 3
+
+class Cfunc_route : public Cfunc_route_base
 {
 public:
-	Croute_func(mysql_interface* db) : Cfunc_route_base(db), tool(db){}
+	Cfunc_route(mysql_interface* db) : Cfunc_route_base(db), tool(db){
+ 		this->cmd_map.insert_cmd_fun(TOOL_ADD_CMD, tool_add);
+// 		this->cmd_map.insert_cmd_fun(TOOL_REDUCE_CMD, tool_reduce);
+// 		this->cmd_map.insert_cmd_fun(TOOL_GET_ALL, tool_get_all);
+	}
 
 	Ctool tool;
 	int tool_add(DEAL_FUN_ARG);
@@ -23,7 +31,7 @@ public:
 	int tool_get_all(DEAL_FUN_ARG);
 };
 
-int Croute_func::tool_add( cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen )
+int Cfunc_route::tool_add( cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen )
 {
 	tool_add_in_t info;
 	rin>>info.id>>info.num;
@@ -32,7 +40,7 @@ int Croute_func::tool_add( cli_proto_head_t& rhead, recv_data_cli_t& rin, char**
 	return 0;
 }
 
-int Croute_func::tool_reduce( cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen )
+int Cfunc_route::tool_reduce( cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen )
 {
 	tool_reduce_in_t info;
 	rin>>info.id>>info.num;
@@ -41,7 +49,7 @@ int Croute_func::tool_reduce( cli_proto_head_t& rhead, recv_data_cli_t& rin, cha
 	return 0;
 }
 
-int Croute_func::tool_get_all( cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen )
+int Cfunc_route::tool_get_all( cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen )
 {
 	//todo 获取数据
 	*sendbuf = this->send_data.data();
