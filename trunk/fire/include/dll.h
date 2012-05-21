@@ -16,7 +16,7 @@
 
 class dll_t
 {
-	PRIVATE_R_DEFAULT(void*, handle);
+	PRIVATE_R(void*, handle);
 public:
 	dll_t();
 	virtual ~dll_t();

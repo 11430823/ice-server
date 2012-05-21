@@ -24,9 +24,9 @@ class tcp_server_epoll_t : public ice::lib_tcp_srv_t
 {
 public:
 	typedef int (*ON_PIPE_EVENT)(int fd, epoll_event& r_evs);
-	PRIVATE_RW_DEFAULT(ON_PIPE_EVENT, on_pipe_event);
-	PRIVATE_RW_DEFAULT(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
-	PRIVATE_R_DEFAULT(on_functions_tcp_server_epoll*, on_functions);//回调函数
+	PRIVATE_RW(ON_PIPE_EVENT, on_pipe_event);
+	PRIVATE_RW(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
+	PRIVATE_R(on_functions_tcp_server_epoll*, on_functions);//回调函数
 public:
 	tcp_server_epoll_t(uint32_t max_events_num);
 	virtual ~tcp_server_epoll_t();
@@ -68,7 +68,7 @@ private:
 
 class net_server_t
 {
-	PRIVATE_R_DEFAULT(tcp_server_epoll_t*, server_epoll);
+	PRIVATE_R(tcp_server_epoll_t*, server_epoll);
 public:
 	net_server_t(void);
 	virtual ~net_server_t(){}
