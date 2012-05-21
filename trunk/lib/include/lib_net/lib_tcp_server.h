@@ -96,11 +96,11 @@ namespace ice{
 	{
 	public:
 		typedef bool (*CHECK_RUN)();
-		PROTECTED_R_DEFAULT(CHECK_RUN, check_run);//服务器循环时检测是否继续执行
-		PROTECTED_RW_DEFAULT(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
-		PROTECTED_R_DEFAULT(lib_tcp_peer_info_t*, peer_fd_infos);//连接用户的信息
-		PROTECTED_R_DEFAULT(int, cli_fd_value_max);//连接上的FD中的最大值
-		PROTECTED_R_DEFAULT(int, listen_fd);//监听FD
+		PROTECTED_R(CHECK_RUN, check_run);//服务器循环时检测是否继续执行
+		PROTECTED_RW(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
+		PROTECTED_R(lib_tcp_peer_info_t*, peer_fd_infos);//连接用户的信息
+		PROTECTED_R(int, cli_fd_value_max);//连接上的FD中的最大值
+		PROTECTED_R(int, listen_fd);//监听FD
 	public:
 		lib_tcp_srv_t();
 		virtual ~lib_tcp_srv_t();

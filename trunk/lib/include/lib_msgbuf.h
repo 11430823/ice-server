@@ -18,16 +18,19 @@ namespace ice{
 	class lib_send_data_t
 	{
 	public:
-		lib_send_data_t(uint8_t* senddata){
-			this->write_pos = sizeof(T_HEAD_TYPE);
+		lib_send_data_t(char* senddata){
+			this->init();
 			this->send_data = senddata;
+		}
+		void init(){
+			this->write_pos = sizeof(T_HEAD_TYPE);
 		}
 		//************************************
 		// Brief:     设置数据的头结构
 		// Warning:		设置后就不能往数据中打包任何数据,否则包头中的总长度需要重新设定
 		//************************************
 		virtual void set_head(const T_HEAD_TYPE& rhead) = 0;
-		inline uint8_t* data(){
+		inline char* data(){
 			return this->send_data;
 		}
 		inline uint32_t len(){
@@ -70,7 +73,7 @@ namespace ice{
 	protected:
 		int write_pos;//数据写到的位置
 	private:
-		uint8_t* send_data;
+		char* send_data;
 	private:
 		lib_send_data_t(const lib_send_data_t& cr); // 拷贝构造函数
 		lib_send_data_t& operator=( const lib_send_data_t& cr); // 赋值函数
@@ -98,7 +101,7 @@ namespace ice{
 		lib_send_data_cli_t()
 			:ice::lib_send_data_t<cli_proto_head_t>(send_data){
 		}
-		virtual void set_header(const cli_proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
+		virtual void set_head(const cli_proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
 			const uint32_t all_len = this->write_pos;
 			this->write_pos = 0;
 			*this<<all_len
@@ -111,7 +114,7 @@ namespace ice{
 	protected:
 	private:
 		static const uint32_t PACK_DEFAULT_SIZE = 8192;//去掉包头,大概相等
-		uint8_t send_data[PACK_DEFAULT_SIZE];
+		char send_data[PACK_DEFAULT_SIZE];
 		lib_send_data_cli_t(const lib_send_data_cli_t& cr); // 拷贝构造函数
 		lib_send_data_cli_t& operator=( const lib_send_data_cli_t& cr); // 赋值函数
 	};

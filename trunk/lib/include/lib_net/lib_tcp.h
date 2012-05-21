@@ -18,8 +18,8 @@
 namespace ice{
 	class lib_tcp_t : public lib_net_t
 	{
-		PROTECTED_RW_DEFAULT(uint16_t, port);
-		PROTECTED_RW_DEFAULT(uint32_t, ip);
+		PROTECTED_RW(uint16_t, port);
+		PROTECTED_RW(uint32_t, ip);
 	public:
 		lib_tcp_t(){
 			this->port = 0;

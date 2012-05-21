@@ -13,10 +13,10 @@
 namespace ice{
 	class lib_mcast_t : public lib_udp_t
 	{
-		PROTECTED_RW_DEFAULT(std::string, mcast_incoming_if);//组播 接收
-		PROTECTED_RW_DEFAULT(std::string, mcast_outgoing_if);//组播 发送
-		PROTECTED_RW_DEFAULT(std::string, mcast_ip);//239.X.X.X组播地址
-		PROTECTED_RW_DEFAULT(uint16_t, mcast_port);//239.X.X.X组播 端口
+		PROTECTED_RW(std::string, mcast_incoming_if);//组播 接收
+		PROTECTED_RW(std::string, mcast_outgoing_if);//组播 发送
+		PROTECTED_RW(std::string, mcast_ip);//239.X.X.X组播地址
+		PROTECTED_RW(uint16_t, mcast_port);//239.X.X.X组播 端口
 	public:
 		lib_mcast_t(){
 			this->mcast_port = 0;

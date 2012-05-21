@@ -17,7 +17,7 @@
 namespace ice{
 	class lib_tcp_peer_info_t : public lib_tcp_t
 	{
-		PROTECTED_RW_DEFAULT(uint32_t, last_tm);
+		PROTECTED_RW(uint32_t, last_tm);
 	public:
 		uint8_t		fd_type;
 		lib_active_buf_t recv_buf;

@@ -15,7 +15,7 @@
 namespace ice{
 	class lib_udp_t : public lib_net_t
 	{
-		PROTECTED_RW_DEFAULT(sockaddr_in, addr);
+		PROTECTED_RW(sockaddr_in, addr);
 	public:
 		lib_udp_t(){}
 		virtual ~lib_udp_t(){}

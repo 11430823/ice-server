@@ -11,6 +11,7 @@
 #include "proto_header.h"
 #include "db_error_base.h"
 
+class Cfunc_route;
 #define  DEAL_FUN_ARG cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen
 
 //定义调用函数的指针类型
