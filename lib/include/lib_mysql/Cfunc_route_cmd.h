@@ -12,26 +12,25 @@
 #include "db_error_base.h"
 
 class Cfunc_route;
-#define  DEAL_FUN_ARG cli_proto_head_t& rhead, recv_data_cli_t& rin, char** sendbuf, int* sndlen
-
+#define  DEAL_FUN_ARG const cli_proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen
 //定义调用函数的指针类型
-typedef int (*P_DEALFUN_T)(DEAL_FUN_ARG);
-typedef P_DEALFUN_T PRI_STRU;
+typedef int (Cfunc_route::*P_DEALFUN_T)(DEAL_FUN_ARG);
 
 class Ccmdmap
 {
 private:
-	typedef std::map<uint32_t, PRI_STRU> CMD_MAP;
+	typedef std::map<uint32_t, P_DEALFUN_T> CMD_MAP;
 	CMD_MAP cmd_map;
 public:
-	PRI_STRU get_cmd_fun(uint32_t cmd){
+	P_DEALFUN_T get_cmd_fun(uint32_t cmd){
 		CMD_MAP::iterator it = this->cmd_map.find(cmd);
 		if (this->cmd_map.end() != it){
 			return it->second;
 		}
 		return NULL;
 	}
-	void insert_cmd_fun(uint32_t cmd, PRI_STRU deal_fun){
+
+	void insert_cmd_fun(uint32_t cmd, P_DEALFUN_T deal_fun){
 		cmd_map[cmd] = deal_fun;
 	}
 };

@@ -26,6 +26,7 @@ class Ctable
 {
 	PROTECTED_RW(mysql_interface*, db);
 	PROTECTED_RW(uint32_t, id);//用于保存主键值，缓存中使用,一般在get_table_name 中同步设置
+	PROTECTED_RW(uint32_t, ret);
 protected:
 	char sqlstr[SQL_STR_MAX_LEN];
 	char db_name[DB_NAME_MAX_LEN];

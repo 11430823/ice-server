@@ -27,11 +27,13 @@ Ctable::Ctable(mysql_interface* db, const char* dbname, const char* tablename )
 	this->db = db;
 	::strcpy(this->table_name, tablename);
 	::strcpy(this->db_name, dbname);
+	this->ret = 0;
 }
 
 Ctable::Ctable(mysql_interface* db)
 {
 	this->db = db;
+	this->ret = 0;
 }
 
 char* Ctable::get_table_name()

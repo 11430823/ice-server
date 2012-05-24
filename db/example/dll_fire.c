@@ -10,7 +10,7 @@
 
 #include <lib_timer.h>
 
-#include "rount_func.h"
+#include "func_rount.h"
 
 mysql_interface* g_db = NULL;
 Cfunc_route* g_route_func = NULL;
@@ -36,6 +36,8 @@ extern "C" int on_init(int isparent)
  		g_db->set_is_log_sql(::atoi(g_bench_conf.get_strval("dbser", "is_log_sql").c_str()));
 
 		g_route_func = new Cfunc_route(g_db);
+
+		
 
 	}
 	return 0;
@@ -96,21 +98,24 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
-	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
+	recv_data_cli_t in(pkg);
+	cli_proto_head_t head;
+	in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
+
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
-		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
-	char *out;
+		head.len, head.cmd, head.seq, head.ret, head.id, peer_fd_info->get_fd(), pkglen);
+	char* out = NULL;
 	int outlen = 0;
-	int ret = g_route_func->deal(pkg, pkglen, &out, &outlen);
+	int ret = g_route_func->deal(head, in, &out, outlen);
 	if (0 == ret){
 		fire::s2peer(peer_fd_info, out, outlen);
 	} else {
 		cli_proto_head_t err_out;
-		err_out.cmd = head->cmd;
-		err_out.id = head->id;
+		err_out.cmd = head.cmd;
+		err_out.id = head.id;
 		err_out.len = sizeof(err_out);
 		err_out.ret = ret;
-		err_out.seq = head->seq;
+		err_out.seq = head.seq;
 		fire::s2peer(peer_fd_info, (void*)&err_out, sizeof(err_out));
 	}
 	return 0;
