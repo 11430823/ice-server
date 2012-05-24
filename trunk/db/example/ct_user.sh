@@ -4,7 +4,7 @@ user="root"
 password="root"
 host="localhost"
 tmp_file="table.sql"
-table_name_prefix="t_tool_"
+table_name_prefix="t_user_"
 db_name_prefix="ICE_"
 
 todo_sql() {
@@ -12,9 +12,8 @@ todo_sql() {
 cat <<EOF >$tmp_file
 	CREATE TABLE IF NOT EXISTS $table_name_prefix$1 (
 	 userid int(10) unsigned  not null ,
-	 id int(10) unsigned  not null,
-	 num int(10) unsigned  not null,
-	primary key(userid,id)
+	 nick char(16) not null,
+	primary key(userid)
 	) ENGINE=innodb CHARSET=UTF8;
 EOF
 }

@@ -1,44 +1,72 @@
-/*
- * =====================================================================================
- *
- *       Filename:  dbser_macro.h
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  2010年06月07日 10时54分34秒
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  jim (xcwen), jim@taomee.com
- *        Company:  taomee
- *
- * =====================================================================================
- */
-#ifndef db_macro
-#define db_macro
-#include "db_error_base.h" 
-#include "proto_header.h" 
+
+#pragma once
 #include <mysql/mysql.h>
 
 #include <lib_log.h>
 
+#include "db_error_base.h" 
+#include "proto_header.h" 
+
+#define mysql_str_len(n) ((n) * 2 + 1)
+
+#define set_mysql_string(dst, src, n) \
+	mysql_real_escape_string(&(this->db->handle), dst, src, n)
+
+inline uint64_t atoi_safe(char* str) 
+{
+	return (str!= NULL ? atoll(str) : 0);
+}
+
+//依次得到row[i]
+// 在STD_QUERY_WHILE_BEGIN  和 STD_QUERY_ONE_BEGIN
+#define NEXT_FIELD 	 (row[++_fi])
+
+#define GET_NEXT_FIELD_INT(out, type) (out)<<(type)atoi_safe(NEXT_FIELD)
+//得到int
+#define INT_CPY_NEXT_FIELD(value)  (value) = atoi_safe(NEXT_FIELD)
+
+//多条记录
+#define STD_QUERY_WHILE_BEGIN(sqlstr, count) \
+	{\
+		MYSQL_RES* res;\
+		MYSQL_ROW  row;\
+		this->db->set_id(this->id);\
+		this->ret = this->db->exec_query_sql(sqlstr, &res);\
+		if (0 == this->ret){\
+			count = mysql_num_rows(res);\
+			while((row = mysql_fetch_row(res))){\
+				int _fi = -1;
+
+#define STD_QUERY_WHILE_END() \
+			}\
+			mysql_free_result(res);	\
+		}else {\
+			this->ret = DB_ERR;\
+		}\
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 #define GET_ROUTE(cmdid) ((cmdid&0x8000)?(70+((cmdid&0x7E00)>>6)+((cmdid &0x00E0)>>5)):(cmdid>>9))
 
-#define set_mysql_string(dst,src,n)	mysql_real_escape_string(  \
-		  &(this->db->handle), dst, src, n)
 
-inline uint64_t atoi_safe (char *str) 
-{
-	return 	(str!= NULL ? atoll(str):0 );
-}
+
 
 inline double atof_safe (char *str) 
 {
 	return 	(str!= NULL ? atof(str):0 );
 }
 
-#define mysql_str_len(n)	( (n) *2 +1)
+
 
 
 //正常的db 连接 
@@ -62,9 +90,7 @@ inline double atof_safe (char *str)
 
 
 
-//依次得到row[i]
-// 在STD_QUERY_WHILE_BEGIN  和 STD_QUERY_ONE_BEGIN
-#define NEXT_FIELD 	 (row[++_fi])
+
 
 //变长方式copy
 #define BIN_CPY_NEXT_FIELD( dst,max_len)  ++_fi; \
@@ -72,8 +98,7 @@ inline double atof_safe (char *str)
 		res->lengths[_fi]<max_len? \
 		memcpy(dst,row[_fi],res->lengths[_fi] ): memcpy(dst,row[_fi],max_len)
 
-//得到int
-#define INT_CPY_NEXT_FIELD(value)  (value)=atoi_safe(NEXT_FIELD)
+
 
 //得到double的值
 #define DOUBLE_CPY_NEXT_FIELD(value )  (value)=atof_safe(NEXT_FIELD)
@@ -141,34 +166,7 @@ inline double atof_safe (char *str)
 
 #else 
 
-// malloc for list ,set record count to count
-#define STD_QUERY_WHILE_BEGIN( sqlstr,pp_list,p_count )  \
-	{ 	MYSQL_RES *res;\
-		MYSQL_ROW  row;\
-		int i;\
-        this->db->set_id(this->id);\
-		if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
-			*p_count=mysql_num_rows(res);\
-			if ((*pp_list =( typeof(*pp_list))malloc(\
-				sizeof(typeof(**pp_list) ) *(*p_count))) ==NULL){\
-				return SYS_ERR;\
-			}\
-			memset(*pp_list,0, sizeof(typeof(**pp_list) ) *(*p_count) );\
-			i=0;\
-			while((row = mysql_fetch_row(res))){\
-				int _fi;\
-			   	_fi=-1;
-	
 
-#define STD_QUERY_WHILE_END()  \
-				i++;\
-			}\
-			mysql_free_result(res);	\
-			return DB_SUCC;\
-		}else {\
-			return DB_ERR;\
-		}\
-	}
 
 
 #endif
@@ -271,7 +269,3 @@ inline char * set_space_end(char * src, int len  )
     return src ;
 
 }
-
-
-
-#endif

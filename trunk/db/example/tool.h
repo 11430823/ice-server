@@ -16,10 +16,16 @@ struct tool_get_all_in_t
 {
 };
 
-struct tool_get_all_out_t 
+struct tool_get_all_out_info_t 
 {
 	uint32_t id;
 	uint32_t num;
+};
+
+struct tool_get_all_out_t 
+{
+	uint32_t cnt;
+		tool_get_all_out_info_t tool_list[]; 
 };
 #pragma pack()
 
@@ -29,6 +35,7 @@ public:
 	Ctool(mysql_interface * db) : CtableRoute(db, "ICE", "t_tool"){}
 	int add(uint32_t userid, uint32_t id, uint32_t num);
 	int reduce(uint32_t userid, uint32_t id, uint32_t num);
+	int get_all(uint32_t userid, send_data_cli_t& out);
 private:
 	int __get_num(uint32_t userid,uint32_t id, uint32_t& num);
 	int __insert(uint32_t userid, uint32_t id, uint32_t num);
