@@ -21,7 +21,18 @@ inline uint64_t atoi_safe(char* str)
 // 在STD_QUERY_WHILE_BEGIN  和 STD_QUERY_ONE_BEGIN
 #define NEXT_FIELD 	 (row[++_fi])
 
-#define GET_NEXT_FIELD_INT(out, type) (out)<<(type)atoi_safe(NEXT_FIELD)
+#define GET_NEXT_FIELD_INT(out, type)\
+	(out)<<(type)atoi_safe(NEXT_FIELD)
+
+#define GET_NEXT_FIELD_BIN(out, max_len)\
+	{\
+		++_fi;\
+		mysql_fetch_lengths(res);\
+		uint32_t real_len = res->lengths[_fi] < max_len ? res->lengths[_fi] : max_len;\
+		out<<real_len;\
+		out.pack_str(row[_fi], real_len);\
+	}
+
 //得到int
 #define INT_CPY_NEXT_FIELD(value)  (value) = atoi_safe(NEXT_FIELD)
 

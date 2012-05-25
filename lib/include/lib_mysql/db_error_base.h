@@ -93,5 +93,7 @@
 #define LIST_ID_NOFIND					  	1110
 #define LIST_ID_MAX						 	1115
 
+#define KEY_INEXISTENCE_ERR					1116
+
 #endif   /* ----- #ifndef ----- */
 
