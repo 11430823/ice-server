@@ -1,0 +1,11 @@
+
+enum E_DB_CMD{
+	E_DB_CMD_BEGIN = 0xFFFFF001,
+	//可用的CMD区间范围
+	E_DB_CMD_END = 0xFFFFFFFF,	
+};
+	BIND_PROTO_CMD(0xFFFFF001, user_add)
+	BIND_PROTO_CMD(0xFFFFF002, user_get_all)
+	BIND_PROTO_CMD(0xFFFFF003, tool_add)
+	BIND_PROTO_CMD(0xFFFFF004, tool_reduce)
+	BIND_PROTO_CMD(0xFFFFF005, tool_get_all)
