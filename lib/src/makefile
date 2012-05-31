@@ -1,5 +1,4 @@
 #-lpthread 是 多线程库支持
-#MYSQL_FLAGS=-lmysqlclient -I/usr/include/mysql/ -L/usr/lib/mysql/
 
 EXE=libice.so
 CC=g++

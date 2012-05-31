@@ -1,19 +1,27 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <lib_log.h>
 #include <bench_conf.h>
 #include <interface.h>
 
-#include <lib_mysql/mysql_iface.h>
-
 #include <lib_timer.h>
 
-#include "func_rount.h"
+#include "route.h"
 
-mysql_interface* g_db = NULL;
-Cfunc_route* g_route_func = NULL;
+#pragma pack(1)
+/* SERVER和CLIENT的协议包头格式 */
+struct cli_proto_head_t {
+	uint32_t len; /* 协议的长度 */
+	uint32_t cmd; /* 协议的命令号 */
+	uint32_t id; /* 账号 */
+	uint32_t seq;/* 序列号 */
+	uint32_t ret; /* S->C, 错误码 */
+	uint8_t body[]; /* 包体信息 */
+};
+#pragma pack()
+
+//////////////////////////////////////////////////////////////////////////////
 
 /**
   * @brief Initialize service
@@ -25,17 +33,8 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		//ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
-		//ice::lib_tcp_peer_info_t* s = connect("switch");// 使用连接时再创建,启动时因无同步地址广播,无法获取IP,PORT
+		g_rotue_t.parser();
 
-		g_db = new mysql_interface(g_bench_conf.get_strval("dbser", "ip"),
-			g_bench_conf.get_strval("dbser", "user"),
-			g_bench_conf.get_strval("dbser", "passwd"),
-			::atoi(g_bench_conf.get_strval("dbser", "port").c_str()),
-			g_bench_conf.get_strval("dbser", "unix_socket").c_str());
- 		g_db->set_is_log_sql(::atoi(g_bench_conf.get_strval("dbser", "is_log_sql").c_str()));
-
-		g_route_func = new Cfunc_route(g_db);
 	}
 	return 0;
 }
@@ -50,8 +49,6 @@ extern "C" int on_fini(int isparent)
 		DEBUG_LOG("======daemon done======");
 	}else{
 		DEBUG_LOG("======server done======");
-		SAFE_DELETE(g_db);
-		SAFE_DELETE(g_route_func);
 	}
 	return 0;
 }
@@ -62,9 +59,6 @@ extern "C" int on_fini(int isparent)
   */
 extern "C" void on_events()
 {
-	if (fire::is_parent()){
-	}else{
-	}
 }
 
 /**
@@ -95,28 +89,10 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
-	recv_data_cli_t in(pkg);
-	cli_proto_head_t head;
-	in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
-
+	cli_proto_head_t* head = (cli_proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
-		head.len, head.cmd, head.seq, head.ret, head.id, peer_fd_info->get_fd(), pkglen);
-	char* out = NULL;
-	int outlen = 0;
-	int ret = g_route_func->deal(head, in, &out, outlen);
-	if (0 == ret){
-		fire::s2peer(peer_fd_info, out, outlen);
-	} else {
-		cli_proto_head_t err_out;
-		err_out.cmd = head.cmd;
-		err_out.id = head.id;
-		err_out.len = sizeof(err_out);
-		err_out.ret = ret;
-		err_out.seq = head.seq;
-		send_data_cli_t out;
-		out.set_head(err_out);
-		fire::s2peer(peer_fd_info, (void*)out.data(), out.len());
-	}
+		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
+	fire::s2peer(peer_fd_info, pkg, pkglen);
 	return 0;
 }
 
