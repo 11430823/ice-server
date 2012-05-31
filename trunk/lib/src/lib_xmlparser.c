@@ -7,7 +7,7 @@ namespace ice {
 			return -1;
 		}
 
-		//this->doc_ptr = xmlReadFile(name,"UTF-8",XML_PARSE_RECOVER); //解析文件
+		//this->doc_ptr = xmlReadFile(name, "UTF-8", XML_PARSE_RECOVER); //解析文件
 		xmlKeepBlanksDefault(0);
 		this->doc_ptr = xmlReadFile(name, 0, XML_PARSE_NOBLANKS);
 		

@@ -44,6 +44,9 @@
 	private:	varType varName;\
 	public:		varType get_##varName(void){return this->varName;}
 
+#define PRIVATE(varType, varName)\
+	private:	varType varName;\
+
 #define PRIVATE_R_REF(varType, varName)\
 	private:	varType varName;\
 	public:		const varType& get_##varName(void){return this->varName;}

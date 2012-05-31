@@ -39,7 +39,7 @@ mysql_interface::mysql_interface (std::string h, std::string user, std::string p
 
 	DEBUG_LOG("DB conn msg [%s][%s][%s][%s]", this->host.c_str(), 
 		this->user.c_str(), this->pass.c_str(), this->unix_socket);
-	connect_server ();
+	connect_server();
 }
 
 void  mysql_interface::show_error_log(const char* sql) 

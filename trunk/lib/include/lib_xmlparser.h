@@ -35,9 +35,9 @@ namespace ice{
 		// Brief:     打开文件
 		//************************************
 		int open(const char* name);
-		inline void move2children_node();
-		inline void move2next_node();
-		inline bool strcmp(const char* name);
+		void move2children_node();
+		void move2next_node();
+		bool strcmp(const char* name);
 		/**
 		* @brief 把某个xml属性的值读取出来
 		* @param val xml的属性值将被读取到val中
@@ -48,9 +48,9 @@ namespace ice{
 		* @see get_xml_prop_raw_str, get_xml_prop_def
 		*/
 		template <typename T>
-		inline void get_xml_prop(T& val, const void* prop, manip_t manip = std::dec){
+		inline void get_xml_prop(xmlNodePtr cur, T& val, const void* prop, manip_t manip = std::dec){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
+			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
 			} else {
 				std::istringstream iss(reinterpret_cast<const char*>(str));
@@ -66,9 +66,9 @@ namespace ice{
 		* @see get_xml_prop
 		*/
 		template <typename T1, typename T2>
-		inline void get_xml_prop_def(T1& val, const void* prop, const T2& def, manip_t manip = std::dec){
+		inline void get_xml_prop_def(xmlNodePtr cur, T1& val, const void* prop, const T2& def, manip_t manip = std::dec){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
+			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				val = def;
 			} else {
 				std::istringstream iss(reinterpret_cast<const char*>(str));
@@ -87,9 +87,9 @@ namespace ice{
 		* @see get_xml_prop_raw_str_def
 		*/
 		template <size_t len>
-		inline void get_xml_prop_raw_str(char (&val)[len], const void* prop){
+		inline void get_xml_prop_raw_str(xmlNodePtr cur, char (&val)[len], const void* prop){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
+			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
 			} else {
 				strncpy(val, reinterpret_cast<char*>(str), len - 1);
@@ -102,9 +102,9 @@ namespace ice{
 		* @see get_xml_prop_raw_str
 		*/
 		template <size_t len>
-		inline void get_xml_prop_raw_str_def(char (&val)[len], const void* prop, const char* def){
+		inline void get_xml_prop_raw_str_def(xmlNodePtr cur, char (&val)[len], const void* prop, const char* def){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
+			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				strncpy(val, def, len - 1);
 				val[len - 1] = '\0';
 			} else {
@@ -115,9 +115,9 @@ namespace ice{
 		}
 		//得到一个节点的内容
 		template <typename T>
-		inline void get_xml_content(T& val){
+		inline void get_xml_content(xmlNodePtr cur, T& val){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlNodeGetContent(this->node_ptr))) {
+			if (!cur || !(str = xmlNodeGetContent(cur))) {
 				assert(0);
 			} else {
 				std::istringstream iss(reinterpret_cast<const char*>(str));
@@ -135,9 +135,9 @@ namespace ice{
 		* @see get_xml_prop_arr_def
 		*/
 		template <typename T1, size_t len>
-		inline size_t get_xml_prop_arr(T1 (&arr)[len], const void* prop, manip_t manip = std::dec){
+		inline size_t get_xml_prop_arr(xmlNodePtr cur, T1 (&arr)[len], const void* prop, manip_t manip = std::dec){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
+			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
 			} else {
 				size_t i = 0;
@@ -157,9 +157,9 @@ namespace ice{
 		* @see get_xml_prop_arr
 		*/
 		template <typename T1, typename T2, size_t len>
-		inline size_t get_xml_prop_arr_def(T1 (&arr)[len], const void* prop, const T2& def, manip_t manip = std::dec){
+		inline size_t get_xml_prop_arr_def(xmlNodePtr cur, T1 (&arr)[len], const void* prop, const T2& def, manip_t manip = std::dec){
 			xmlChar* str;
-			if (!this->node_ptr || !(str = xmlGetProp(this->node_ptr, reinterpret_cast<const xmlChar*>(prop)))) {
+			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				for (size_t i = 0; i != len; ++i) {
 					arr[i] = def;
 				}
