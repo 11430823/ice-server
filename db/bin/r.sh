@@ -1,2 +1,2 @@
 ./kill.sh
-./db-server.exe
+./dbser.exe

@@ -57,6 +57,7 @@ namespace {
 		return 0;
 	}
 }
+
 int route_t::parser()
 {
 	int ret = this->xml.open(ROUTE_XML_PATH);
