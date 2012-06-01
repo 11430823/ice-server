@@ -11,8 +11,8 @@ todo_sql() {
 #	drop table if exists $table_name_prefix$1;
 cat <<EOF >$tmp_file
 	CREATE TABLE IF NOT EXISTS $table_name_prefix$1 (
-	 userid int(10) unsigned  not null ,
-	 nick char(16) not null,
+	userid int(10) unsigned  not null ,
+	nick char(16) not null,
 	primary key(userid)
 	) ENGINE=innodb CHARSET=UTF8;
 EOF

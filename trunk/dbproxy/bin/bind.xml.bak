@@ -3,5 +3,5 @@
 net_type:[0,tcp][1,udp]
 -->
 <Interface>
-	<Date id="1" net_type="0" name="dbproxy" ip="192.168.0.109" port="9001"/>
+	<Date id="1" net_type="0" name="dbproxy" ip="192.168.0.109" port="6001"/>
 </Interface>

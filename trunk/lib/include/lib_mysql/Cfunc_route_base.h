@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <lib_log.h>
 #include <lib_util.h>
 
 #include "mysql_iface.h"

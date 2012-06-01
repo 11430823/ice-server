@@ -35,26 +35,26 @@ dir=../log
 
 [multicast]
 #组播地址必须是239.x.x.x(注释掉则关闭组播功能)
-mcast_ip=239.0.0.3
+mcast_ip=239.0.1.0
 #组播端口号
-mcast_port=5538
+mcast_port=5001
 #interface on which arriving multicast datagrams will be received
 mcast_incoming_if=eth0
 #interface for outgoing multicast datagrams
-mcast_outgoing_if=10.1.1.57
+mcast_outgoing_if=192.168.0.104
 
 [addr_multicast]
 #组播地址必须是239.x.x.x(注释掉则关闭组播功能)
-mcast_ip=239.0.0.11
+mcast_ip=239.0.2.0
 #组播端口号
-mcast_port=5566
+mcast_port=5002
 #interface on which arriving multicast datagrams will be received
 mcast_incoming_if=eth0
 #interface for outgoing multicast datagrams
-mcast_outgoing_if=10.1.1.57
+mcast_outgoing_if=192.168.0.104
 
 [dbser]
-ip=10.1.1.57
+ip=192.168.0.104
 user=root
 passwd=root
 port=3306
