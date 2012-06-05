@@ -80,7 +80,7 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 	uint32_t pkg_len = 0;
 	pkg_len = *(uint32_t*)(data);
 	TRACE_LOG("[fd:%d, len:%d, pkg_len:%u]", cli_fd_info->get_fd(), len, pkg_len);
-	if (pkg_len < sizeof(cli_proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
+	if (pkg_len < sizeof(proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("head len err [len=%u]", pkg_len);
 		return -1;
 	}
@@ -96,7 +96,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 {
 	/* 返回非零，断开FD的连接 */ 
 	recv_data_cli_t in(pkg);
-	cli_proto_head_t head;
+	proto_head_t head;
 	in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
 
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
@@ -107,7 +107,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	if (0 == ret){
 		fire::s2peer(peer_fd_info, out, outlen);
 	} else {
-		cli_proto_head_t err_out;
+		proto_head_t err_out;
 		err_out.cmd = head.cmd;
 		err_out.id = head.id;
 		err_out.len = sizeof(err_out);

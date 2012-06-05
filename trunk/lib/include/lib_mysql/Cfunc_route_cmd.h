@@ -12,7 +12,7 @@
 #include "db_error_base.h"
 
 class Cfunc_route;
-#define  DEAL_FUN_ARG const cli_proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen
+#define  DEAL_FUN_ARG const proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen
 //定义调用函数的指针类型
 typedef int (Cfunc_route::*P_DEALFUN_T)(DEAL_FUN_ARG);
 
