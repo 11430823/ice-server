@@ -31,7 +31,7 @@ public:
 		this->send_data.init();
 	}
 
-	inline virtual int deal(const cli_proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen){
+	inline virtual int deal(const proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen){
 		this->send_data.init();
 
 		P_DEALFUN_T p_pri_stru = this->cmd_map.get_cmd_fun(head.cmd);

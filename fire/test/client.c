@@ -7,26 +7,15 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+
+#include <lib_proto.h>
+
 using namespace std;
-
-
-
-#pragma pack(1)
-	/* SERVER和CLIENT的协议包头格式 */
-	struct cli_proto_head_t{
-		uint32_t len; /* 协议的长度 */
-		uint32_t cmd; /* 协议的命令号 */
-		uint32_t id; /* 账号 */
-		uint32_t seq;/* 序列号 */
-		uint32_t ret; /* S->C, 错误码 */
-		uint8_t body[]; /* 包体信息 */
-	};
-#pragma pack()
 
 int main()
 {
-	cli_proto_head_t head;
-	head.len = sizeof(cli_proto_head_t);
+	proto_head_t head;
+	head.len = sizeof(proto_head_t);
 	head.cmd = 1;
 	head.id = 102356;
 	head.seq = 1;

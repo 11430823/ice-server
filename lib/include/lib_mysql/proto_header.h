@@ -22,21 +22,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "lib_msgbuf.h"
+#include <lib_msgbuf.h>
+#include <lib_proto.h>
 
 //define userid type
 typedef uint32_t userid_t;
 
-#pragma pack(1)
-typedef struct cli_proto_head_t{
-	uint32_t len; /* 协议的长度 */
-	uint32_t cmd; /* 协议的命令号 */
-	uint32_t id; /* 账号 */
-	uint32_t seq;/* 序列号 */
-	uint32_t ret; /* S->C, 错误码 */
-	uint8_t body[]; /* 包体信息 */
-}PROTO_HEADER;
-#pragma pack()
+typedef proto_head_t PROTO_HEADER;
 
 //////////////////////////////////////////////////////////////////////////
 //接收客户端的数据
@@ -61,13 +53,13 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 //发送给客户端的数据
-class send_data_cli_t : public ice::lib_send_data_t<cli_proto_head_t>
+class send_data_cli_t : public ice::lib_send_data_t<proto_head_t>
 {
 public:
 	send_data_cli_t()
-		: ice::lib_send_data_t<cli_proto_head_t>(send_data){
+		: ice::lib_send_data_t<proto_head_t>(send_data){
 	}
-	virtual void set_head(const cli_proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
+	virtual void set_head(const proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
 		const uint32_t all_len = this->write_pos;
 		this->write_pos = 0;
 		*this<<all_len

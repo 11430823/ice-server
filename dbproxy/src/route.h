@@ -9,21 +9,37 @@
 #pragma pack(1)
 struct  route_cmd_t
 {
-	uint32_t start_id;
-	uint32_t end_id;
-	uint32_t now_id;
+	uint32_t start;
+	uint32_t end;
+	uint32_t now;
 	route_cmd_t(){
-		this->start_id = 0;
-		this->end_id = 0;
-		this->now_id = 0;
+		this->start = 0;
+		this->end = 0;
+		this->now = 0;
 	}
 	bool operator < (const route_cmd_t& r) const
 	{
-		return !(this->start_id <= r.now_id && r.now_id <= this->end_id);
+		return !(this->start <= r.now && r.now <= this->end);
 	}
 };
 
-struct connect_db_t 
+struct route_id_t
+{
+	uint32_t start;
+	uint32_t end;
+	uint32_t now;
+	route_cmd_t(){
+		this->start = 0;
+		this->end = 0;
+		this->now = 0;
+	}
+	bool operator < (const route_id_t& r) const
+	{
+		return !(this->start <= r.now && r.now <= this->end);
+	}
+};
+
+struct db_info_t 
 {
 };
 #pragma pack()
@@ -31,20 +47,33 @@ struct connect_db_t
 class route_t
 {
 	PRIVATE(ice::lib_xmlparser, xml);
-	typedef 
-	typedef std::map<route_cmd_t, connect_db_t> CMD_MAP;//key:cmd范围, val:dbser列表
+	typedef std::map<route_id_t, db_info_t> DB_SER;
+	typedef std::map<route_cmd_t, DB_SER> CMD_MAP;//key:cmd范围, val:dbser列表
 	CMD_MAP cmd_map;
 public:
 	route_t(){}
 	virtual ~route_t(){}
 	int parser();
-	void find_dbser(uint32_t cmd){
+	DB_SER* find_dbser(uint32_t cmd){
 		route_cmd_t info;
-		info.now_id = cmd;
+		info.now = cmd;
 		CMD_MAP::iterator it = cmd_map.find(info);
-		//todo
-		
+		if (cmd_map.end() != it){
+			return it->second;
+		}
+		return NULL;
 	}
+	db_info_t* find_dbinfo(uint32_t id, DB_SER* dbser, uint32_t db_type){
+		route_id_t info;
+		info.now = id;
+		DB_SER::iterator it = dbser->find(info);
+		if (dbser->end() != it){
+			db_info_t& info = it->second;
+		}
+
+		return NULL;
+	}
+
 protected:
 	
 private:
