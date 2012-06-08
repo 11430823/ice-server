@@ -92,15 +92,22 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	uint32_t cmd = ice::lib_byte_swap_t::bswap(head->cmd);
 	uint32_t id = ice::lib_byte_swap_t::bswap(head->id);
 
-	route_t::DB_SER* dbser = g_rotue_t.find_dbser(cmd);
+	uint32_t db_type = 0;
+	route_t::DB_SER* dbser = g_rotue_t.find_dbser(cmd, db_type);
 	if (NULL != dbser){
 		//todo 判断USERID
-
+		if (E_DB_TYPE_1 == db_type){
+			dbser->
+		} else if (E_DB_TYPE_100 == db_type){
+		}
+		
+		
+		
+	} else {
+		//todo cmd命令没有定义
+		ERROR_LOG("cmd no define [cmd:%u, id:%u]", cmd, id);
 	}
-	
-	
-	g_rotue_t.
-	
+
 	return 0;
 }
 

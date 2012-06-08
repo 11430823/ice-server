@@ -25,8 +25,6 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		//ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
-		//ice::lib_tcp_peer_info_t* s = connect("switch");// 使用连接时再创建,启动时因无同步地址广播,无法获取IP,PORT
 
 		g_db = new mysql_interface(g_bench_conf.get_strval("dbser", "ip"),
 			g_bench_conf.get_strval("dbser", "user"),
@@ -167,4 +165,3 @@ extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip
 extern "C" void on_udp_pkg(int fd, const void* data, int len ,struct sockaddr_in* from, socklen_t fromlen)
 {
 }
-

@@ -13,9 +13,9 @@ dll_t g_dll;
 
 namespace {
 
-	#define DLFUNC(h, v, name, type) \
+	#define DLFUNC(h, v, name, db_type) \
 	{\
-		v = (type)dlsym (h, name);\
+		v = (db_type)dlsym (h, name);\
 		if (NULL != (error = dlerror())) {\
 			ALERT_LOG("DLSYM ERROR [error:%s, fn:%p]", error, v);\
 			dlclose(h);\

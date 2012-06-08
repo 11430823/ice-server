@@ -66,8 +66,6 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======server start======");
 		ice::setup_timer();
 		p = new test_timer;
-		//ice::lib_tcp_peer_info_t* ser = fire::connect("192.168.0.102", 8001);
-		//ice::lib_tcp_peer_info_t* s = connect("switch");// 使用连接时再创建,启动时因无同步地址广播,无法获取IP,PORT
 	}
 	return 0;
 }

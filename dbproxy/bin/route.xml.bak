@@ -3,22 +3,22 @@
 -->
 <route>
   <!--
-  db_name:库名
-  db_type:分库类型(100:0-99,100个库)
+  name:库名
+  type:分库类型(100:0-99,100个库)
   -->
-  <dbser db_name="ICE" db_type="100">
-    <cmd_id>
+  <dbser name="ICE" type="100">
+    <cmd>
       <!--
       start:起始CMD_ID
       end:结束CMD_ID
       -->
       <date start="12" end="34" />
       <date start="56" end="78" />
-    </cmd_id>
-    <connect_db>
-      <date name="dbser" ip="10.1.1.57" start_id="0" end_id="20"/>
-      <date name="dbser" ip="10.1.1.57" start_id="21" end_id="40"/>
-      <date name="dbser" ip="10.1.1.57" start_id="41" end_id="99"/>      
-    </connect_db>
+    </cmd>
+    <db>
+      <date name="dbser" ip="10.1.1.57" start="0" end="20"/>
+      <date name="dbser" ip="10.1.1.57" start="21" end="40"/>
+      <date name="dbser" ip="10.1.1.57" start="41" end="99"/>      
+    </db>
   </dbser>
 </route>
