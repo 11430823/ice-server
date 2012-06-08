@@ -21,8 +21,8 @@ inline uint64_t atoi_safe(char* str)
 // 在STD_QUERY_WHILE_BEGIN  和 STD_QUERY_ONE_BEGIN
 #define NEXT_FIELD 	 (row[++_fi])
 
-#define GET_NEXT_FIELD_INT(out, type)\
-	(out)<<(type)atoi_safe(NEXT_FIELD)
+#define GET_NEXT_FIELD_INT(out, db_type)\
+	(out)<<(db_type)atoi_safe(NEXT_FIELD)
 
 #define GET_NEXT_FIELD_BIN(out, max_len)\
 	{\

@@ -187,8 +187,8 @@ static inline void list_splice_init (struct list_head *list, struct list_head *h
  * @param type the type of the struct this is embedded in.
  * @param member the name of the list_struct within the struct.
  */
-#define list_entry(ptr, type, member) \
-	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+#define list_entry(ptr, db_type, member) \
+	((db_type *)((char *)(ptr)-(unsigned long)(&((db_type *)0)->member)))
 
 /**
  * @brief iterate over a list
