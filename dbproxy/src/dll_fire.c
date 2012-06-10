@@ -153,6 +153,11 @@ extern "C" void	on_mcast_pkg(const void* data, int len)
 extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/)
 {
 	TRACE_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
+	g_rotue_t.
+	if (0 == strcmp(DB_SERVER_NAME, name)){
+
+	}
+	
 }
 
 extern "C" void on_udp_pkg(int fd, const void* data, int len ,struct sockaddr_in* from, socklen_t fromlen)
