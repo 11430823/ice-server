@@ -1,10 +1,9 @@
+#pragma once
 
 #include <map>
 
 #include <lib_xmlparser.h>
 #include <lib_util.h>
-
-#pragma once
 
 #pragma pack(1)
 struct  route_cmd_t
