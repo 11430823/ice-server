@@ -47,6 +47,8 @@ struct db_info_t
 };
 #pragma pack()
 
+const char* DB_SERVER_NAME = "dbser";
+
 enum e_db_type{
 	E_DB_TYPE_1 = 1,
 	E_DB_TYPE_100 = 100,
