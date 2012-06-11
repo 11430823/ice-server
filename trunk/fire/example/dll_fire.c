@@ -7,6 +7,7 @@
 
 #include <lib_timer.h>
 #include <lib_proto.h>
+#include <lib_msgbuf.h>
 
 class test_timer;
 test_timer* p;
@@ -52,8 +53,6 @@ private:
 	test_timer & operator=( const test_timer &cr);
 };
 
-//////////////////////////////////////////////////////////////////////////////
-
 /**
   * @brief Initialize service
   *
@@ -98,6 +97,26 @@ extern "C" void on_events()
 	}
 }
 
+//接收客户端的数据
+class recv_data_t : public ice::lib_recv_data_t{
+public:
+	recv_data_t(const void* recvdata, int readpos = 0)
+		:ice::lib_recv_data_t(recvdata, readpos){
+	}
+public:
+	//前4个字节是整个包长度
+	uint32_t get_len(){
+		return (ice::lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
+	}
+	uint32_t remain_len() {
+		return get_len() - this->read_pos;
+	}
+protected:
+private:
+	recv_data_t(const recv_data_t& cr); // 拷贝构造函数
+	recv_data_t& operator=( const recv_data_t& cr); // 赋值函数
+};
+
 /**
   * @brief Return length of the receiving package
   *
@@ -109,9 +128,11 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 	}
 
 	uint32_t pkg_len = 0;
+	recv_data_t in(data);
+	ice::lib_packer_t::unpack(data, pkg_len, )
 	pkg_len = *(uint32_t*)(data);
 	TRACE_LOG("[fd:%d, len:%d, pkg_len:%u]", cli_fd_info->get_fd(), len, pkg_len);
-	if (pkg_len < sizeof(proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
+	if (pkg_len < sizeof(ice::proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("head len err [len=%u]", pkg_len);
 		return -1;
 	}
@@ -126,7 +147,7 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
-	proto_head_t* head = (proto_head_t*)pkg;
+	ice::proto_head_t* head = (ice::proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
 		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
 	fire::s2peer(peer_fd_info, pkg, pkglen);
