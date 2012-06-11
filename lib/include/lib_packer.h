@@ -3,7 +3,8 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	用于对数据包进行解包，或者把数据打包成数据包
-	brief:		ok
+	brief:		注:默认为小端, 若定义ICE_DEF_BIG_ENDIAN 之后.则进行字节转换,
+				预编译ICE_DEF_BIG_ENDIAN的函数必须放在本文件(.h)中,不可放入.c中
 *********************************************************************/
 #pragma once
 
@@ -12,7 +13,6 @@
 #include "lib_byte_swap.h"
 
 namespace ice{
-
 	class lib_packer_t
 	{
 	public:
@@ -26,7 +26,12 @@ namespace ice{
 		*/
 		template <typename T>
 		static inline void pack(void* pkg, T val, int& idx){
-			*(reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(pkg) + idx)) = lib_byte_swap_t::bswap(val);
+			*(reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(pkg) + idx)) = 
+#ifdef ICE_DEF_BIG_ENDIAN
+				lib_byte_swap_t::bswap(val);
+#else
+				val;
+#endif
 			idx += sizeof val;
 		}
 
@@ -67,7 +72,12 @@ namespace ice{
 		 */
 		template <typename T>
 		static inline void unpack(const void* pkg, T& val, int& idx){
-			val = lib_byte_swap_t::bswap(*(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx)));
+			val = 
+#ifdef ICE_DEF_BIG_ENDIAN
+				lib_byte_swap_t::bswap(*(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx)));
+#else
+				*(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx));
+#endif
 			idx += sizeof val;
 		}
 
