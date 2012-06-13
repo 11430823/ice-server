@@ -27,14 +27,14 @@ int Cfunc_route::tool_get_all(DEAL_FUN_ARG)
 	return 0;
 }
 
-int Cfunc_route::user_add( const proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen )
+int Cfunc_route::user_add(DEAL_FUN_ARG)
 {
 	user_add_in_t info;
 	in.unpack_str(info.nick, USER_NICK_LEN);
 	return this->user.add(head.id, info.nick);
 }
 
-int Cfunc_route::user_get_all( const proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen )
+int Cfunc_route::user_get_all(DEAL_FUN_ARG)
 {
 	return this->user.get_all(head.id, this->send_data);
 }

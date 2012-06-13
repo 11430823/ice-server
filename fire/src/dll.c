@@ -29,7 +29,7 @@ namespace {
 	 */
 	void rename_core(int pid)
 	{
-		::chmod("core", 700);
+		::chmod("core", 777);
 		::chown("core", 0, 0);
 		char core_name[1024] ={0};
 		::sprintf(core_name, "core.%d", pid);

@@ -80,15 +80,15 @@ namespace ice{
 		lib_send_data_t& operator=( const lib_send_data_t& cr); // 赋值函数
 	};
 
-#if 0
+
 	//////////////////////////////////////////////////////////////////////////
 	//exmaple:使用发送数据端的例子
 	//发送给客户端的数据
-	class lib_send_data_cli_t : public ice::lib_send_data_t<proto_head_t>
+	class lib_send_data_cli_t : public lib_send_data_t<proto_head_t>
 	{
 	public:
 		lib_send_data_cli_t()
-			:ice::lib_send_data_t<proto_head_t>(send_data){
+			:lib_send_data_t<proto_head_t>(send_data){
 		}
 		virtual void set_head(const proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
 			const uint32_t all_len = this->write_pos;
@@ -107,9 +107,6 @@ namespace ice{
 		lib_send_data_cli_t(const lib_send_data_cli_t& cr); // 拷贝构造函数
 		lib_send_data_cli_t& operator=( const lib_send_data_cli_t& cr); // 赋值函数
 	};
-
-#endif
-
 
 	//////////////////////////////////////////////////////////////////////////
 	//接收数据
@@ -165,19 +162,19 @@ namespace ice{
 		lib_recv_data_t(const lib_recv_data_t& cr);
 		lib_recv_data_t& operator=( const lib_recv_data_t& cr);
 	};
-#if 0
+
 	//////////////////////////////////////////////////////////////////////////
 	//example:使用接收数据的例子
 	//接收客户端的数据
-	class lib_recv_data_cli_t : public ice::lib_recv_data_t{
+	class lib_recv_data_cli_t : public lib_recv_data_t{
 	public:
 		lib_recv_data_cli_t(const void* recvdata, int readpos = 0)
-			:ice::lib_recv_data_t(recvdata, readpos){
+			:lib_recv_data_t(recvdata, readpos){
 		}
 	public:
 		//前4个字节是整个包长度
 		uint32_t get_len(){
-			return (ice::lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
+			return (lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
 		}
 		uint32_t remain_len() {
 			return get_len() - this->read_pos;
@@ -187,8 +184,6 @@ namespace ice{
 		lib_recv_data_cli_t(const lib_recv_data_cli_t& cr); // 拷贝构造函数
 		lib_recv_data_cli_t& operator=( const lib_recv_data_cli_t& cr); // 赋值函数
 	};
-
-#endif
 }//end namespace ice  
 
 
