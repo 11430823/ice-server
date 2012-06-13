@@ -23,61 +23,11 @@
 #include <stdlib.h>
 
 #include <lib_msgbuf.h>
-#include <lib_proto.h>
 
 //define userid type
 typedef uint32_t userid_t;
 
-typedef proto_head_t PROTO_HEADER;
-
-//////////////////////////////////////////////////////////////////////////
-//接收客户端的数据
-class recv_data_cli_t : public ice::lib_recv_data_t{
-public:
-	recv_data_cli_t(const void* recvdata, int readpos = 0)
-		:ice::lib_recv_data_t(recvdata, readpos){
-	}
-public:
-	//前4个字节是整个包长度
-	uint32_t get_len(){
-		return (ice::lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
-	}
-	uint32_t remain_len() {
-		return get_len() - this->read_pos;
-	}
-protected:
-private:
-	recv_data_cli_t(const recv_data_cli_t& cr); // 拷贝构造函数
-	recv_data_cli_t& operator=( const recv_data_cli_t& cr); // 赋值函数
-};
-
-//////////////////////////////////////////////////////////////////////////
-//发送给客户端的数据
-class send_data_cli_t : public ice::lib_send_data_t<proto_head_t>
-{
-public:
-	send_data_cli_t()
-		: ice::lib_send_data_t<proto_head_t>(send_data){
-	}
-	virtual void set_head(const proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
-		const uint32_t all_len = this->write_pos;
-		this->write_pos = 0;
-		*this<<all_len
-			<<rhead.cmd
-			<<rhead.id
-			<<rhead.seq
-			<<rhead.ret;
-		this->write_pos = all_len;
-	}
-protected:
-private:
-	static const uint32_t PACK_DEFAULT_SIZE = 8192;//去掉包头,大概相等
-	char send_data[PACK_DEFAULT_SIZE];
-	send_data_cli_t(const send_data_cli_t& cr); // 拷贝构造函数
-	send_data_cli_t& operator=( const send_data_cli_t& cr); // 赋值函数
-};
-
-
+typedef ice::proto_head_t PROTO_HEADER;
 
 //在cmdid 中数据库识别标志
 #define RROTO_ROUTE_FIELD               0xFE00 //使用前7个bit

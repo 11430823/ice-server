@@ -1,4 +1,7 @@
+#include <set>
+
 #include <lib_log.h>
+
 #include "route.h"
 
 route_t g_rotue_t;
@@ -6,7 +9,11 @@ route_t g_rotue_t;
 const char* ROUTE_XML_PATH = "./route.xml";
 
 namespace {
+	std::set<route_cmd_t> tmp_parser;//临时变量(用于解析 ROUTE_XML_PATH 时使用)
+
 	int parser_cmd(xmlNodePtr cur, ice::lib_xmlparser& xml, uint32_t db_type){
+		tmp_parser.clear();
+
 		cur = cur->xmlChildrenNode;
 		while (NULL != cur){
 			if (!xmlStrcmp(cur->name,(const xmlChar*)"date")){
@@ -17,8 +24,9 @@ namespace {
 				INFO_LOG("start:%u", info.start);
 				xml.get_xml_prop(cur, info.end, "end");
 				INFO_LOG("end:%u", info.end);
-				route_t::DB_SER dbser;
-				if (!g_rotue_t.cmd_map.insert(std::make_pair(info, dbser)).second){
+				DB_SER dbser;
+				if (!g_rotue_t.cmd_map.insert(std::make_pair(info, dbser)).second
+					|| !tmp_parser.insert(info).second){
 					assert(0);
 					return -1;
 				}
@@ -45,15 +53,23 @@ namespace {
 				INFO_LOG("end:%u", db.end);
 
 				FOREACH(g_rotue_t.cmd_map, it){
-					route_t::DB_SER& dbser = it->second;
-					if (!dbser.insert(std::make_pair(db, dbinfo)).second){
-						assert(0);
-						return -1;
+					DB_SER& dbser = it->second;
+					const route_cmd_t& cmdinfo = it->first;
+					FOREACH(tmp_parser, tmp_it){
+						const route_cmd_t& tmp_dbser = *tmp_it;
+						if (cmdinfo == tmp_dbser){
+							if (!dbser.insert(std::make_pair(db, dbinfo)).second){
+								assert(0);
+								return -1;
+							}
+						}
 					}
 				}
 			}
 			cur = cur->next;
 		}
+
+		tmp_parser.clear();
 		return 0;
 	}
 
@@ -96,5 +112,18 @@ int route_t::parser()
 		}
 		xml.move2next_node();
 	}
+
+	FOREACH(this->cmd_map, it){
+		const route_cmd_t& cmdinfo = it->first;
+		INFO_LOG("[db_type:%u, start:%u, end:%u, now:%u]", cmdinfo.db_type, cmdinfo.start, cmdinfo.end, cmdinfo.now);
+		DB_SER& dbser = it->second;
+		FOREACH(dbser, it_dbser){
+			const route_db_t& rdb = it_dbser->first;
+			const db_info_t& dbinfo = it_dbser->second;
+			INFO_LOG("[route_db_start:%u, end:%u, now:%u]", rdb.start, rdb.end, rdb.now);
+			INFO_LOG("[dbinfo_name:%s, ip:%s]", dbinfo.name.c_str(), dbinfo.ip.c_str());
+		}
+	}
+
 	return 0;
 }

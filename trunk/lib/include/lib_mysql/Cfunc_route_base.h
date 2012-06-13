@@ -22,7 +22,7 @@ class Cfunc_route_base
 	PROTECTED_R(mysql_interface*, db);//db 连接
 	PROTECTED_R(int, ret);/*用于保存操作返回值，只是为了方便 */
 	PROTECTED_R(Ccmdmap, cmd_map);
-	PROTECTED_R_REF(send_data_cli_t, send_data);
+	PROTECTED_R_REF(ice::lib_send_data_cli_t, send_data);
 
 public:
 	Cfunc_route_base(mysql_interface* db){
@@ -31,7 +31,7 @@ public:
 		this->send_data.init();
 	}
 
-	inline virtual int deal(const proto_head_t& head, recv_data_cli_t& in, char** sendbuf, int& sndlen){
+	inline virtual int deal(DEAL_FUN_ARG){
 		this->send_data.init();
 
 		P_DEALFUN_T p_pri_stru = this->cmd_map.get_cmd_fun(head.cmd);

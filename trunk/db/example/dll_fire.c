@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <lib_msgbuf.h>
 #include <lib_log.h>
-#include <bench_conf.h>
-#include <interface.h>
-
+#include <lib_timer.h>
+#include <lib_err_code.h>
 #include <lib_mysql/mysql_iface.h>
 
-#include <lib_timer.h>
+#include <bench_conf.h>
+#include <interface.h>
 
 #include "func_rount.h"
 
@@ -75,10 +76,10 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 		return 0;
 	}
 
-	uint32_t pkg_len = 0;
-	pkg_len = *(uint32_t*)(data);
+	ice::lib_recv_data_cli_t in(data);
+	uint32_t pkg_len = in.get_len();
 	TRACE_LOG("[fd:%d, len:%d, pkg_len:%u]", cli_fd_info->get_fd(), len, pkg_len);
-	if (pkg_len < sizeof(proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
+	if (pkg_len < sizeof(ice::proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("head len err [len=%u]", pkg_len);
 		return -1;
 	}
@@ -93,8 +94,8 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
 	/* 返回非零，断开FD的连接 */ 
-	recv_data_cli_t in(pkg);
-	proto_head_t head;
+	ice::lib_recv_data_cli_t in(pkg);
+	ice::proto_head_t head;
 	in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
 
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
@@ -105,13 +106,13 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	if (0 == ret){
 		fire::s2peer(peer_fd_info, out, outlen);
 	} else {
-		proto_head_t err_out;
+		ice::proto_head_t err_out;
 		err_out.cmd = head.cmd;
 		err_out.id = head.id;
 		err_out.len = sizeof(err_out);
-		err_out.ret = ret;
+		err_out.ret = ice::e_lib_err_code_dbproxy_no_find_cmd;
 		err_out.seq = head.seq;
-		send_data_cli_t out;
+		ice::lib_send_data_cli_t out;
 		out.set_head(err_out);
 		fire::s2peer(peer_fd_info, (void*)out.data(), out.len());
 	}

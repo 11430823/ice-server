@@ -89,7 +89,7 @@ int Ctool::reduce( uint32_t userid, uint32_t id, uint32_t num )
 	return 0;
 }
 
-int Ctool::get_all( uint32_t userid, send_data_cli_t& out )
+int Ctool::get_all( uint32_t userid, ice::lib_send_data_cli_t& out )
 {
 	GEN_SQLSTR(this->sqlstr,"select %s,%s from %s where %s=%u",
 		TOOL_ID, TOOL_NUM,

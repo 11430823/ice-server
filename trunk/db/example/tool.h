@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <lib_msgbuf.h>
 #include <lib_mysql/CtableRoute.h>
 
 #pragma pack(1)
@@ -35,7 +36,7 @@ public:
 	Ctool(mysql_interface * db) : CtableRoute(db, "ICE", "t_tool"){}
 	int add(uint32_t userid, uint32_t id, uint32_t num);
 	int reduce(uint32_t userid, uint32_t id, uint32_t num);
-	int get_all(uint32_t userid, send_data_cli_t& out);
+	int get_all(uint32_t userid, ice::lib_send_data_cli_t& out);
 private:
 	int __get_num(uint32_t userid,uint32_t id, uint32_t& num);
 	int __insert(uint32_t userid, uint32_t id, uint32_t num);

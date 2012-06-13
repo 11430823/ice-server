@@ -11,9 +11,10 @@
 
 #include <lib_log.h>
 #include <lib_timer.h>
+#include <lib_msgbuf.h>
+
 #include <bench_conf.h>
 #include <interface.h>
-#include <lib_proto.h>
 
 #include "route.h"
 
@@ -65,10 +66,10 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 		return 0;
 	}
 
-	uint32_t pkg_len = 0;
-	pkg_len = *(uint32_t*)(data);
+	ice::lib_recv_data_cli_t in(data);
+	uint32_t pkg_len = in.get_len();
 	TRACE_LOG("[fd:%d, len:%d, pkg_len:%u]", cli_fd_info->get_fd(), len, pkg_len);
-	if (pkg_len < sizeof(proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
+	if (pkg_len < sizeof(ice::proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("head len err [len=%u]", pkg_len);
 		return -1;
 	}
@@ -82,30 +83,32 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
   */
 extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
-	/* 返回非零，断开FD的连接 */ 
-	proto_head_t* head = (proto_head_t*)pkg;
+	/* 返回非零，断开FD的连接 */
+	ice::lib_recv_data_cli_t in(pkg);
+	ice::proto_head_t head;
+	in>>head.len>>head.cmd>>head.id>>head.seq>>head.ret;
+	
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
-		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
-	fire::s2peer(peer_fd_info, pkg, pkglen);
-
-	//todo 判断CMD
-	uint32_t cmd = ice::lib_byte_swap_t::bswap(head->cmd);
-	uint32_t id = ice::lib_byte_swap_t::bswap(head->id);
-
+		head.len, head.cmd, head.seq, head.ret, head.id, peer_fd_info->get_fd(), pkglen);
 	uint32_t db_type = 0;
-	route_t::DB_SER* dbser = g_rotue_t.find_dbser(cmd, db_type);
+	DB_SER* dbser = g_rotue_t.find_dbser(head.cmd, db_type);
 	if (NULL != dbser){
 		//todo 判断USERID
 		if (E_DB_TYPE_1 == db_type){
-			dbser->
 		} else if (E_DB_TYPE_100 == db_type){
 		}
-		
-		
-		
 	} else {
 		//todo cmd命令没有定义
-		ERROR_LOG("cmd no define [cmd:%u, id:%u]", cmd, id);
+		ERROR_LOG("cmd no define [cmd:%u, id:%u]", head.cmd, head.id);
+		ice::proto_head_t err_out;
+		err_out.cmd = head.cmd;
+		err_out.id = head.id;
+		err_out.len = sizeof(err_out);
+		err_out.ret = ice::e_lib_err_code_dbproxy_no_find_cmd;
+		err_out.seq = head.seq;
+		ice::lib_send_data_cli_t out;
+		out.set_head(err_out);
+		fire::s2peer(peer_fd_info, (void*)out.data(), out.len());
 	}
 
 	return 0;
@@ -118,7 +121,6 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 extern "C" void on_srv_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info)
 {
 	TRACE_LOG("[fd:%d, ip:%s, port:%u]", peer_fd_info->get_fd(), peer_fd_info->get_ip_str().c_str(), peer_fd_info->get_port());
-	fire::s2peer(peer_fd_info, pkg, pkglen);
 }
 
 /**
@@ -153,11 +155,6 @@ extern "C" void	on_mcast_pkg(const void* data, int len)
 extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/)
 {
 	TRACE_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
-	g_rotue_t.
-	if (0 == strcmp(DB_SERVER_NAME, name)){
-
-	}
-	
 }
 
 extern "C" void on_udp_pkg(int fd, const void* data, int len ,struct sockaddr_in* from, socklen_t fromlen)

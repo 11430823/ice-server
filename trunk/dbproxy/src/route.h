@@ -10,7 +10,7 @@ struct  route_cmd_t
 {
 	uint32_t start;
 	uint32_t end;
-	uint32_t now;
+	uint32_t now;//只在find这个CMD的时候有用 operator < 
 	uint32_t db_type;
 	route_cmd_t(){
 		this->start = 0;
@@ -22,6 +22,10 @@ struct  route_cmd_t
 	{
 		return !(this->start <= r.now && r.now <= this->end);
 	}
+	bool operator == (const route_cmd_t& r) const
+	{
+		return r.start == this->start && r.end == this->end && r.db_type == this->db_type;
+	}
 };
 
 struct route_db_t
@@ -29,7 +33,7 @@ struct route_db_t
 	uint32_t start;
 	uint32_t end;
 	uint32_t now;
-	route_cmd_t(){
+	route_db_t(){
 		this->start = 0;
 		this->end = 0;
 		this->now = 0;
@@ -47,18 +51,17 @@ struct db_info_t
 };
 #pragma pack()
 
-const char* DB_SERVER_NAME = "dbser";
-
 enum e_db_type{
 	E_DB_TYPE_1 = 1,
 	E_DB_TYPE_100 = 100,
 };
-
+	typedef std::map<route_db_t, db_info_t> DB_SER;
+	typedef std::map<route_cmd_t, DB_SER> CMD_MAP;//key:cmd范围, val:dbser列表
 class route_t
 {
 	PRIVATE(ice::lib_xmlparser, xml);
-	typedef std::map<route_db_t, db_info_t> DB_SER;
-	typedef std::map<route_cmd_t, DB_SER> CMD_MAP;//key:cmd范围, val:dbser列表
+public:
+
 	CMD_MAP cmd_map;
 public:
 	route_t(){}
@@ -70,7 +73,7 @@ public:
 		CMD_MAP::iterator it = cmd_map.find(info);
 		if (cmd_map.end() != it){
 			db_type = it->first.db_type;
-			return it->second;
+			return &(it->second);
 		}
 		return NULL;
 	}
@@ -79,7 +82,7 @@ public:
 		info.now = id;
 		DB_SER::iterator it = dbser->find(info);
 		if (dbser->end() != it){
-			db_info_t& info = it->second;
+	//		db_info_t& info = it->second;
 		}
 
 		return NULL;

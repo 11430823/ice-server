@@ -97,26 +97,6 @@ extern "C" void on_events()
 	}
 }
 
-//接收客户端的数据
-class recv_data_t : public ice::lib_recv_data_t{
-public:
-	recv_data_t(const void* recvdata, int readpos = 0)
-		:ice::lib_recv_data_t(recvdata, readpos){
-	}
-public:
-	//前4个字节是整个包长度
-	uint32_t get_len(){
-		return (ice::lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
-	}
-	uint32_t remain_len() {
-		return get_len() - this->read_pos;
-	}
-protected:
-private:
-	recv_data_t(const recv_data_t& cr); // 拷贝构造函数
-	recv_data_t& operator=( const recv_data_t& cr); // 赋值函数
-};
-
 /**
   * @brief Return length of the receiving package
   *
@@ -127,10 +107,8 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 		return 0;
 	}
 
-	uint32_t pkg_len = 0;
-	recv_data_t in(data);
-	ice::lib_packer_t::unpack(data, pkg_len, )
-	pkg_len = *(uint32_t*)(data);
+	ice::lib_recv_data_cli_t in(data);
+	uint32_t pkg_len = in.get_len();
 	TRACE_LOG("[fd:%d, len:%d, pkg_len:%u]", cli_fd_info->get_fd(), len, pkg_len);
 	if (pkg_len < sizeof(ice::proto_head_t) || pkg_len > g_bench_conf.get_page_size_max()){
 		ERROR_LOG("head len err [len=%u]", pkg_len);

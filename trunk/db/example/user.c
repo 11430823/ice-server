@@ -15,7 +15,7 @@ int Cuser::add( uint32_t userid, char* nick )
 	return this->exec_insert_sql(this->sqlstr, KEY_EXISTED_ERR);
 }
 
-int Cuser::get_all( uint32_t userid, send_data_cli_t& out )
+int Cuser::get_all( uint32_t userid, ice::lib_send_data_cli_t& out )
 {
 	GEN_SQLSTR(this->sqlstr,"select %s,%s from %s where %s=%u",
 		USER_USERID, USER_NICK,
