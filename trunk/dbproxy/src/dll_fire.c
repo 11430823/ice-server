@@ -30,6 +30,8 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======server start======");
 		g_rotue_t.parser();
 
+
+
 	}
 	return 0;
 }
@@ -155,6 +157,17 @@ extern "C" void	on_mcast_pkg(const void* data, int len)
 extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/)
 {
 	TRACE_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
+	std::string peer_name = name;
+	std::string peer_ip = ip;
+	FOREACH(g_rotue_t.cmd_map, it){
+		DB_SER& dbser = it->second;
+		FOREACH(dbser, it_dbser){
+			db_info_t& dbinfo = it_dbser->second;
+			if (dbinfo.name == peer_name && dbinfo.ip == peer_ip){
+
+			}
+		}
+	}
 }
 
 extern "C" void on_udp_pkg(int fd, const void* data, int len ,struct sockaddr_in* from, socklen_t fromlen)
