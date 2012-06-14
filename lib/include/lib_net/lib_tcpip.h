@@ -76,43 +76,6 @@ class Cudp_sender{
 			return sendlen==len;
 		}
 		
-		//发送msg
-		inline  bool send_msg( char *head_buf,  Cmessage *msg=NULL )
-		{
-			uint32_t head_len=*(uint32_t* )head_buf;
-			if (msg==NULL) {
-				return this->send(head_buf,head_len );
-			}else{
-				static byte_array_t ba;
-				ba.init_postion();
-				ba.write_buf(head_buf,head_len);
-				msg->write_to_buf(ba);
-				uint32_t total_size=ba.get_postion();
-				*(uint32_t*)(ba.get_buf())=total_size;
-				return this->send(ba.get_buf(),total_size);
-			}
-		}
-		//发送db_msg
-		inline  bool send_db_msg(uint32_t userid,uint16_t cmdid,uint32_t protoid=0, Cmessage *msg=NULL )
-		{
-			struct {
-				uint32_t proto_length; //报文总长度
-				uint32_t proto_id;//序列号，需要原样返回
-				uint16_t cmd_id; //命令号
-				int32_t result; //返回值
-				uint32_t  id;  /*一般是米米号*/
-			} __attribute__((packed)) ph;
-			ph.proto_length=sizeof(ph);
-			ph.proto_id=protoid;
-			ph.id=userid;
-			ph.cmd_id=cmdid;
-			ph.result=0;
-			return this->send_msg((char*)&ph,msg );
-
-		}
-
-
-
 		inline int close_socket_udp(){
 			return close(fd);
 		}
