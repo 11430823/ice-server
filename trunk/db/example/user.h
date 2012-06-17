@@ -32,4 +32,4 @@ public:
 	int get_all(uint32_t userid, ice::lib_send_data_cli_t& out);
 
 private:
-};
+}; 
