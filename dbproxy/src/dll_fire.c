@@ -12,11 +12,15 @@
 #include <lib_log.h>
 #include <lib_timer.h>
 #include <lib_msgbuf.h>
+#include <lib_err_code.h>
 
 #include <bench_conf.h>
 #include <interface.h>
 
 #include "route.h"
+#include "service.h"
+
+service_mgr_t g_service_mgr;
 
 /**
   * @brief Initialize service
@@ -28,10 +32,9 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		g_rotue_t.parser();
-
-
-
+		if (0 != g_rotue_t.parser()){
+			return -1;
+		}
 	}
 	return 0;
 }
@@ -141,6 +144,7 @@ extern "C" void on_cli_conn_closed(int fd)
 extern "C" void on_svr_conn_closed(int fd)
 {
 	TRACE_LOG("[fd%d]", fd);
+	g_service_mgr.remove(fd);
 }
 
 /**
@@ -159,12 +163,19 @@ extern "C"  void on_addr_mcast_pkg(uint32_t id, const char* name, const char* ip
 	TRACE_LOG("[id:%u, name:%s, ip:%s, port:%u, flag:%d]", id, name, ip, port, flag);
 	std::string peer_name = name;
 	std::string peer_ip = ip;
-	FOREACH(g_rotue_t.cmd_map, it){
-		DB_SER& dbser = it->second;
-		FOREACH(dbser, it_dbser){
-			db_info_t& dbinfo = it_dbser->second;
-			if (dbinfo.name == peer_name && dbinfo.ip == peer_ip){
-
+	if (1 == flag){
+		FOREACH(g_rotue_t.cmd_map, it){
+			DB_SER& dbser = it->second;
+			FOREACH(dbser, it_dbser){
+				db_info_t& dbinfo = it_dbser->second;
+				if (dbinfo.name == peer_name && dbinfo.ip == peer_ip){
+					if (NULL == g_service_mgr.get_service(peer_name)){
+						ice::lib_tcp_peer_info_t* peer_info = fire::connect(name);
+						if (NULL != peer_info){
+							g_service_mgr.add(peer_name, peer_info);
+						}
+					}
+				}
 			}
 		}
 	}

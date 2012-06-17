@@ -16,12 +16,12 @@
       <date start="56" end="78" />
     </cmd>
     <db>
-      <date name="dbser" ip="10.1.1.57" port="1234" start="0" end="20"/>
-      <date name="dbser" ip="10.1.1.57" port="1234" start="21" end="40"/>
-      <date name="dbser" ip="10.1.1.57" port="1234" start="41" end="99"/>      
+      <date name="dbser1" ip="10.1.1.57" port="1234" start="0" end="20"/>
+      <date name="dbser2" ip="10.1.1.57" port="1234" start="21" end="40"/>
+      <date name="dbser3" ip="10.1.1.57" port="1234" start="41" end="99"/>      
     </db>
   </dbser>
-  <dbser name="ICE00" db_type="100">
+  <dbser name="ICE00" type="100">
     <cmd>
       <!--
       start:起始CMD_ID
@@ -31,9 +31,9 @@
       <date start="5600" end="7800" />
     </cmd>
     <db>
-      <date name="dbser00" ip="10.1.1.57" port="1234" start="0" end="20"/>
-      <date name="dbser00" ip="10.1.1.57" port="1234" start="21" end="40"/>
-      <date name="dbser00" ip="10.1.1.57" port="1234" start="41" end="99"/>
+      <date name="dbser01" ip="10.1.1.57" port="1234" start="0" end="20"/>
+      <date name="dbser02" ip="10.1.1.57" port="1234" start="21" end="40"/>
+      <date name="dbser03" ip="10.1.1.57" port="1234" start="41" end="99"/>
     </db>
   </dbser>
 </route>

@@ -1,5 +1,6 @@
 #include <lib_log.h>
 #include <lib_file.h>
+#include <lib_util.h>
 
 #include "daemon.h"
 #include "dll.h"
@@ -11,6 +12,12 @@
 
 int main(int argc, char* argv[])
 {
+	if (ice::is_little_endian()){
+		DEBUG_LOG("LITTLE ENDIAN");
+	} else {
+		DEBUG_LOG("BIG ENDIAN");
+	}
+	
 	if (0 != g_bench_conf.load()){
 		BOOT_LOG(-1, "bench conf load ???");
 	}

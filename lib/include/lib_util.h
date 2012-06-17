@@ -215,4 +215,23 @@ namespace ice{
 		return h;
 	}
 
+	/**
+	 * @brief	ÊÇ·ñĞ¡¶Ë×Ö½ÚĞò
+	 * @return	bool
+	 */
+	static inline bool is_little_endian()
+	{
+		union ut{
+			int16_t s;
+			char c[2];
+		};
+
+		ut u;
+		u.s = 0x0102;
+		if(1 == u.c[0] && 2 == u.c[1]){
+			return false;
+		}
+		return true;
+	}
+
 }//end namespace ice
