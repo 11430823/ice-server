@@ -48,6 +48,7 @@ struct db_info_t
 {
 	std::string name;
 	std::string ip;
+	uint16_t port;
 };
 #pragma pack()
 

@@ -21,9 +21,8 @@ namespace {
 				info.db_type = db_type;
 
 				xml.get_xml_prop(cur, info.start, "start");
-				INFO_LOG("start:%u", info.start);
 				xml.get_xml_prop(cur, info.end, "end");
-				INFO_LOG("end:%u", info.end);
+				INFO_LOG("[start:%u, end:%u]", info.start, info.end);
 				DB_SER dbser;
 				if (!g_rotue_t.cmd_map.insert(std::make_pair(info, dbser)).second
 					|| !tmp_parser.insert(info).second){
@@ -42,15 +41,14 @@ namespace {
 			if (!xmlStrcmp(cur->name,(const xmlChar*)"date")){
 				db_info_t dbinfo;
 				xml.get_xml_prop(cur, dbinfo.name, "name");
-				INFO_LOG("name:%s", dbinfo.name.c_str());
 				xml.get_xml_prop(cur, dbinfo.ip, "ip");
-				INFO_LOG("ip:%s", dbinfo.ip.c_str());
+				xml.get_xml_prop(cur, dbinfo.port, "port");
+				INFO_LOG("[name:%s, ip:%s, port:%u]", dbinfo.name.c_str(), dbinfo.ip.c_str(), dbinfo.port);
 
 				route_db_t db;
 				xml.get_xml_prop(cur, db.start, "start");
-				INFO_LOG("start:%u", db.start);
 				xml.get_xml_prop(cur, db.end, "end");
-				INFO_LOG("end:%u", db.end);
+				INFO_LOG("[start:%u, end:%u]", db.start, db.end);
 
 				FOREACH(g_rotue_t.cmd_map, it){
 					DB_SER& dbser = it->second;
@@ -107,7 +105,6 @@ int route_t::parser()
 				assert(0);
 				return -1;
 			}
-
 			parser_dbser(cur, this->xml, db_type);
 		}
 		xml.move2next_node();
@@ -120,8 +117,8 @@ int route_t::parser()
 		FOREACH(dbser, it_dbser){
 			const route_db_t& rdb = it_dbser->first;
 			const db_info_t& dbinfo = it_dbser->second;
-			INFO_LOG("[route_db_start:%u, end:%u, now:%u]", rdb.start, rdb.end, rdb.now);
-			INFO_LOG("[dbinfo_name:%s, ip:%s]", dbinfo.name.c_str(), dbinfo.ip.c_str());
+			INFO_LOG("[route_db_start:%u, end:%u, now:%u, dbinfo_name:%s, ip:%s, port:%u]",
+				rdb.start, rdb.end, rdb.now, dbinfo.name.c_str(), dbinfo.ip.c_str(), dbinfo.port);
 		}
 	}
 

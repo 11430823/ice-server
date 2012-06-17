@@ -37,8 +37,8 @@ mysql_interface::mysql_interface (std::string h, std::string user, std::string p
 
 	this->is_log_sql = false;
 
-	DEBUG_LOG("DB conn msg [%s][%s][%s][%s]", this->host.c_str(), 
-		this->user.c_str(), this->pass.c_str(), this->unix_socket);
+	DEBUG_LOG("DB conn msg [host:%s][user:%s][pass:%s][port:%u][unix_socket:%s]", this->host.c_str(), 
+		this->user.c_str(), this->pass.c_str(), this->port, this->unix_socket);
 	connect_server();
 }
 
@@ -62,7 +62,7 @@ int mysql_interface::connect_server ()
 	unsigned long flag = CLIENT_FOUND_ROWS;
 	if (!mysql_real_connect(&this->handle, this->host.c_str(), this->user.c_str(), this->pass.c_str(), NULL, this->port, us, flag))
 	{
-		ERROR_LOG("db connect is err [%d]\n", this->get_errno());
+		ERROR_LOG("db connect is err [%d, %s]\n", this->get_errno(), this->get_error());
 		return DB_ERR;
 	}
 	DEBUG_LOG("db connect is ok [%d]\n", this->get_errno());

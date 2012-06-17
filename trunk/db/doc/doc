@@ -1,0 +1,9 @@
+er使用mypassword从任何主机连接到mysql服务器的话。
+
+Sql代码 复制代码
+
+  1. GRANT ALL PRIVILEGES ON *.* TO 'myuser'@'%' IDENTIFIED BY 'mypassword' WITH
+
+      GRANT OPTION;  
+
+  2.FLUSH   PRIVILEGES; 

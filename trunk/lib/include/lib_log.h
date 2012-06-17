@@ -325,8 +325,18 @@ namespace ice{
  */
 #define BOOT_LOG_VOID(OK, fmt, args...) \
 	do { \
-	ice::lib_log_t::boot(OK, 0, fmt, ##args); \
-	return; \
+		ice::lib_log_t::boot(OK, 0, fmt, ##args); \
+		return; \
+	} while (0)
+
+/**
+ * @def BOOT_LOG_NO_RETURN
+ * @brief 输出程序启动日志到屏幕。
+ *        用法示例：BOOT_LOG_NO_RETURN("dlopen error, %s", error);
+ */
+#define BOOT_LOG_NO_RETURN(fmt, args...) \
+	do { \
+		ice::lib_log_t::boot(0, 0, fmt, ##args); \
 	} while (0)
 
 /**
