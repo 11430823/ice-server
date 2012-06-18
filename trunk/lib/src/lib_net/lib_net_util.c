@@ -58,5 +58,24 @@ int ice::lib_net_util_t::get_ip_addr( const char* nif, int af, void* ipaddr, siz
 	return ret_code;
 }
 
+int ice::lib_net_util_t::family_to_level( int family )
+{
+	int level = -1;
+
+	switch (family) {
+	case AF_INET:
+		level = IPPROTO_IP;
+		break;
+	case AF_INET6:
+		level = IPPROTO_IPV6;
+		break;
+	default:
+		break;
+	}
+
+	return level;
+}
+
+
 
 

@@ -41,6 +41,11 @@ namespace ice{
 		* todo 用途?
 		*/
 		static int get_ip_addr(const char* nif, int af, void* ipaddr, size_t len);
+
+		/**
+		* @brief	translate the given address family to its corresponding level
+		*/
+		static int family_to_level(int family);
 	protected:
 		
 	private:

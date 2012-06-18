@@ -2,6 +2,7 @@
 #include "lib_log.h"
 #include "lib_net/lib_tcp.h"
 #include "lib_file.h"
+#include "lib_net/lib_net_util.h"
 
 #include "lib_net/lib_multicast.h"
 
@@ -21,7 +22,16 @@ int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
 	lib_file_t::set_io_block(this->fd, false);
 
 	memset(&this->addr, 0, sizeof(this->addr));
-	this->addr.sin_family = AF_INET;
+	/*
+	 *ai_family参数指定调用者期待返回的套接口地址结构的类型。
+	 *它的值包括三种：AF_INET，AF_INET6和AF_UNSPEC。如果指定AF_INET，
+	 *那么函数九不能返回任何IPV6相关的地址信息；如果仅指定了AF_INET6，
+	 *则就不能返回任何IPV4地址信息。AF_UNSPEC则意味着函数返回的是适用于指定
+	 *主机名和服务名且适合任何协议族的地址。如果某个主机既有AAAA记录(IPV6)地址，
+	 *同时又有A记录(IPV4)地址，那么AAAA记录将作为sockaddr_in6结构返回，
+	 而A记录则作为sockaddr_in结构返回
+	*/
+	this->addr.sin_family = AF_INET;// todo //AF_UNSPEC ;
 	::inet_pton(AF_INET, this->mcast_ip.c_str(), &(this->addr.sin_addr));
 	this->addr.sin_port = htons(this->mcast_port);
 
@@ -44,14 +54,27 @@ int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
 		ERROR_RETURN(-1, ("failed to bind mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
-	// Join the Multicast Group
+	return this->mcast_join();
+}
+
+int ice::lib_mcast_t::mcast_join()
+{
 	struct group_req req;
+
 	req.gr_interface = if_nametoindex(this->mcast_incoming_if.c_str());
+	if (req.gr_interface == 0) {
+		errno = ENXIO; /* i/f name not found */
+		return -1;
+	}
+
 	memcpy(&req.gr_group, &this->addr, sizeof(this->addr));
-	if (-1 == ::setsockopt(this->fd, IPPROTO_IP, MCAST_JOIN_GROUP, &req, sizeof(req))) {
+	if (-1 == ::setsockopt(this->fd, lib_net_util_t::family_to_level(this->addr.sin_family), MCAST_JOIN_GROUP, &req, sizeof(req))) {
 		ERROR_RETURN(-1, ("failed to join mcast grp [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	return 0;
 }
+
+
+
 
