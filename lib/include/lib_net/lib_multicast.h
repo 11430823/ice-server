@@ -33,10 +33,12 @@ namespace ice{
 		*/
 		int create(const std::string& mcast_ip, uint16_t mcast_port,
 			const std::string& mcast_incoming_if, const std::string& mcast_outgoing_if);
+
 	protected:
 	private:
 		lib_mcast_t(const lib_mcast_t& cr);
 		lib_mcast_t& operator=(const lib_mcast_t& cr);
+		int mcast_join();
 	private:
 	};
 }//end namespace ice
