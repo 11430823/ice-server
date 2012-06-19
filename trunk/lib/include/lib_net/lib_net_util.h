@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace ice{
 	enum E_FD_TYPE{
 		FD_TYPE_UNUSED = 0,
@@ -41,6 +43,11 @@ namespace ice{
 		* todo 用途?
 		*/
 		static int get_ip_addr(const char* nif, int af, void* ipaddr, size_t len);
+
+		//todo test
+		static bool get_local_ip( std::string& ip);
+
+		static bool get_local_ip( long& ip);
 
 		/**
 		* @brief	translate the given address family to its corresponding level
