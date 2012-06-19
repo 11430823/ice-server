@@ -107,7 +107,6 @@ bool ice::lib_net_util_t::get_local_ip( long& ip )
 	if (gethostname(szHost, sizeof szHost) == 0){
 		hostent* pHostEnt = gethostbyname(szHost);
 		if (pHostEnt != NULL && pHostEnt->h_length == 4 && pHostEnt->h_addr_list[0] != NULL){
-			char* pTemp = inet_ntoa(*((in_addr*)pHostEnt->h_addr_list[0]));
 			ip = *((long*)pHostEnt->h_addr_list[0]);
 			return true;
 		}
