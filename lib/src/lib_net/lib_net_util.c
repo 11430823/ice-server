@@ -1,3 +1,10 @@
+#include <unistd.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <iostream>
+
 #include "lib_include.h"
 #include "lib_util.h"
 #include "lib_net/lib_net_util.h"
@@ -75,6 +82,40 @@ int ice::lib_net_util_t::family_to_level( int family )
 
 	return level;
 }
+
+bool ice::lib_net_util_t::get_local_ip( std::string& ip )
+{
+	//////////////////////////////////////////////////////////////////////////
+	// Don't use 'gethostbyname(NULL)'. The winsock DLL may be replaced by a DLL from a third party
+	// which is not fully compatible to the original winsock DLL. ppl reported crash with SCORSOCK.DLL
+	// when using 'gethostbyname(NULL)'.
+	char szHost[256];
+	if (gethostname(szHost, sizeof szHost) == 0){
+		hostent* pHostEnt = gethostbyname(szHost);
+		if (pHostEnt != NULL && pHostEnt->h_length == 4 && pHostEnt->h_addr_list[0] != NULL){
+			char* pTemp = inet_ntoa(*((in_addr*)pHostEnt->h_addr_list[0]));
+			ip = pTemp;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ice::lib_net_util_t::get_local_ip( long& ip )
+{
+	char szHost[256];
+	if (gethostname(szHost, sizeof szHost) == 0){
+		hostent* pHostEnt = gethostbyname(szHost);
+		if (pHostEnt != NULL && pHostEnt->h_length == 4 && pHostEnt->h_addr_list[0] != NULL){
+			char* pTemp = inet_ntoa(*((in_addr*)pHostEnt->h_addr_list[0]));
+			ip = *((long*)pHostEnt->h_addr_list[0]);
+			return true;
+		}
+	}
+	return false;
+}
+
+
 
 
 
