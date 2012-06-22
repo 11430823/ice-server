@@ -333,7 +333,7 @@ void tcp_server_epoll_t::handle_listen()
 	}else{
 		TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
 			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), peer_fd);
-		this->add_connect(peer_fd, ice::FD_TYPE_CLI, this->ip2str(peer.sin_addr.s_addr).c_str(), peer.sin_port);
+		this->add_connect(peer_fd, ice::FD_TYPE_CLI, this->ip2str(peer.sin_addr.s_addr).c_str(), ntohs(peer.sin_port));
 	}
 }
 
