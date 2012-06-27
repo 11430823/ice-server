@@ -10,6 +10,7 @@ LOCAL_SRCS=$(wildcard ./*.c)
 #LOCAL_INCLUDES=$(wildcard ../include/*.h)
 LOCAL_SRCS_NET=$(wildcard ./lib_net/*.c)
 LOCAL_SRCS_PROTO=$(wildcard ./lib_proto/*.c)
+LOCAL_SRCS_PROTO=$(wildcard ./lib_websocket/*.c)
 
 $(EXE):
 	$(CC) $(LOCAL_SRCS) $(LOCAL_SRCS_NET) $(LOCAL_SRCS_PROTO) $(INCLUDES) $(GLIB_INCLUDES) $(LINK) $(FLAG) $@
