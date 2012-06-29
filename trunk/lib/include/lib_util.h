@@ -107,7 +107,6 @@ namespace ice{
 	#define FOREACH(container, it) \
 		for(typeof((container).begin()) it = (container).begin(); (it) != (container).end(); ++(it))
 
-	//靠
 	#define FOREACH_REVERSE(cotainer, it) \
 		for(typeof((container).rbegin()) it = (container).rbegin(); (it) != (container).rend(); ++(it))
 
@@ -142,21 +141,69 @@ namespace ice{
 	//************************************
 	// Brief:     切割字符(以单个符号为间断)like: 1,2,3 or 1;2;3 or aa/b/cc ...
 	// Returns:   void
-	// Parameter: std::vector<T> & dst_result 切割后的结果
-	// Parameter: std::string & src_str	待切割的字符串
+	// Parameter: std::vector<T> & result 切割后的结果
+	// Parameter: std::string & src	待切割的字符串
 	// Parameter: char tag	切割依据符号
 	//************************************
 	template <typename T>
-	inline void cat_string(std::vector<T>& dst_result, std::string& src_str, char tag){
-		std::stringstream ss(src_str);        
+	inline void g_cat_string(std::vector<T>& result, const std::string& src, char tag){
+		std::stringstream ss(src);        
 		std::string sub_str;        
 		while(std::getline(ss, sub_str, tag)){
 			//以tag为间隔分割str的内容 
-			T i;
-			convert_from_string(i,sub_str);
-			dst_result.push_back(i);
+			T t;
+			convert_from_string(t, sub_str);
+			result.push_back(t);
 		}
 	};
+
+	/**
+	* @brief	分割(separator中每个字符都单独作为分隔符)
+	* @param	const std::string & src
+	* @param	const std::string & separator
+	* @param	std::vector<T> & dest
+	Example
+
+	std::string src = "1jf456j89";
+	std::vector<std::string> v;
+	split(src, "jf",v);
+
+	1
+	456
+	89
+	*/
+	template <typename T>
+	inline void split(const std::string& src, const std::string& separator, std::vector<T>& dest)
+	{
+		std::string str = src;
+		std::string substring;
+		std::string::size_type start = 0, index;
+
+		do
+		{
+			index = str.find_first_of(separator, start);
+			if (index != std::string::npos)
+			{    
+				substring = str.substr(start, index-start);
+
+				T t;
+				convert_from_string(t, substring);
+				dest.push_back(t);
+
+				start = str.find_first_not_of(separator, index);
+				if (start == std::string::npos){
+					return;
+				}
+			}
+		}while(index != std::string::npos);
+
+		//the last token
+		substring = str.substr(start);
+
+		T t;
+		convert_from_string(t, substring);
+		dest.push_back(t);
+	}
 
 	//删除(非空)指针并置空
 	//使用方法://for_each(vector.begin(),vector.end(),lib_delete_ptr());
@@ -232,6 +279,26 @@ namespace ice{
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	* @brief	流装换成16进制
+	*/
+	static inline void bin2hex(std::string& dst, char* src, uint32_t len)
+	{
+		uint32_t hex;
+		char c;
+		for(uint32_t i=0;i<len;i++){
+			hex=((unsigned char)src[i])>>4;
+			c = (hex < 10) ? ('0'+hex) : ('A'- 10 + hex);
+			dst += c;
+
+			hex = ((unsigned char)src[i]) & 0x0F;
+			c = (hex < 10) ? ('0' + hex) : ('A'- 10 + hex);
+			dst += c;
+
+			dst += ' ';
+		}
 	}
 
 }//end namespace ice

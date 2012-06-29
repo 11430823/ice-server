@@ -109,7 +109,7 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 		return 0;
 	}
 	
-	int ret = g_lib_websocket.is_full_pack((char*)data, len); 
+	int ret = ice::lib_websocket_t::is_full_pack((char*)data, len); 
 	if (0 == ret){
 		TRACE_LOG("");
 		return len;
@@ -137,9 +137,13 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 {
 	/* 返回非零，断开FD的连接 */ 
 
+	std::string outbuf;
+	bin2hex(outbuf, pkg, pkglen);
+	TRACE_LOG("on_cli_pkg[len:%d, %s]", pkglen, outbuf.c_str());
+
 	if (0 == g_lib_websocket.proc((char*)pkg, pkglen)){
 		TRACE_LOG("xxxxxxxx");
-		//fire::s2peer(peer_fd_info, ice::g_lib_websocket.get_websocket_buf(), ice::g_lib_websocket.get_websocket_len());
+		fire::s2peer(peer_fd_info, g_lib_websocket.get_websocket_buf(), g_lib_websocket.get_websocket_len());
 		return 0;
 	}
 	

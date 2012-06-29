@@ -55,7 +55,7 @@ namespace ice{
 		* @param	uint32_t len
 		* @return	int 0:是, 1:不是, -1:是包,但是长度错误
 		*/
-		int is_full_pack(char* buf, uint32_t len);
+		static int is_full_pack(char* buf, uint32_t len);
 	protected:
 		
 	private:
