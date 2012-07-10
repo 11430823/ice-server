@@ -6,8 +6,9 @@
 	brief:		OK
 *********************************************************************/
 
-#include <pthread.h>
+#pragma  once 
 
+#include "lib_include.h"
 #include "lib_util.h"
 
 namespace ice{
@@ -16,8 +17,12 @@ namespace ice{
 	{
 		PRIVATE_R(pthread_mutex_t, lock_mutex);
 	public:
-		lib_lock_mutex_t();
-		virtual ~lib_lock_mutex_t();
+		lib_lock_mutex_t(){
+			::pthread_mutex_init(&this->lock_mutex,NULL);
+		}
+		virtual ~lib_lock_mutex_t(){
+			::pthread_mutex_destroy(&this->lock_mutex);
+		}
 	public:
 		//************************************
 		// Brief:     加锁
