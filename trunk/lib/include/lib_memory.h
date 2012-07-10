@@ -21,8 +21,12 @@ namespace ice{
 		PRIVATE_R(uint32_t, total_len);//已分配的总长度
 		PRIVATE_R(uint32_t, write_pos);//已使用到的位置
 	public:
-		lib_active_buf_t();
-		virtual ~lib_active_buf_t();
+		lib_active_buf_t(){
+			this->init_data();
+		}
+		virtual ~lib_active_buf_t(){
+			this->clean();
+		}
 		//************************************
 		// Brief:     向后插入数据
 		// Returns:   void

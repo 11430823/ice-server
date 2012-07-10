@@ -11,6 +11,7 @@ purpose:	基本头文件
 #pragma once 
 
 #include <assert.h>
+#include <byteswap.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -21,9 +22,13 @@ purpose:	基本头文件
 #include <stdio.h>
 #include <syslog.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
-#include <unistd.h>
+#include <vector>
+#include <string>
+#include <pthread.h>
 
+#include <linux/version.h>
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/stat.h>

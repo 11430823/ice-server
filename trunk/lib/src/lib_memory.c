@@ -1,5 +1,4 @@
 #include "lib_include.h"
-#include "lib_util.h"
 #include "lib_memory.h"
 
 uint32_t ice::lib_active_buf_t::pop_front( uint32_t len )
@@ -21,7 +20,7 @@ void ice::lib_active_buf_t::push_back( const char* const pdata, uint32_t len )
 		memcpy(this->data + this->write_pos, pdata, len);
 		this->write_pos += len;
 	}else{
-		if(this->total_len == 0){
+		if(0 == this->total_len){
 			this->data = (char*)malloc(len);
 			memcpy(this->data, pdata, len);
 			this->total_len = len;
@@ -34,14 +33,3 @@ void ice::lib_active_buf_t::push_back( const char* const pdata, uint32_t len )
 		}
 	}
 }
-
-ice::lib_active_buf_t::lib_active_buf_t()
-{
-	this->init_data();
-}
-
-ice::lib_active_buf_t::~lib_active_buf_t()
-{
-	this->clean();
-}
-

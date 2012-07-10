@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
+#include "lib_include.h"
 
 namespace ice{
 	class lib_file_t
