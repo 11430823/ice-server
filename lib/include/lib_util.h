@@ -8,13 +8,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <errno.h>
-#include <stdlib.h>
+#include "lib_include.h"
 
 #ifndef likely
 #define likely(x)  __builtin_expect(!!(x), 1)
@@ -29,37 +23,37 @@
 //使用宏管理成员变量
 #define PROTECTED_R(varType, varName)\
 	protected:	varType varName;\
-	public:		varType get_##varName(void){return this->varName;}
+	public:		inline varType get_##varName(void){return this->varName;}
 
 #define PROTECTED_RW(varType, varName)\
 	protected:	varType varName;\
-	public:		varType get_##varName(void){return this->varName;}\
-	public:		void set_##varName(varType var){this->varName = var;}
+	public:		inline varType get_##varName(void){return this->varName;}\
+	public:		inline void set_##varName(varType var){this->varName = var;}
 
 #define PROTECTED_R_REF(varType, varName)\
 	protected:	varType varName;\
-	public:		const varType& get_##varName(void){return this->varName;}
+	public:		inline const varType& get_##varName(void){return this->varName;}
 
 #define PRIVATE_R(varType, varName)\
 	private:	varType varName;\
-	public:		varType get_##varName(void){return this->varName;}
+	public:		inline varType get_##varName(void){return this->varName;}
 
 #define PRIVATE(varType, varName)\
 	private:	varType varName;\
 
 #define PRIVATE_R_REF(varType, varName)\
 	private:	varType varName;\
-	public:		const varType& get_##varName(void){return this->varName;}
+	public:		inline const varType& get_##varName(void){return this->varName;}
 
 #define PRIVATE_RW(varType, varName)\
 	private:	varType varName;\
-	public:		varType get_##varName(void){return this->varName;} \
-	public:		void set_##varName(varType var){this->varName = var;}
+	public:		inline varType get_##varName(void){return this->varName;} \
+	public:		inline void set_##varName(varType var){this->varName = var;}
 
 #define PRIVATE_RW_REF(varType, varName)\
 	private:	varType varName;\
-	public:		const varType& get_##varName(void){return this->varName;} \
-	public:		void set_##varName(const varType& var){this->varName = var;}
+	public:		inline const varType& get_##varName(void){return this->varName;} \
+	public:		inline void set_##varName(const varType& var){this->varName = var;}
 
 #define SAFE_DELETE(p__){\
 		delete p__;\

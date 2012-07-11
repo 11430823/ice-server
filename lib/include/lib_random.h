@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "lib_include.h"
+
 namespace ice{
 
 	class lib_random_t
@@ -19,13 +21,22 @@ namespace ice{
 		* @param max 随机出来的最大数。
 		* @return min和max之间的随机数，包括min和max。//return [min,max]
 		*/
-		static int random(int min, int max);
+		static inline int random(int min, int max){
+			return (::rand()%(max-min+1))+min;
+		}
 		/**
 		* @brief 根据输入的字符串，生成一个32位的哈希值
 		* @param p 需要生成哈希值的字符串
 		* @return 字符串对应的哈希值
 		*/
-		static int hash(const char* p);
+		static inline int hash(const char* p){
+			int h = 0;
+			while (*p) {
+				h = h * 11 + (*p << 4) + (*p >> 4);
+				p++;
+			}
+			return h;
+		}
 	protected:
 		
 	private:

@@ -17,21 +17,26 @@ purpose:	基本头文件
 #include <fcntl.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <syslog.h>
 #include <string.h>
 #include <stdint.h>
+#include <sstream>
 #include <unistd.h>
 #include <vector>
 #include <string>
 #include <pthread.h>
+#include <cstring>
+#include <time.h>
 
 #include <linux/version.h>
 #include <arpa/inet.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>

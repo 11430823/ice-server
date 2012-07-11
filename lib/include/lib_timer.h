@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include <stdlib.h>
-#include <time.h>
-#include <stdint.h>
-#include <sys/time.h>
+#include "lib_include.h"
 #include <glib.h>
 
 #include "lib_list.h"

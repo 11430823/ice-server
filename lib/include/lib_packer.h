@@ -8,9 +8,10 @@
 *********************************************************************/
 #pragma once
 
-#include <cstring>
-
+#include "lib_include.h"
 #include "lib_byte_swap.h"
+
+//#define ICE_DEF_BIG_ENDIAN
 
 namespace ice{
 	class lib_packer_t
@@ -32,7 +33,7 @@ namespace ice{
 #else
 				val;
 #endif
-			idx += sizeof val;
+			idx += sizeof(val);
 		}
 
 		/**
@@ -59,7 +60,7 @@ namespace ice{
 		template <typename T>
 		static inline void pack_h(void* pkg, T val, int& idx){
 			*(reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(pkg) + idx)) = val;
-			idx += sizeof val;
+			idx += sizeof(val);
 		}
 
 		/**
@@ -78,7 +79,7 @@ namespace ice{
 #else
 				*(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx));
 #endif
-			idx += sizeof val;
+			idx += sizeof(val);
 		}
 
 		/**
@@ -105,7 +106,7 @@ namespace ice{
 		template <typename T>
 		static inline void unpack_h(const void* pkg, T& val, int& idx){
 			val = *(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx));
-			idx += sizeof val;
+			idx += sizeof(val);
 		}
 	protected:
 		

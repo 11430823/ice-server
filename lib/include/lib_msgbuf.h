@@ -11,6 +11,7 @@
 #include "lib_byte_swap.h"
 #include "lib_packer.h"
 #include "lib_proto.h"
+#include "lib_util.h"
 
 namespace ice{
 	//////////////////////////////////////////////////////////////////////////
@@ -18,12 +19,14 @@ namespace ice{
 	template <typename T_HEAD_TYPE>
 	class lib_send_data_t
 	{
+		PROTECTED_R(int, write_pos);//数据写到的位置
+		PRIVATE(const char*, send_data);
 	public:
 		lib_send_data_t(char* senddata){
 			this->init();
 			this->send_data = senddata;
 		}
-		void init(){
+		inline void init(){
 			this->write_pos = sizeof(T_HEAD_TYPE);
 		}
 		//************************************
@@ -68,13 +71,9 @@ namespace ice{
 		inline void set_count(T_COUNT_TYPE value, int pos) {
 			lib_packer_t::pack(this->send_data, value, pos);
 		}
-		inline void pack_str(const char* mstring, size_t length){
-			lib_packer_t::pack(this->send_data, mstring, length, this->write_pos);
+		inline void pack_str(const char* data, size_t len){
+			lib_packer_t::pack(this->send_data, data, len, this->write_pos);
 		}
-	protected:
-		int write_pos;//数据写到的位置
-	private:
-		char* send_data;
 	private:
 		lib_send_data_t(const lib_send_data_t& cr); // 拷贝构造函数
 		lib_send_data_t& operator=( const lib_send_data_t& cr); // 赋值函数
@@ -112,6 +111,8 @@ namespace ice{
 	//接收数据
 	class lib_recv_data_t
 	{
+		PROTECTED_R(const void*, recv_data);
+		PROTECTED_R(int, read_pos);
 	public:
 		lib_recv_data_t(const void* recvdata, int readpos){
 			this->recv_data = recvdata;
@@ -119,9 +120,6 @@ namespace ice{
 		}
 		inline const void* data(){
 			return this->recv_data;
-		}
-		inline uint32_t get_read_pos(){
-			return this->read_pos;
 		}
 		//////////////////////////////////////////////////////////////////////////
 		//解包数据
@@ -155,9 +153,6 @@ namespace ice{
 		inline void* read_pos_data(){
 			return ((char*)this->recv_data + this->read_pos);
 		}
-	protected:
-		const void* recv_data;
-		int read_pos;
 	private:
 		lib_recv_data_t(const lib_recv_data_t& cr);
 		lib_recv_data_t& operator=( const lib_recv_data_t& cr);
@@ -173,10 +168,10 @@ namespace ice{
 		}
 	public:
 		//前4个字节是整个包长度
-		uint32_t get_len(){
+		inline uint32_t get_len(){
 			return (lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
 		}
-		uint32_t remain_len() {
+		inline uint32_t remain_len() {
 			return get_len() - this->read_pos;
 		}
 	protected:
