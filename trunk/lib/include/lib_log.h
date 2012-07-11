@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include "lib_include.h"
 
 namespace ice{
 

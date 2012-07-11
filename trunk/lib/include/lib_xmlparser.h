@@ -13,8 +13,7 @@
 
 #pragma once
 
-#include <sstream>
-#include <assert.h>
+#include "lib_include.h"
 
 #include <libxml/tree.h>
 

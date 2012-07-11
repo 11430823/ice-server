@@ -64,8 +64,8 @@ int ice::lib_websocket_t::proc( char* buf, uint32_t len )
 	std::vector<std::string> ret;
 	std::string str_src;
 	str_src.assign(buf, len);
-	std::string str_separator = '\r';
-	split(str_src, 
+// 	std::string str_separator = '\r';
+// 	split(str_src, 
 
 	return 0;
 }

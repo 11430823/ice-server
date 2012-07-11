@@ -18,6 +18,13 @@ namespace ice{
 		uint32_t seq;/* 序列号 */
 		uint32_t ret; /* S->C, 错误码 */
 		uint8_t body[]; /* 包体信息 */
+		proto_head_t(){
+			this->len = 0;
+			this->cmd = 0;
+			this->id = 0;
+			this->seq = 0;
+			this->ret = 0;
+		}
 	};
 	#pragma pack()
 }

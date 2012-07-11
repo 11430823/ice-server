@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <time.h>
+#include "lib_include.h"
 
 namespace ice{
 	class lib_time_t
