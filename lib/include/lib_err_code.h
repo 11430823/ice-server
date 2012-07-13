@@ -1,4 +1,10 @@
-
+/********************************************************************
+	platform:	
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	各种错误码定义
+	brief:		ok
+*********************************************************************/
 #pragma once
 
 namespace ice{

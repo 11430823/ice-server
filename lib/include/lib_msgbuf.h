@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	消息包打包与解析(自动转换字节序、主机-》网络/网络-》主机)
+	purpose:	消息包打包与解析(自动转换字节序,根据lib_packer.h 文件中宏定义)
 	brief:		ok
 *********************************************************************/
 
