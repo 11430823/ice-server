@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	测试协议
+-->
+<ice_protocol>
+	<structs>
+	<!--结构体列表-->
+		<struct name="cli_get_user_in" desc="">
+			<field mode="single" name="uid" type="uint32" desc="米米号"/>
+		</struct>
+		<struct name="cli_get_user_out" desc="">
+			<field mode="single" name="user_info" type="user_info_t" desc="玩家信息"/>
+		</struct>
+		<struct name="user_info_t" desc="">
+			<field mode="array" name="nick" type="char" size="16" desc="昵称"/>
+			<field mode="single" name="color" type="uint32" desc="颜色"/>
+			<field mode="single" name="birthday" type="uint32" desc="生日"/>
+			<field mode="single" name="money" type="uint32" desc="摩尔豆"/>
+		</struct>
+	</structs>
+	
+	<protocols>
+	<!--协议列表-->
+		<protocol cmd="1020" name="cli_get_user" struct_in="cli_get_user_in" struct_out="cli_get_user_out" desc="拉取用户信息"/>
+	</protocols>
+</ice_protocol>
