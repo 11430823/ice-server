@@ -29,8 +29,6 @@ def get_xml_data(file_name):
 			sd = xml_struct.struct_t();
 			sd.name = get_attrvalue(node, "name");
 			sd.desc = get_attrvalue(node, "desc");
-			
-			#print r"struct:", sd.name, sd.desc;
 
 			field_nodes = get_xmlnode(node, "field");
 			for field_node in field_nodes:
@@ -42,9 +40,7 @@ def get_xml_data(file_name):
 				f.size = get_attrvalue(field_node, "size");
 				
 				sd.fields.append(f);
-				
-				#print "\t", r"field:", f.mode, f.name, f.type, f.desc, f.size;
-				
+
 			
 			structs_data.append(sd);
 	return structs_data;
