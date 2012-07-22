@@ -19,10 +19,10 @@ namespace ice{
 	template <typename T_HEAD_TYPE>
 	class lib_send_data_t
 	{
-		PROTECTED_R(int, write_pos);//数据写到的位置
-		PRIVATE(const char*, send_data);
+		PROTECTED_R(uint32_t, write_pos);//数据写到的位置
+		PRIVATE(void*, send_data);
 	public:
-		lib_send_data_t(char* senddata){
+		lib_send_data_t(void* senddata){
 			this->init();
 			this->send_data = senddata;
 		}
@@ -34,7 +34,7 @@ namespace ice{
 		// Warning:		设置后就不能往数据中打包任何数据,否则包头中的总长度需要重新设定
 		//************************************
 		virtual void set_head(const T_HEAD_TYPE& rhead) = 0;
-		inline char* data(){
+		inline void* data(){
 			return this->send_data;
 		}
 		inline uint32_t len(){
@@ -101,7 +101,7 @@ namespace ice{
 		}
 	protected:
 	private:
-		static const uint32_t PACK_DEFAULT_SIZE = 8192;//去掉包头,大概相等
+		static const uint32_t PACK_DEFAULT_SIZE = 81920;//去掉包头,大概相等
 		char send_data[PACK_DEFAULT_SIZE];
 		lib_send_data_cli_t(const lib_send_data_cli_t& cr); // 拷贝构造函数
 		lib_send_data_cli_t& operator=( const lib_send_data_cli_t& cr); // 赋值函数
@@ -112,7 +112,7 @@ namespace ice{
 	class lib_recv_data_t
 	{
 		PROTECTED_R(const void*, recv_data);
-		PROTECTED_R(int, read_pos);
+		PROTECTED_R(uint32_t, read_pos);
 	public:
 		lib_recv_data_t(const void* recvdata, int readpos){
 			this->recv_data = recvdata;

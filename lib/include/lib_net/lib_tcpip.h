@@ -12,8 +12,6 @@
 #include "lib_tcp.h"
 #include "../lib_file.h"
 
-#include "lib_proto/proto.h"
-
 struct stru_ip_port {
     char addr[128]; /* ip or dns */
     uint32_t port;

@@ -13,16 +13,12 @@ def get_nodevalue(node, index = 0):
 
 def get_xmlnode(node, name):
 	return node.getElementsByTagName(name) if node else [];
-	
 
+#存储每次解析出来的结构体数据	
+g_structs_data = [];
 
-def get_xml_data(file_name):
-	doc = minidom.parse(file_name);
-	ice_protocol_node = doc.documentElement;
-	structs_nodes = get_xmlnode(ice_protocol_node, "structs");
-
-	structs_data = [];
-	
+#解析XML中struct字段
+def _prc_xml_struct(structs_nodes):
 	for structs_node in structs_nodes:
 		struct_node = get_xmlnode(structs_node, "struct");
 		for node in struct_node:
@@ -38,10 +34,46 @@ def get_xml_data(file_name):
 				f.type = get_attrvalue(field_node, "type");
 				f.desc = get_attrvalue(field_node, "desc");
 				f.size = get_attrvalue(field_node, "size");
-				
 				sd.fields.append(f);
+			g_structs_data.append(sd);
 
-			
-			structs_data.append(sd);
-	return structs_data;
+#解析XML中struct字段
+def _prc_xml_structs(node):
+	structs_nodes = get_xmlnode(node, "structs");
+	_prc_xml_struct(structs_nodes);
 
+
+#获取xml中structs的struct数据
+def get_xml_data_structs(file_name):
+	g_structs_data[:] = [];
+	doc = minidom.parse(file_name);
+	ice_protocol_node = doc.documentElement;
+	_prc_xml_structs(ice_protocol_node);
+
+#获取xml中protocols的struct数据
+def get_xml_data_protocols(file_name):
+	g_structs_data[:] = [];
+	doc = minidom.parse(file_name);
+	ice_protocol_node = doc.documentElement;
+	protocol_nodes = get_xmlnode(ice_protocol_node, "protocols");
+
+	for protocols_node in protocol_nodes:
+		protocol_node = get_xmlnode(protocols_node, "protocol");
+		struct_data = _prc_xml_struct(protocol_node);
+
+#获取xml中protocols的cmd数据
+def get_xml_data_protocols_cmd(file_name):
+	g_structs_data[:] = [];
+	doc = minidom.parse(file_name);
+	ice_protocol_node = doc.documentElement;
+	protocol_nodes = get_xmlnode(ice_protocol_node, "protocols");
+	
+	for protocols_node in protocol_nodes:
+		nodes = get_xmlnode(protocols_node, "protocol");
+		for node in nodes:
+			sd = xml_struct.cmd_t();
+			sd.id = get_attrvalue(node, "cmd");
+			print sd.id;
+			sd.name = get_attrvalue(node, "name");
+			print sd.name;
+			g_structs_data.append(sd);
