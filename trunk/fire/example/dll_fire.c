@@ -9,6 +9,9 @@
 #include <lib_proto.h>
 #include <lib_msgbuf.h>
 #include <lib_websocket/lib_websocket.h>
+#include <lib_util.h>
+
+#include "handle_cli.h"
 
 ice::lib_websocket_t g_lib_websocket;
 class test_timer;
@@ -109,14 +112,14 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 		return 0;
 	}
 	
-	int ret = ice::lib_websocket_t::is_full_pack((char*)data, len); 
-	if (0 == ret){
-		TRACE_LOG("");
-		return len;
-	} else if (-1 == ret){
-		TRACE_LOG("");
-		return ret;
-	}
+// 	int ret = ice::lib_websocket_t::is_full_pack((char*)data, len); 
+// 	if (0 == ret){
+// 		TRACE_LOG("");
+// 		return len;
+// 	} else if (-1 == ret){
+// 		TRACE_LOG("");
+// 		return ret;
+// 	}
 
 	ice::lib_recv_data_cli_t in(data);
 	uint32_t pkg_len = in.get_len();
@@ -138,20 +141,19 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	/* 返回非零，断开FD的连接 */ 
 
 	std::string outbuf;
-	bin2hex(outbuf, pkg, pkglen);
+	ice::bin2hex(outbuf, (char*)pkg, pkglen);
 	TRACE_LOG("on_cli_pkg[len:%d, %s]", pkglen, outbuf.c_str());
 
-	if (0 == g_lib_websocket.proc((char*)pkg, pkglen)){
-		TRACE_LOG("xxxxxxxx");
-		fire::s2peer(peer_fd_info, g_lib_websocket.get_websocket_buf(), g_lib_websocket.get_websocket_len());
-		return 0;
-	}
-	
+// 	if (0 == g_lib_websocket.proc((char*)pkg, pkglen)){
+// 		TRACE_LOG("xxxxxxxx");
+// 		fire::s2peer(peer_fd_info, g_lib_websocket.get_websocket_buf(), g_lib_websocket.get_websocket_len());
+// 		return 0;
+// 	}
 	ice::proto_head_t* head = (ice::proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
 		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
-	fire::s2peer(peer_fd_info, pkg, pkglen);
-	return 0;
+	return g_handle_cli.handle(pkg, pkglen);
+	//fire::s2peer(peer_fd_info, pkg, pkglen);
 }
 
 /**

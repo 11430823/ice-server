@@ -26,7 +26,7 @@ namespace ice{
 		* @return void
 		*/
 		template <typename T>
-		static inline void pack(void* pkg, T val, int& idx){
+		static inline void pack(void* pkg, T val, uint32_t& idx){
 			*(reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(pkg) + idx)) = 
 #ifdef ICE_DEF_BIG_ENDIAN
 				lib_byte_swap_t::bswap(val);
@@ -44,7 +44,7 @@ namespace ice{
 		* @param idx 指示val应该被打包到pkg中偏移量为idx的内存中。
 		* @return void
 		*/
-		static inline void pack(void* pkg, const void* val, std::size_t len, int& idx){
+		static inline void pack(void* pkg, const void* val, std::size_t len, uint32_t& idx){
 			memcpy(reinterpret_cast<uint8_t*>(pkg) + idx, val, len);
 			idx += len;
 		}
@@ -58,7 +58,7 @@ namespace ice{
 		* @return void
 		*/
 		template <typename T>
-		static inline void pack_h(void* pkg, T val, int& idx){
+		static inline void pack_h(void* pkg, T val, uint32_t& idx){
 			*(reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(pkg) + idx)) = val;
 			idx += sizeof(val);
 		}
@@ -72,7 +72,7 @@ namespace ice{
 		 * @return void
 		 */
 		template <typename T>
-		static inline void unpack(const void* pkg, T& val, int& idx){
+		static inline void unpack(const void* pkg, T& val, uint32_t& idx){
 			val = 
 #ifdef ICE_DEF_BIG_ENDIAN
 				lib_byte_swap_t::bswap(*(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx)));
@@ -90,7 +90,7 @@ namespace ice{
 		 * @param idx 指示应该把pkg中偏移量从idx开始的数据解包到val中。
 		 * @return void
 		 */
-		static inline void unpack(const void* pkg, void* val, std::size_t len, int& idx){
+		static inline void unpack(const void* pkg, void* val, std::size_t len, uint32_t& idx){
 			memcpy(val, reinterpret_cast<const uint8_t*>(pkg) + idx, len);
 			idx += len;
 		}
@@ -104,7 +104,7 @@ namespace ice{
 		 * @return void
 		 */
 		template <typename T>
-		static inline void unpack_h(const void* pkg, T& val, int& idx){
+		static inline void unpack_h(const void* pkg, T& val, uint32_t& idx){
 			val = *(reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(pkg) + idx));
 			idx += sizeof(val);
 		}

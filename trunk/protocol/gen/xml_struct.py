@@ -24,3 +24,11 @@ class struct_t:
 		self.desc = "";
 		#字段列表,存放field_t
 		self.fields = [];
+
+#命令信息		
+class cmd_t:
+	def __init__(self):
+		#命令ID
+		self.cmd_id = "";
+		#命令名称
+		self.cmd_name = "";
