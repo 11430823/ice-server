@@ -28,15 +28,27 @@ namespace ice{
 	public:
 		typedef std::ios_base& (&manip_t)(std::ios_base&);
 	public:
-		lib_xmlparser();
-		virtual ~lib_xmlparser();
+		lib_xmlparser(){
+			this->doc_ptr = NULL;
+		}
+		virtual ~lib_xmlparser(){
+			if(NULL != this->doc_ptr){
+				xmlFreeDoc(this->doc_ptr);
+			}
+		}
 		//************************************
 		// Brief:     打开文件
 		//************************************
 		int open(const char* name);
-		void move2children_node();
-		void move2next_node();
-		bool strcmp(const char* name);
+		inline void move2children_node(){
+			this->node_ptr = this->node_ptr->xmlChildrenNode;
+		}
+		inline void move2next_node(){
+			this->node_ptr = this->node_ptr->next;
+		}
+		inline bool strcmp(const char* name){
+			return xmlStrcmp(this->node_ptr->name,(const xmlChar*)name);
+		}
 		/**
 		* @brief 把某个xml属性的值读取出来
 		* @param val xml的属性值将被读取到val中

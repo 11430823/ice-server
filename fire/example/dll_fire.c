@@ -1,10 +1,8 @@
-#include <stdint.h>
-#include <stdio.h>
 
+#include <lib_include.h>
 #include <lib_log.h>
 #include <bench_conf.h>
 #include <interface.h>
-
 #include <lib_timer.h>
 #include <lib_proto.h>
 #include <lib_msgbuf.h>
@@ -38,15 +36,15 @@ protected:
 	
 private:
 	list_head_t timer_list;
-	static int s_timer(void* data, void* info){
-		test_timer* pp = (test_timer*)data;
+	static int s_timer(void* owner, void* data){
+		test_timer* pp = (test_timer*)owner;
 		ADD_TIMER_EVENT(pp,&test_timer::s_timer, NULL,
 			 ice::get_now_tv()->tv_sec+1);
 		DEBUG_LOG("s_timer[%ld]", ice::get_now_tv()->tv_sec);
 		return 0;
 	}
-	static int m_timer(void* data, void* info){
-		test_timer* pp = (test_timer*)data;
+	static int m_timer(void* owner, void* data){
+		test_timer* pp = (test_timer*)owner;
 		timeval next_time;
 		next_time.tv_sec = ice::get_now_tv()->tv_sec;
 		next_time.tv_usec = ice::get_now_tv()->tv_usec + 300000;
@@ -70,6 +68,36 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======server start======");
 		ice::setup_timer();
 		p = new test_timer;
+
+		//test g_slice_alloc
+		struct a 
+		{
+			int i;
+			int j;
+			int k;
+		};
+
+		
+		for (int j = 0; j < 10; j++){
+			ice::renew_now();
+			uint32_t t_b = ice::get_now_tv()->tv_sec;
+
+			for (int i = 0; i < 2000000000; i++){
+				//a* aa = (a*)g_slice_alloc(sizeof(a));
+				a* aa = (a*)malloc(sizeof(a));
+				aa->i = 1;
+				aa->j = 2;
+				aa->k = 3;
+				//g_slice_free1(sizeof(a), aa);
+				free(aa);
+			}
+
+			ice::renew_now();
+			uint32_t t_e = ice::get_now_tv()->tv_sec;
+			DEBUG_LOG("todo test %u", t_e - t_b);
+		}
+
+
 	}
 	return 0;
 }

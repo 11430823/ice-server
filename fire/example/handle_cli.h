@@ -9,6 +9,8 @@
 #pragma once
 
 #define  DEAL_FUN_ARG
+
+class handle_cli;
 //定义调用函数的指针类型
 typedef int (handle_cli::*P_DEALFUN_T)(DEAL_FUN_ARG);
 
@@ -20,7 +22,7 @@ public:
 		#undef  BIND_PROTO_CMD
 		#define BIND_PROTO_CMD(cmdid, fun_name)\
 			this->cmd_map.insert_cmd_fun(cmdid, &handle_cli::fun_name);
-		#include "./protocol/protocol_online_cmd.h"
+//todo		#include "./protocol/protocol_online_cmd.h"
 		#undef  BIND_PROTO_CMD
 	}
 	virtual ~handle_cli(){}
@@ -32,7 +34,7 @@ private:
 	#undef  BIND_PROTO_CMD
 	#define BIND_PROTO_CMD(cmdid, fun_name)\
 		int fun_name(DEAL_FUN_ARG);
-	#include "./protocol/protocol_online_cmd.h"
+//todo	#include "./protocol/protocol_online_cmd.h"
 	#undef  BIND_PROTO_CMD
 
 	handle_cli(const handle_cli& cr);

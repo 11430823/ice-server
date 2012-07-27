@@ -3,8 +3,9 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	用于对数据包进行解包，或者把数据打包成数据包
-	brief:		注:默认为小端, 若定义ICE_DEF_BIG_ENDIAN 之后.则进行字节转换,
+				注:默认为小端, 若定义ICE_DEF_BIG_ENDIAN 之后.则进行字节转换,
 				预编译ICE_DEF_BIG_ENDIAN的函数必须放在本文件(.h)中,不可放入.c中
+	brief:		OK
 *********************************************************************/
 #pragma once
 
