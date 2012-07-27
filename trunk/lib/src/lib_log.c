@@ -3,6 +3,7 @@
 #include "lib_log.h"
 #include "lib_util.h"
 #include "lib_file.h"
+#include "lib_timer.h"
 
 namespace{
 
@@ -272,8 +273,9 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 	}
 
 	va_list ap;
-	struct tm t_m;
-	lib_time_t::get_now_tm(t_m);
+
+	const struct tm* t_m = get_now_tm();
+	
 	::va_start(ap, fmt);
 
 	if (unlikely(!s_log_info.has_init || (e_dest_terminal & s_log_info.log_dest))) {
@@ -285,13 +287,13 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 		case e_lvl_crit:		
 		case e_lvl_error:
 			::fprintf(stderr, "%s%02d:%02d:%02d ", s_log_color[lvl],
-				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+				t_m->tm_hour, t_m->tm_min, t_m->tm_sec);
 			::vfprintf(stderr, fmt, aq);
 			::fprintf(stderr, "%s", s_color_end);
 			break;
 		default:
 			::fprintf(stdout, "%s%02d:%02d:%02d ", s_log_color[lvl],
-				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+				t_m->tm_hour, t_m->tm_min, t_m->tm_sec);
 			::vfprintf(::stdout, fmt, aq);
 			::fprintf(::stdout, "%s", s_color_end);
 			break;
@@ -299,14 +301,14 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 		::va_end(aq);
 	}
 
-	if (unlikely(!(s_log_info.log_dest & e_dest_file) || (shift_fd(lvl, t_m) < 0))) {
+	if (unlikely(!(s_log_info.log_dest & e_dest_file) || (shift_fd(lvl, *t_m) < 0))) {
 		::va_end(ap);
 		return;
 	}
 
 	char log_buffer[LOG_BUF_SIZE];
 	int pos = ::snprintf(log_buffer, sizeof(log_buffer), "[%02d:%02d:%02d] %u [%05d,%05d]",
-		t_m.tm_hour, t_m.tm_min, t_m.tm_sec, key, ::getpid(), LOG_IDX++);
+		t_m->tm_hour, t_m->tm_min, t_m->tm_sec, key, ::getpid(), LOG_IDX++);
 	int end = ::vsnprintf(log_buffer + pos, sizeof(log_buffer) - pos, fmt, ap);
 	::va_end(ap);
 
@@ -325,8 +327,8 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 	}
 
 	va_list ap;
-	struct tm t_m;
-	lib_time_t::get_now_tm(t_m);
+	const struct tm* t_m = get_now_tm();
+
 	::va_start(ap, fmt);
 
 	if (unlikely(!s_log_info.has_init || e_dest_terminal & s_log_info.log_dest)) {
@@ -336,13 +338,13 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 		case e_lvl_crit:		
 		case e_lvl_error:
 			::fprintf(::stderr, "%s%02d:%02d:%02d ", s_log_color[lvl],
-				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+				t_m->tm_hour, t_m->tm_min, t_m->tm_sec);
 			::vfprintf(::stderr, fmt, ap);
 			::fprintf(::stderr, "%s", s_color_end);
 			break;
 		default:
 			::fprintf(::stdout, "%s%02d:%02d:%02d ", s_log_color[lvl],
-				t_m.tm_hour, t_m.tm_min, t_m.tm_sec);
+				t_m->tm_hour, t_m->tm_min, t_m->tm_sec);
 			::vfprintf(::stdout, fmt, ap);
 			::fprintf(::stdout, "%s", s_color_end);
 			break;
@@ -352,7 +354,7 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 	if (e_dest_file & s_log_info.log_dest) {		
 		char log_buffer[LOG_BUF_SIZE];
 		int pos = ::snprintf(log_buffer, LOG_BUF_SIZE, "[%02d:%02d:%02d][%05d]",
-			t_m.tm_hour, t_m.tm_min, t_m.tm_sec, ::getpid());
+			t_m->tm_hour, t_m->tm_min, t_m->tm_sec, ::getpid());
 		::vsnprintf(log_buffer + pos, LOG_BUF_SIZE - pos, fmt, ap);
 		::syslog(lvl, "%s", log_buffer);
 	}

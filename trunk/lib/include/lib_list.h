@@ -63,7 +63,7 @@ static inline void list_add (struct list_head *new_entry, struct list_head *head
   __list_add (new_entry, head, head->next);
 }
 
-/**
+/**将new所代表的list_head插入head所索引的队列的尾部
  * @brief add a new entry\n
  *        Insert a new entry before the specified head.
  *        This is useful for implementing queues.

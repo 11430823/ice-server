@@ -28,33 +28,5 @@ namespace ice {
 		}
 		return 0;
 	}
-
-	void lib_xmlparser::move2children_node()
-	{
-		this->node_ptr = this->node_ptr->xmlChildrenNode;
-	}
-
-	void lib_xmlparser::move2next_node()
-	{
-		this->node_ptr = this->node_ptr->next;
-	}
-
-	lib_xmlparser::lib_xmlparser()
-	{
-		this->doc_ptr = NULL;
-	}
-
-	lib_xmlparser::~lib_xmlparser()
-	{
-		if(NULL != this->doc_ptr){
-			xmlFreeDoc(this->doc_ptr);
-		}
-	}
-
-	bool lib_xmlparser::strcmp( const char* name )
-	{
-		return xmlStrcmp(this->node_ptr->name,(const xmlChar*)name);
-	}
-
 }//end namespace ice
 

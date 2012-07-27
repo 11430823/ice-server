@@ -1,6 +1,7 @@
 #include <lib_log.h>
 #include <lib_file.h>
 #include <lib_util.h>
+#include <lib_timer.h>
 
 #include "daemon.h"
 #include "dll.h"
@@ -12,6 +13,7 @@
 
 int main(int argc, char* argv[])
 {
+	ice::renew_now();
 	if (ice::is_little_endian()){
 		DEBUG_LOG("LITTLE ENDIAN");
 	} else {

@@ -84,7 +84,7 @@ namespace ice{
 	#define SUCC 0
 	#define ERR  -1
 
-		//协助
+	//协助
 	#define NOTE//需要注意
 	#define TODO//需要完成
 	#define FOR_DEBUG//为了调试
