@@ -12,8 +12,7 @@
 
 namespace ice{
 
-	class lib_random_t
-	{
+	class lib_random_t{
 	public:
 		/**
 		* @brief 产生给定范围内的随机数。如果需要更加随机，可以在程序起来的时候调用一次srand()。

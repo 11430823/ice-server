@@ -25,13 +25,13 @@ int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
 	/*
 	 *ai_family参数指定调用者期待返回的套接口地址结构的类型。
 	 *它的值包括三种：AF_INET，AF_INET6和AF_UNSPEC。如果指定AF_INET，
-	 *那么函数九不能返回任何IPV6相关的地址信息；如果仅指定了AF_INET6，
+	 *那么函数就不能返回任何IPV6相关的地址信息；如果仅指定了AF_INET6，
 	 *则就不能返回任何IPV4地址信息。AF_UNSPEC则意味着函数返回的是适用于指定
 	 *主机名和服务名且适合任何协议族的地址。如果某个主机既有AAAA记录(IPV6)地址，
 	 *同时又有A记录(IPV4)地址，那么AAAA记录将作为sockaddr_in6结构返回，
 	 而A记录则作为sockaddr_in结构返回
 	*/
-	this->addr.sin_family = AF_INET;// todo //AF_UNSPEC ;
+	this->addr.sin_family = AF_INET;//AF_UNSPEC ;
 	::inet_pton(AF_INET, this->mcast_ip.c_str(), &(this->addr.sin_addr));
 	this->addr.sin_port = htons(this->mcast_port);
 

@@ -66,4 +66,3 @@ public:
 };
 
 extern addr_mcast_t g_addr_mcast;
-extern	ice::lib_mcast_t g_mcast;

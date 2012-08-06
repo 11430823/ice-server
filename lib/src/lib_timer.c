@@ -56,7 +56,7 @@ namespace {
 					min_exptm = t->expire;
 				}
 			} else {
-				ice::do_remove_timer(t, 1);			
+				ice::remove_sec_timer(t, 1);			
 			}
 		}
 
@@ -127,10 +127,10 @@ namespace {
 		list_for_each_safe(l, p, &micro_timer) {
 			t = list_entry(l, lib_timer_micro_t, entry);
 			if (!(t->function)) {
-				remove_micro_timer(t, 1);
+				ice::remove_micro_timer(t, 1);
 			} else if (now.tv_sec > t->tv.tv_sec || (now.tv_sec == t->tv.tv_sec && now.tv_usec > t->tv.tv_usec)) {
 				if (t->function(t->owner, t->data) == 0) {
-					remove_micro_timer(t, 1);
+					ice::remove_micro_timer(t, 1);
 				}
 			}
 		}
@@ -147,11 +147,11 @@ namespace {
 
 		list_for_each_safe(l, p, &vec[0].head) {
 			t = list_entry(l, lib_timer_sec_t, entry);
-			if (!(t->function)) {
-				do_remove_timer(t, 1);
+			if (NULL == t->function) {
+				ice::remove_sec_timer(t, 1);
 			} else if (t->expire <= now.tv_sec) {
 				if ( t->function(t->owner, t->data) == 0 ) {
-					do_remove_timer(t, 1);
+					ice::remove_sec_timer(t, 1);
 				}
 			}
 		}
@@ -176,12 +176,13 @@ void ice::setup_timer()
 
 void ice::destroy_timer()
 {
-	list_head_t *l, *p;
+	list_head_t* l;
+	list_head_t* p;
 
 	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
 		list_for_each_safe(l, p, &vec[i].head) {
 			lib_timer_sec_t* t = list_entry(l, lib_timer_sec_t, entry);
-			do_remove_timer(t, 1);
+			remove_sec_timer(t, 1);
 		}	
 	}
 
@@ -291,7 +292,7 @@ void ice::handle_timer()
 	scan_micro_timer();
 }
 
-void ice::do_remove_timer(lib_timer_sec_t* t, int freed)
+void ice::remove_sec_timer(lib_timer_sec_t* t, int freed)
 {
 	if (t->sprite_list.next != 0) {
 		list_del(&t->sprite_list);
@@ -311,7 +312,7 @@ void ice::remove_timers(list_head_t* head)
 
 	list_for_each_safe (l, m, head) {
 		t = list_entry (l, lib_timer_sec_t, sprite_list);
-		do_remove_timer(t, 0);
+		remove_sec_timer(t, 0);
 	}
 }
 

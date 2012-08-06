@@ -22,9 +22,9 @@
 //库标示:
 //当第一个bit为1时：			1111110111 00000 	==库标示9位(64个库)(可用命令号32个 )
 //当第一个bit为0时：(cmdid>>9): 1111110  00000000 ==库标示6位(512个库)(可用命令号256个 )
-#define GET_ROUTE(cmdid) ((cmdid&0x8000)?(70+((cmdid&0x7E00)>>6)+((cmdid &0x00E0)>>5)):(cmdid>>9))  
+#define GET_ROUTE(cmd_id) ((cmd_id&0x8000)?(70+((cmd_id&0x7E00)>>6)+((cmd_id &0x00E0)>>5)):(cmd_id>>9))  
 
-#define get_db_type( cmdid )  enum_route_type( GET_ROUTE(cmdid) )
+#define get_db_type( cmd_id )  enum_route_type( GET_ROUTE(cmd_id) )
 
 //define route db for com 
 enum enum_route_type {

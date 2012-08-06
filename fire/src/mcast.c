@@ -9,7 +9,6 @@
 #include "mcast.h"
 
 addr_mcast_t g_addr_mcast;
-ice::lib_mcast_t g_mcast;
 
 namespace {
 	const uint32_t ADDR_MCAST_SYN_TIME_OUT_SEC = 60;//同步地址超时秒数

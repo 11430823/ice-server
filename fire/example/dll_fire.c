@@ -77,7 +77,7 @@ extern "C" int on_init(int isparent)
 			int k;
 		};
 
-		
+		/*
 		for (int j = 0; j < 10; j++){
 			ice::renew_now();
 			uint32_t t_b = ice::get_now_tv()->tv_sec;
@@ -96,7 +96,7 @@ extern "C" int on_init(int isparent)
 			uint32_t t_e = ice::get_now_tv()->tv_sec;
 			DEBUG_LOG("todo test %u", t_e - t_b);
 		}
-
+		*/
 
 	}
 	return 0;

@@ -15,8 +15,7 @@
 //#define ICE_DEF_BIG_ENDIAN
 
 namespace ice{
-	class lib_packer_t
-	{
+	class lib_packer_t{
 	public:
 		/**
 		* @brief 把val转换字节序，并且打包到(uint8_t*)pkg + idx，然后增加idx的值，idx的增量为val变量占用的字节数。\n

@@ -199,12 +199,12 @@ int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_nu
 		return -1;
 
 	}
-	ret = ice::lib_net_t::set_recvbuf(this->listen_fd, bufsize);
+	ret = ice::lib_net_util_t::set_recvbuf(this->listen_fd, bufsize);
 	if (-1 == ret){
 		ice::lib_file_t::close_fd(this->listen_fd);
 		return -1;
 	}
-	ret = ice::lib_net_t::set_sendbuf(this->listen_fd, bufsize);
+	ret = ice::lib_net_util_t::set_sendbuf(this->listen_fd, bufsize);
 	if(-1 == ret){
 		ice::lib_file_t::close_fd(this->listen_fd);
 		return -1;
@@ -228,7 +228,7 @@ int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_nu
 		return -1;
 	}
 
-	this->set_ip(ice::lib_net_t::ip2int(ip));
+	this->set_ip(ice::lib_net_util_t::ip2int(ip));
 	this->set_port(port);
 
 	return 0;
@@ -285,7 +285,7 @@ ice::lib_tcp_peer_info_t* tcp_server_epoll_t::add_connect( int fd, ice::E_FD_TYP
 	cfi.fd_type = fd_type;
 	cfi.set_last_tm(ice::lib_time_t::get_now_second());
 	if (NULL != ip) {
-		cfi.set_ip(ice::lib_net_t::ip2int(ip));
+		cfi.set_ip(ice::lib_net_util_t::ip2int(ip));
 		cfi.set_port(port);
 	}
 
@@ -333,7 +333,7 @@ void tcp_server_epoll_t::handle_listen()
 	}else{
 		TRACE_LOG("client accept [ip:%s, port:%u, new_socket:%d]",
 			inet_ntoa(peer.sin_addr), ntohs(peer.sin_port), peer_fd);
-		this->add_connect(peer_fd, ice::FD_TYPE_CLI, this->ip2str(peer.sin_addr.s_addr).c_str(), ntohs(peer.sin_port));
+		this->add_connect(peer_fd, ice::FD_TYPE_CLI, ice::lib_net_util_t::ip2str(peer.sin_addr.s_addr).c_str(), ntohs(peer.sin_port));
 	}
 }
 

@@ -17,8 +17,7 @@ namespace ice{
 	//////////////////////////////////////////////////////////////////////////
 	//发送数据
 	template <typename T_HEAD_TYPE>
-	class lib_send_data_t
-	{
+	class lib_send_data_t{
 		PROTECTED_R(uint32_t, write_pos);//数据写到的位置
 		PRIVATE(void*, send_data);
 	public:
@@ -83,8 +82,7 @@ namespace ice{
 	//////////////////////////////////////////////////////////////////////////
 	//exmaple:使用发送数据端的例子
 	//发送给客户端的数据
-	class lib_send_data_cli_t : public lib_send_data_t<proto_head_t>
-	{
+	class lib_send_data_cli_t : public lib_send_data_t<proto_head_t>{
 	public:
 		lib_send_data_cli_t()
 			:lib_send_data_t<proto_head_t>(send_data){
@@ -109,8 +107,7 @@ namespace ice{
 
 	//////////////////////////////////////////////////////////////////////////
 	//接收数据
-	class lib_recv_data_t
-	{
+	class lib_recv_data_t{
 		PROTECTED_R(const void*, recv_data);
 		PROTECTED_R(uint32_t, read_pos);
 	public:

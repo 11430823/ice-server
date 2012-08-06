@@ -14,8 +14,7 @@
 namespace ice{
 	//////////////////////////////////////////////////////////////////////////
 	//自动无限放大,但是不会自动紧缩.
-	class lib_active_buf_t
-	{
+	class lib_active_buf_t{
 		PRIVATE_R(char*, data);//数据头指针
 		PRIVATE_R(uint32_t, total_len);//已分配的总长度
 		PRIVATE_R(uint32_t, write_pos);//已使用到的位置

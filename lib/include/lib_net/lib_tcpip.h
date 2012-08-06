@@ -1,3 +1,10 @@
+/********************************************************************
+	platform:	
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	todo
+	brief:		
+*********************************************************************/
 
 #pragma once
 
@@ -11,6 +18,7 @@
 
 #include "lib_tcp.h"
 #include "../lib_file.h"
+#include "lib_net_util.h"
 
 struct stru_ip_port {
     char addr[128]; /* ip or dns */
@@ -158,8 +166,8 @@ class Ctcp{
 				this->last_fail_connect_time_=time(NULL);
 			}else{
 				//设置接收发送超时
-				if (ice::lib_tcp_t::set_sock_send_timeo(this->fd_, this->send_recv_timeout_*1000)
-					|| ice::lib_tcp_t::set_sock_rcv_timeo(this->fd_, this->send_recv_timeout_*1000)){
+				if (ice::lib_net_util_t::set_sock_send_timeo(this->fd_, this->send_recv_timeout_*1000)
+					|| ice::lib_net_util_t::set_sock_rcv_timeo(this->fd_, this->send_recv_timeout_*1000)){
 					ice::lib_file_t::close_fd(this->fd_);
 				}
 			}

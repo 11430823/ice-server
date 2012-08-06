@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	todo
 	brief:		tcp server
 *********************************************************************/
 
@@ -54,21 +54,17 @@ namespace ice{
 	//The following interfaces are called both by the parent and child process
 		//************************************
 		// Brief:	//Called only once at server startup by both the parent and child process.
-					//`isparent == 1` indicates this interface is called by the parent;
-					//`isparent == 0` indicates this interface is called by the child.
 					//You should initialize your service program (allocate memory, create objects, etc) here.
 					//You must return 0 on success, -1 otherwise.
 		//************************************
-		typedef int (*ON_INIT)(int isparent);
+		typedef int (*ON_INIT)();
 		ON_INIT on_init;
 		//************************************
 		// Brief:	//Called only once at server stop by both the parent and child process.
-					//`isparent == 1` indicates this interface is called by the parent;
-					//`isparent == 0` indicates this interface is called by the child.
 					//You should finalize your service program (release memory, destroy objects, etc) here.
 					//You must return 0 if you have finished finalizing the service, -1 otherwise. 
 		//************************************
-		typedef int (*ON_FINI)(int isparent);
+		typedef int (*ON_FINI)();
 		ON_FINI on_fini;
 		/*!
 		  * This interface will be called both by the parent and child process.

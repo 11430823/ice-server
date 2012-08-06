@@ -167,17 +167,14 @@ namespace ice{
 	89
 	*/
 	template <typename T>
-	inline void split(const std::string& src, const std::string& separator, std::vector<T>& dest)
-	{
+	inline void split(const std::string& src, const std::string& separator, std::vector<T>& dest){
 		std::string str = src;
 		std::string substring;
 		std::string::size_type start = 0, index;
 
-		do
-		{
+		do{
 			index = str.find_first_of(separator, start);
-			if (index != std::string::npos)
-			{    
+			if (index != std::string::npos){    
 				substring = str.substr(start, index-start);
 
 				T t;
@@ -201,8 +198,7 @@ namespace ice{
 
 	//删除(非空)指针并置空
 	//使用方法://for_each(vector.begin(),vector.end(),lib_delete_ptr());
-	struct lib_delete_ptr
-	{
+	struct lib_delete_ptr{
 		template <typename T>
 		void operator() (const T* ptr) const{
 			if (ptr){
@@ -213,8 +209,7 @@ namespace ice{
 
 	//删除(非空)map中val位置上的指针并置空
 	//用法://for_each(map.begin(), map.end(), lib_delete_pair());
-	struct lib_delete_pair
-	{
+	struct lib_delete_pair{
 		template <typename Ty1, typename Ty2>
 		void operator() (const std::pair<Ty1, Ty2> &ptr) const{
 			if (ptr.second){
@@ -246,8 +241,7 @@ namespace ice{
 	 * @param p 需要生成哈希值的字符串
 	 * @return 字符串对应的哈希值
 	 */
-	static inline uint32_t gen_u32_hash(const char* p)
-	{
+	static inline uint32_t gen_u32_hash(const char* p){
 		uint32_t h = 0;
 		while (*p) {
 			h = h * 11 + (*p << 4) + (*p >> 4);
@@ -260,8 +254,7 @@ namespace ice{
 	 * @brief	是否小端字节序
 	 * @return	bool
 	 */
-	static inline bool is_little_endian()
-	{
+	static inline bool is_little_endian(){
 		union ut{
 			int16_t s;
 			char c[2];
@@ -278,8 +271,7 @@ namespace ice{
 	/**
 	* @brief	流装换成16进制
 	*/
-	static inline void bin2hex(std::string& dst, char* src, uint32_t len)
-	{
+	static inline void bin2hex(std::string& dst, char* src, uint32_t len){
 		uint32_t hex;
 		char c;
 		for(uint32_t i=0;i<len;i++){
