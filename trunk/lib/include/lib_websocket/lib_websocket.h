@@ -1,4 +1,10 @@
-
+/********************************************************************
+	platform:	
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	todo
+	brief:		html5 websocket
+*********************************************************************/
 #include "lib_util.h"
 
 #pragma once
@@ -31,8 +37,7 @@ Sec-WebSocket-Version: 13
 #define USE_ICE_LIB_WEBSOCKET
 
 namespace ice{
-	class lib_websocket_t
-	{
+	class lib_websocket_t{
 		PRIVATE_R(uint32_t, websocket_len);
 	public:
 		const static uint32_t WEB_SOCKET_BUF_MAX_LEN = 2048;

@@ -67,7 +67,7 @@ inline uint64_t atoi_safe(char* str)
 
 
 
-#define GET_ROUTE(cmdid) ((cmdid&0x8000)?(70+((cmdid&0x7E00)>>6)+((cmdid &0x00E0)>>5)):(cmdid>>9))
+#define GET_ROUTE(cmd_id) ((cmd_id&0x8000)?(70+((cmd_id&0x7E00)>>6)+((cmd_id &0x00E0)>>5)):(cmd_id>>9))
 
 
 

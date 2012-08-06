@@ -11,8 +11,7 @@
 #include "lib_include.h"
 
 namespace ice{
-	class lib_time_t
-	{
+	class lib_time_t{
 	public:
 		//************************************
 		// Brief:     returns the time as the number of seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).

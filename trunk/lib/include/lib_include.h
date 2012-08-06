@@ -31,6 +31,7 @@ purpose:	基本头文件
 #include <pthread.h>
 #include <cstring>
 #include <time.h>
+#include <map>
 
 #include <linux/version.h>
 #include <arpa/inet.h>

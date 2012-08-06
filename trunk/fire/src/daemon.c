@@ -214,7 +214,7 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 
 bool daemon_check_run_fn()
 {
-	return likely(!g_daemon.stop) || 0 != g_dll.functions.on_fini(g_is_parent);
+	return likely(!g_daemon.stop) || 0 != g_dll.functions.on_fini();
 }
 
 int daemon_t::run()

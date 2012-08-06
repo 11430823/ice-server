@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
 		NULL, g_bench_conf.get_log_save_next_file_interval_min());
-	if (0 != g_dll.functions.on_init(g_is_parent)) {
+	if (0 != g_dll.functions.on_init()) {
 		BOOT_LOG(-1, "FAILED TO INIT PARENT PROCESS");
 	}
 

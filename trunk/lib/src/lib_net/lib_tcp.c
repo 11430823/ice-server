@@ -37,7 +37,7 @@ int ice::lib_tcp_t::recv( void* buf, int bufsize )
 
 std::string ice::lib_tcp_t::get_ip_str()
 {
-	return this->ip2str(this->ip);
+	return ice::lib_net_util_t::ip2str(this->ip);
 }
 
 int ice::lib_tcp_t::connect( const char* ip, uint16_t port, int timeout, bool block )

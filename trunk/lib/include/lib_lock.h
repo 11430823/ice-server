@@ -13,12 +13,11 @@
 
 namespace ice{
 	//互斥锁
-	class lib_lock_mutex_t
-	{
+	class lib_lock_mutex_t{
 		PRIVATE_R(pthread_mutex_t, lock_mutex);
 	public:
 		lib_lock_mutex_t(){
-			::pthread_mutex_init(&this->lock_mutex,NULL);
+			::pthread_mutex_init(&this->lock_mutex, NULL);
 		}
 		virtual ~lib_lock_mutex_t(){
 			::pthread_mutex_destroy(&this->lock_mutex);

@@ -21,8 +21,7 @@
 
 namespace ice{
 
-	class lib_xmlparser
-	{
+	class lib_xmlparser{
 		PRIVATE_R_REF(xmlDocPtr, doc_ptr);//定义解析文档指针
 		PRIVATE_R_REF(xmlNodePtr, node_ptr);//定义结点指针(你需要它为了在各个结点间移动)
 	public:

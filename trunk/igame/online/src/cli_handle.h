@@ -8,24 +8,26 @@
 
 #pragma once
 
-#define  DEAL_FUN_ARG
+#define CLI_HANDLE_FUN_ARG
 
-class handle_cli;
+class cli_handle_t;
 //定义调用函数的指针类型
-typedef int (handle_cli::*P_DEALFUN_T)(DEAL_FUN_ARG);
+typedef int (cli_handle_t::*CLI_FUNC)(CLI_HANDLE_FUN_ARG);
 
-class handle_cli
+class cli_handle_t
 {
 public:
-	handle_cli(){
+	cli_handle_t(){
+		this->cmd_map.insert(
 		//初始化CMD和处理函数
 		#undef  BIND_PROTO_CMD
 		#define BIND_PROTO_CMD(cmd_id, fun_name)\
-			this->cmd_map.insert_cmd_fun(cmd_id, &handle_cli::fun_name);
-//todo		#include "./protocol/protocol_online_cmd.h"
+			this->cmd_map.insert(cmd_id, &cli_handle_t::fun_name);
+			
+			#include "../../protocol/online_cmd.h"
 		#undef  BIND_PROTO_CMD
 	}
-	virtual ~handle_cli(){}
+	virtual ~cli_handle_t(){}
 	int handle(const void* pkg, int pkglen);
 protected:
 	
@@ -34,11 +36,12 @@ private:
 	#undef  BIND_PROTO_CMD
 	#define BIND_PROTO_CMD(cmd_id, fun_name)\
 		int fun_name(DEAL_FUN_ARG);
-//todo	#include "./protocol/protocol_online_cmd.h"
+		
+		#include "./protocol/online_cmd.h"
 	#undef  BIND_PROTO_CMD
-
-	handle_cli(const handle_cli& cr);
-	handle_cli& operator=(const handle_cli& cr);
+	ice::lib_cmd_map_t<CLI_FUNC> cmd_map;
+	cli_handle_t(const cli_handle_t& cr);
+	cli_handle_t& operator=(const cli_handle_t& cr);
 };
 
-extern handle_cli g_handle_cli;
+extern cli_handle_t g_cli_handle;

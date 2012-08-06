@@ -14,8 +14,7 @@
 
 namespace ice{
 
-	class lib_log_t
-	{
+	class lib_log_t{
 	public:
 		/**
 		 * @enum  E_LEVEL

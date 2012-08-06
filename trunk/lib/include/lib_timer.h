@@ -2,15 +2,14 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	todo
 	brief:		定时器函数，有秒级和微妙级两种精度的接口。用于设定某一时刻调用某个函数。需要glib支持。
 *********************************************************************/
 
 #pragma once
 
-#include "lib_include.h"
 #include <glib.h>
-
+#include "lib_include.h"
 #include "lib_list.h"
 
 /**
@@ -107,7 +106,7 @@ namespace ice{
 	 */
 	void mod_expire_time(lib_timer_sec_t* tmr, time_t exptm);
 
-	void do_remove_timer(lib_timer_sec_t* t, int freed);
+	void remove_sec_timer(lib_timer_sec_t* t, int freed);
 
 	/**
 	 * @brief  删除链表head中所有的定时器，并释放内存。用于删除秒级定时器。
@@ -185,7 +184,7 @@ namespace ice{
  * @see    add_sec_event, ADD_TIMER_EVENT, remove_timers
  */
 #define REMOVE_TIMER(timer_) \
-		ice::do_remove_timer((timer_), 0)
+		ice::remove_sec_timer((timer_), 0)
 
 /**
  * @def    REMOVE_MICRO_TIMER

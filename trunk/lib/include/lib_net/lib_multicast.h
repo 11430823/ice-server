@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	ok
 	brief:		组播
 *********************************************************************/
 
@@ -11,8 +11,7 @@
 #include "lib_udp.h"
 
 namespace ice{
-	class lib_mcast_t : public lib_udp_t
-	{
+	class lib_mcast_t : public lib_udp_t{
 		PROTECTED_RW(std::string, mcast_incoming_if);//组播 接收
 		PROTECTED_RW(std::string, mcast_outgoing_if);//组播 发送
 		PROTECTED_RW(std::string, mcast_ip);//239.X.X.X组播地址

@@ -14,10 +14,11 @@
 #include "service.h"
 
 service_t g_service;
+ice::lib_mcast_t g_mcast;
 
 bool service_check_run()
 {
-	return likely(!g_daemon.stop) || g_dll.functions.on_fini(g_is_parent);
+	return likely(!g_daemon.stop) || g_dll.functions.on_fini();
 }
 
 void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
@@ -56,7 +57,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		BOOT_LOG_VOID(-1, "server listen err [ip:%s, port:%u]", this->bind_elem->ip.c_str(), this->bind_elem->port);
 	}
 
-	if ( 0 != g_dll.functions.on_init(g_is_parent)) {
+	if ( 0 != g_dll.functions.on_init()) {
 		ALERT_LOG("FAIL TO INIT WORKER PROCESS. [id=%u, name=%s]", this->bind_elem->id, this->bind_elem->name.c_str());
 		goto fail;
 	}
@@ -66,8 +67,8 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		if (0 != g_mcast.create(g_bench_conf.get_mcast_ip(), 
 			g_bench_conf.get_mcast_port(), g_bench_conf.get_mcast_incoming_if(),
 			g_bench_conf.get_mcast_outgoing_if())){
-				ALERT_LOG("mcast.create err");
-				return;
+			ALERT_LOG("mcast.create err");
+			return;
 		}else{
 			g_net_server.get_server_epoll()->add_connect(g_mcast.get_fd(),
 				ice::FD_TYPE_MCAST, g_bench_conf.get_mcast_ip().c_str(), g_bench_conf.get_mcast_port());

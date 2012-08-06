@@ -12,8 +12,7 @@
 #include "lib_util.h"
 
 namespace ice{
-	class lib_file_t
-	{
+	class lib_file_t{
 	public:	
 		//************************************
 		// Brief:     Set the given fd to be blocking or noblocking
