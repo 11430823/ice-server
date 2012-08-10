@@ -39,24 +39,27 @@ namespace {
 		}
 	}
 
-	void scan_timer_list(const int idx){
+	/**
+	* @brief	更新秒级定时器
+	*/
+	void renew_sec_timer_list(const int idx){
 		time_t min_exptm = 0;
 		list_head_t* cur;
 		list_head_t* next;
 
 		list_for_each_safe(cur, next, &vec[idx].head) {
 			lib_timer_sec_t* t = list_entry(cur, lib_timer_sec_t, entry);
-			if (t->function) {
+			if (NULL != t->function) {
 				int i = find_min_idx(t->expire - now.tv_sec, idx);
 				if (i != idx) {
 					list_del(&t->entry);
 					list_add_tail(&t->entry, &vec[i].head);
 					set_min_exptm(t->expire, i);
-				} else if ((t->expire < min_exptm) || !min_exptm) {
+				} else if ((t->expire < min_exptm) || 0 == min_exptm) {
 					min_exptm = t->expire;
 				}
 			} else {
-				ice::remove_sec_timer(t, 1);			
+				ice::remove_sec_timer(t);			
 			}
 		}
 
@@ -126,16 +129,20 @@ namespace {
 
 		list_for_each_safe(l, p, &micro_timer) {
 			t = list_entry(l, lib_timer_micro_t, entry);
-			if (!(t->function)) {
-				ice::remove_micro_timer(t, 1);
+			if (NULL == (t->function)) {
+				ice::remove_micro_timer(t);
 			} else if (now.tv_sec > t->tv.tv_sec || (now.tv_sec == t->tv.tv_sec && now.tv_usec > t->tv.tv_usec)) {
-				if (t->function(t->owner, t->data) == 0) {
-					ice::remove_micro_timer(t, 1);
+				if (0 == t->function(t->owner, t->data)) {
+					ice::remove_micro_timer(t);
 				}
 			}
 		}
 	}
-
+	
+	int gen_time_interval(int idx)
+	{
+		return (1 <<  (idx + 2));
+	}
 	/**
 	* @brief	扫描秒级定时器离链表(转轮序号0)
 	* @return	void
@@ -148,28 +155,29 @@ namespace {
 		list_for_each_safe(l, p, &vec[0].head) {
 			t = list_entry(l, lib_timer_sec_t, entry);
 			if (NULL == t->function) {
-				ice::remove_sec_timer(t, 1);
+				ice::remove_sec_timer(t);
 			} else if (t->expire <= now.tv_sec) {
-				if ( t->function(t->owner, t->data) == 0 ) {
-					ice::remove_sec_timer(t, 1);
+				if (0 == t->function(t->owner, t->data)) {
+					ice::remove_sec_timer(t);
 				}
 			}
 		}
 
 		for (int i = 1; i != TIMER_VEC_SIZE; ++i) {
-			if ((vec[i].min_expiring_time - now.tv_sec) < 2) {//这里判断< (1 << (i+2))????
-				scan_timer_list(i);
+			if ((vec[i].min_expiring_time - now.tv_sec) < gen_time_interval(i)) {
+				renew_sec_timer_list(i);
 			}
 		}
 	}
 
 }//end namespace
 
+/*
 void ice::setup_timer()
 {
 	renew_now();
 	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
-		vec[i].expire = 1 << (i + 2);
+		vec[i].expire = gen_time_interval(i);
 	}
 	INIT_LIST_HEAD(&micro_timer);
 }
@@ -182,13 +190,13 @@ void ice::destroy_timer()
 	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
 		list_for_each_safe(l, p, &vec[i].head) {
 			lib_timer_sec_t* t = list_entry(l, lib_timer_sec_t, entry);
-			remove_sec_timer(t, 1);
+			remove_sec_timer(t);
 		}	
 	}
 
 	list_for_each_safe(l, p, &micro_timer) {
 		lib_timer_micro_t* t = list_entry(l, lib_timer_micro_t, entry);
-		remove_micro_timer(t, 1);
+		remove_micro_timer(t);
 	}
 }
 
@@ -197,15 +205,12 @@ lib_timer_sec_t* ice::add_sec_event(list_head_t* head, ON_TIMER_FUN function, vo
 {
 	lib_timer_sec_t* timer;
 
-	if (timer_add_new_timer != flag) {
+	if (timer_replace_timer == flag) {
 		timer = find_event(head, function);
 		if (NULL == timer){
 			goto new_timer;
 		}
-
-		if ( timer_replace_timer == flag){			
-			mod_expire_time(timer, expire);
-		}
+		mod_expire_time(timer, expire);
 		return timer;
 	}
 new_timer:
@@ -223,8 +228,6 @@ new_timer:
 
 void ice::mod_expire_time(lib_timer_sec_t* t, time_t expiretime)
 {
-	if (!t->expire) return;
-
 	t->expire = expiretime;
 
 	int idx = find_root_idx(expiretime);
@@ -305,7 +308,7 @@ void ice::remove_sec_timer(lib_timer_sec_t* t, int freed)
 	}
 }
 
-void ice::remove_timers(list_head_t* head)
+void ice::remove_sec_timers(list_head_t* head)
 {
 	lib_timer_sec_t *t;
 	list_head_t *l, *m;
@@ -322,7 +325,159 @@ void ice::remove_micro_timer(lib_timer_micro_t *t, int freed)
 		list_del_init(&t->entry);
 		g_slice_free1(sizeof(lib_timer_micro_t), t);
 	} else {
+		t->function = NULL;
+	}
+}
+*/
+
+void ice::lib_timer_t::setup_timer()
+{
+	renew_now();
+	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
+		vec[i].expire = gen_time_interval(i);
+	}
+	INIT_LIST_HEAD(&micro_timer);
+}
+
+void ice::lib_timer_t::destroy_timer()
+{
+	list_head_t* l;
+	list_head_t* p;
+
+	for (int i = 0; i < TIMER_VEC_SIZE; i++) {
+		list_for_each_safe(l, p, &vec[i].head) {
+			lib_timer_sec_t* t = list_entry(l, lib_timer_sec_t, entry);
+			remove_sec_timer(t);
+		}	
+	}
+
+	list_for_each_safe(l, p, &micro_timer) {
+		lib_timer_micro_t* t = list_entry(l, lib_timer_micro_t, entry);
+		remove_micro_timer(t);
+	}
+}
+
+void ice::lib_timer_t::handle_timer()
+{
+	static time_t last = 0;
+
+	//second timer
+	if (last != now.tv_sec) {
+		last = now.tv_sec;
+		scan_sec_timer();
+	}
+	//microseconds timer
+	scan_micro_timer();
+}
+
+lib_timer_sec_t* ice::lib_timer_t::add_sec_event( list_head_t* head, ON_TIMER_FUN func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag )
+{
+	lib_timer_sec_t* timer;
+
+	if (timer_replace_timer == flag) {
+		timer = find_event(head, function);
+		if (NULL == timer){
+			goto new_timer;
+		}
+		mod_expire_time(timer, expire);
+		return timer;
+	}
+new_timer:
+	timer = (lib_timer_sec_t*)g_slice_alloc(sizeof(lib_timer_sec_t));
+	timer->init();
+	timer->function  = function;
+	timer->expire    = expire;
+	timer->owner     = owner;
+	timer->data      = data;
+
+	list_add_tail(&timer->sprite_list, head);
+	add_timer(timer);
+	return timer;
+}
+
+void ice::lib_timer_t::mod_expire_time( lib_timer_sec_t* tmr, time_t exptm )
+{
+	t->expire = expiretime;
+
+	int idx = find_root_idx(expiretime);
+
+	list_del_init(&t->entry);
+	list_add_tail(&t->entry, &vec[idx].head);
+	set_min_exptm(t->expire, idx);
+}
+
+void ice::lib_timer_t::remove_sec_timer( lib_timer_sec_t* t, int freed /*= 1*/ )
+{
+	if (t->sprite_list.next != 0) {
+		list_del(&t->sprite_list);
+	}
+	if (freed) {
+		list_del(&t->entry);
+		g_slice_free1(sizeof *t, t);
+	} else {
 		t->function = 0;
 	}
 }
 
+void ice::lib_timer_t::remove_sec_timers( list_head_t* head )
+{
+	lib_timer_sec_t *t;
+	list_head_t *l, *m;
+
+	list_for_each_safe (l, m, head) {
+		t = list_entry (l, lib_timer_sec_t, sprite_list);
+		remove_sec_timer(t, 0);
+	}
+}
+
+lib_timer_micro_t* ice::lib_timer_t::add_micro_event( ON_TIMER_FUN func, const struct timeval* tv, void* owner, void* data )
+{
+	lib_timer_micro_t* timer = (lib_timer_micro_t*)g_slice_alloc(sizeof(lib_timer_micro_t));
+	timer->init();
+	timer->function  = func;
+	timer->tv        = *tv;
+	timer->owner     = owner;
+	timer->data      = data;
+
+	list_add_tail(&timer->entry, &micro_timer);
+	return timer;
+}
+
+void ice::lib_timer_t::remove_micro_timer( lib_timer_micro_t *t, int freed /*= 1*/ )
+{
+	if (freed) {
+		list_del_init(&t->entry);
+		g_slice_free1(sizeof(lib_timer_micro_t), t);
+	} else {
+		t->function = NULL;
+	}
+}
+
+void ice::lib_timer_t::remove_micro_timers( void* owner )
+{
+	list_head_t *l, *p;
+	lib_timer_micro_t* t;
+
+	list_for_each_safe(l, p, &micro_timer) {
+		t = list_entry(l, lib_timer_micro_t, entry);
+		if (t->owner == owner) {
+			remove_micro_timer(t, 0);
+		}
+	}
+}
+
+void ice::lib_timer_t::renew_now()
+{
+	gettimeofday(&now, 0);
+	localtime_r(&now.tv_sec, &tm_cur);
+}
+
+const struct timeval* ice::lib_timer_t::get_now_tv()
+{
+	return &now;
+}
+
+const struct tm* ice::lib_timer_t::get_now_tm()
+{
+	return &tm_cur;
+}

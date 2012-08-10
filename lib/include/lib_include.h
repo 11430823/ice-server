@@ -1,11 +1,9 @@
 /********************************************************************
-author:		kevinmeng
-mail:		kevinmengmsn@gmail.com
-Company  	TaoMee.Inc, ShangHai.
-Copyright  	Copyright (c) 2009, TaoMee.Inc, ShangHai.
-Revision  	1.0.0.0
-purpose:	基本头文件
-@brief
+	platform:	
+	author:		kevin
+	copyright:	All rights reserved.
+	purpose:	基本头文件
+	brief:		ok
 *********************************************************************/
 
 #pragma once 
