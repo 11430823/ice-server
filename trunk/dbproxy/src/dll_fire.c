@@ -109,7 +109,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 		err_out.cmd = head.cmd;
 		err_out.id = head.id;
 		err_out.len = sizeof(err_out);
-		err_out.ret = ice::e_lib_err_code_dbproxy_no_find_cmd;
+		err_out.ret = ice::E_LIB_ERR_CODE_DBPROXY_NO_FIND_CMD;
 		err_out.seq = head.seq;
 		ice::lib_send_data_cli_t out;
 		out.set_head(err_out);

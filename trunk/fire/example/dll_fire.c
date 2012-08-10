@@ -55,7 +55,7 @@ private:
 	test_timer(const test_timer &cr);
 	test_timer & operator=( const test_timer &cr);
 };
-
+ice::lib_timer_t g_timer;
 /**
   * @brief Initialize service
   *
@@ -66,7 +66,7 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		ice::setup_timer();
+		g_timer.setup_timer();
 		p = new test_timer;
 
 		//test g_slice_alloc

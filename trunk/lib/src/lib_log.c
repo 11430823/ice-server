@@ -274,7 +274,7 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 
 	va_list ap;
 
-	const struct tm* t_m = get_now_tm();
+	const struct tm* t_m = lib_timer_t::get_now_tm();
 	
 	::va_start(ap, fmt);
 
@@ -327,7 +327,7 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 	}
 
 	va_list ap;
-	const struct tm* t_m = get_now_tm();
+	const struct tm* t_m = lib_timer_t::get_now_tm();
 
 	::va_start(ap, fmt);
 

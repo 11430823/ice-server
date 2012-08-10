@@ -14,10 +14,10 @@ namespace ice{
 	//[0 - 4095]
 	enum E_LIB_ERR_CODE_DBPROXY
 	{
-		e_lib_err_code_dbproxy_min = 1,
-		e_lib_err_code_dbproxy_no_find_cmd = 100,//route.xml表中未定义CMD
-		e_lib_err_code_dbproxy_time_out = 101,//超时
-		e_lib_err_code_dbproxy_max = 4095,
+		E_LIB_ERR_CODE_DBPROXY_MIN = 1,
+		E_LIB_ERR_CODE_DBPROXY_NO_FIND_CMD = 100,//route.xml表中未定义CMD
+		E_LIB_ERR_CODE_DBPROXY_TIME_OUT = 101,//超时
+		E_LIB_ERR_CODE_DBPROXY_MAX = 4095,
 	};
 	//////////////////////////////////////////////////////////////////////////
 	//db
