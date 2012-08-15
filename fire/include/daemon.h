@@ -32,7 +32,7 @@ public:
 	// Returns:   void
 	//************************************
 	void killall_children();
-	void restart_child_process(struct bind_config_elem_t* elem);
+	void restart_child_process(struct bind_config_elem_t* elem, uint32_t elem_idx);
 	//true:停止.false:继续(无改变)
 	volatile bool stop;
 	//true:重启.false:继续(无改变)

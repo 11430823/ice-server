@@ -1,6 +1,4 @@
 #include <glib.h>
-#include <stdint.h>
-#include <sstream>
 
 #include <lib_log.h>
 #include <lib_util.h>
@@ -66,6 +64,7 @@ int bench_conf_t::load()
 	get_val(this->is_daemon, key, "common", "is_daemon");
 	get_val(this->fd_time_out, key, "common", "fd_time_out");
 	get_val(this->page_size_max, key, "common", "page_size_max");
+	get_val(this->listen_num, key, "common", "listen_num");
 	if (0 != get_val(this->log_dir, key, "log", "dir")){
 		ret = -1;
 		goto ret;
@@ -102,13 +101,14 @@ bench_conf_t::bench_conf_t()
 	this->log_level = 8;
 	this->log_save_next_file_interval_min = 0;
 	this->fd_time_out = 0;
-	this->page_size_max = 8192;
+	this->page_size_max = 81920;
 	this->core_size = 2147483648U;
 	this->restart_cnt_max = 20;
 	this->daemon_tcp_port = 0;
 	this->daemon_tcp_max_fd_num = 20000;
 	this->mcast_port = 0;
 	this->addr_mcast_port = 0;
+	this->listen_num = 1024;
 }
 
 std::string bench_conf_t::get_strval(const char* key, const char* name) const

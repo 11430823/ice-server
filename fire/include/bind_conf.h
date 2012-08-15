@@ -7,9 +7,7 @@
 *********************************************************************/
 #pragma once
 
-#include <stdint.h>
-#include <string>
-#include <vector>
+#include <lib_include.h>
 
 #include "bind_pipe.h"
 
@@ -23,8 +21,8 @@ struct bind_config_elem_t {
 	std::string		ip;
 	uint16_t		port;
 	uint8_t			restart_cnt;//重启过的次数(防止不断的重启)
-	bind_pipe_t			send_pipe;//针对子进程的写
-	bind_pipe_t			recv_pipe;//针对子进程的读
+	bind_pipe_t		send_pipe;//针对子进程的写
+	bind_pipe_t		recv_pipe;//针对子进程的读
 	bind_config_elem_t();
 };
 #pragma pack()
@@ -40,7 +38,6 @@ public:
 	// Returns:   int 0:success, -1:error
 	//************************************
 	int load();
-	int get_elem_idx(const bind_config_elem_t* bc_elem);
 protected:
 private:
 };
