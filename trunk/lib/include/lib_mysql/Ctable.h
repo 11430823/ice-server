@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <lib_include.h>
 
 #include "db_macro.h"
 #include "proto_header.h"

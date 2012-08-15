@@ -1,22 +1,10 @@
-#include <string.h>
-#include <stdio.h>
-
 #include <mysql/mysqld_error.h>
 #include <mysql/errmsg.h>
 
 #include <lib_log.h>
+#include <lib_err_code.h>
 
-#include "db_error_base.h" 
 #include "mysql_iface.h"
-
-#define safe_copy_string(dst,src) { \
-	if (src){\
-		strncpy (dst, src, sizeof(dst) - 1); \
-		dst[sizeof(dst) - 1] = '\0'; \
-	}else{\
-		dst[0] = '\0'; \
-	}\
-}
 
 mysql_interface::mysql_interface (std::string h, std::string user, std::string pass,
 								  uint16_t port,const char * a_unix_socket)
@@ -26,11 +14,11 @@ mysql_interface::mysql_interface (std::string h, std::string user, std::string p
 	this->user = user;
 	this->pass = pass;
 	this->port = port;
-	DEBUG_LOG("MYSQL_INTERFACE::MYSQL_INTERFACE  7" );
+
 	mysql_init(&handle);
 
 	if (a_unix_socket!=NULL) {
-		safe_copy_string(this->unix_socket , a_unix_socket);
+		SAFE_STRNCPY(this->unix_socket , a_unix_socket);
 	}else{
 		this->unix_socket[0]='\0';
 	}

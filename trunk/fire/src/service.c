@@ -38,7 +38,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 	int  len = snprintf(prefix, 8, "%u", this->bind_elem->id);
 	prefix[len] = '_';	
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
-		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
+		(ice::lib_log_t::E_lOG_LEVEL)g_bench_conf.get_log_level(),
 		prefix, g_bench_conf.get_log_save_next_file_interval_min());
 
 	//初始化子进程

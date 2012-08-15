@@ -1,5 +1,6 @@
 
 #pragma once
+
 #include <mysql/mysql.h>
 
 #include <lib_log.h>
@@ -56,52 +57,30 @@ inline uint64_t atoi_safe(char* str)
 		}\
 	}
 
-
-
-
-
-
-
-
-
-
-
-
 #define GET_ROUTE(cmd_id) ((cmd_id&0x8000)?(70+((cmd_id&0x7E00)>>6)+((cmd_id &0x00E0)>>5)):(cmd_id>>9))
-
-
-
 
 inline double atof_safe (char *str) 
 {
 	return 	(str!= NULL ? atof(str):0 );
 }
 
-
-
-
 //正常的db 连接 
 #define STD_OPEN_AUTOCOMMIT()	   mysql_autocommit(&(this->db->handle), T)
 #define STD_ROLLBACK()  mysql_rollback(&(this->db->handle))
 #define STD_CLOSE_AUTOCOMMIT(nret) {\
-		if (mysql_autocommit(&(this->db->handle), 0)==DB_SUCC){\
-				nret = DB_SUCC;\
+		if (mysql_autocommit(&(this->db->handle), 0)==SUCC){\
+				nret = SUCC;\
 		}else {\
 				nret = DB_ERR;\
 		}\
 	}
 #define STD_COMMIT(nret) {\
-		if (mysql_commit(&(this->db->handle))==DB_SUCC){\
-				nret = DB_SUCC;\
+		if (mysql_commit(&(this->db->handle))==SUCC){\
+				nret = SUCC;\
 		}else {\
 				nret = DB_ERR;\
 		}\
 	}
-
-
-
-
-
 
 //变长方式copy
 #define BIN_CPY_NEXT_FIELD( dst,max_len)  ++_fi; \
@@ -126,7 +105,7 @@ inline double atof_safe (char *str)
         int list_size;\
         int i;\
         this->db->set_id(this->id);\
-        if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
+        if (( this->db->exec_query_sql(sqlstr,&res))==SUCC){\
             *p_count=mysql_num_rows(res);\
             *pp_list =(typeof(*pp_list))this->dbser_return_buf;\
             list_size = sizeof(typeof(**pp_list))*(*p_count);\
@@ -144,7 +123,7 @@ inline double atof_safe (char *str)
                 i++;\
             }\
             mysql_free_result(res); \
-            return DB_SUCC;\
+            return SUCC;\
         }else {\
             return DB_ERR;\
         }\
@@ -158,7 +137,7 @@ inline double atof_safe (char *str)
 		MYSQL_RES *res;\
 		MYSQL_ROW  row;\
         this->db->set_id(this->id);\
-		if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
+		if (( this->db->exec_query_sql(sqlstr,&res))==SUCC){\
 			typeof(item_list[0]) item ;\
 			while((row = mysql_fetch_row(res))){\
 				int _fi;\
@@ -169,7 +148,7 @@ inline double atof_safe (char *str)
 			_item_list.push_back(item);\
 			}\
 			mysql_free_result(res);	\
-			return DB_SUCC;\
+			return SUCC;\
 		}else {\
 			return DB_ERR;\
 		}\
@@ -188,7 +167,7 @@ inline double atof_safe (char *str)
 		MYSQL_RES *res;\
 		MYSQL_ROW  row;\
         this->db->set_id(this->id);\
-		if (( this->db->exec_query_sql(sqlstr,&res))==DB_SUCC){\
+		if (( this->db->exec_query_sql(sqlstr,&res))==SUCC){\
 			typeof(item_list[0]) item ;\
 			while((row = mysql_fetch_row(res))){\
 				int _fi;\
@@ -198,7 +177,7 @@ inline double atof_safe (char *str)
             _item_list.push_back(item);\
             }\
             mysql_free_result(res); \
-            return DB_SUCC;\
+            return SUCC;\
         }else {\
             return DB_ERR;\
         }\

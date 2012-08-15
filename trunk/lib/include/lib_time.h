@@ -36,7 +36,7 @@ namespace ice{
 			tm_cur->tm_min  = 0;
 			tm_cur->tm_sec  = 0;
 
-			return mktime(tm_cur);
+			return ::mktime(tm_cur);
 		}
 		//get zodiac index
 		static inline int get_zodiac( int mon, int mon_day ){

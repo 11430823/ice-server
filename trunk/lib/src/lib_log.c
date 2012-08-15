@@ -12,23 +12,23 @@ namespace{
 	uint16_t LOG_IDX = 0;//日志中的序号
 
 	struct log_info_t {
-		ice::lib_log_t::E_LEVEL  level;	  // default log level
+		ice::lib_log_t::E_lOG_LEVEL  level;	  // default log level
 		std::string dir_name;//日志目录
 		std::string file_pre_name;//文件名前缀
 		bool is_multi_thread;//是否多线程
 		ice::lib_lock_mutex_t shift_fd_mutex;//互斥锁
-		ice::lib_log_t::E_DEST log_dest;//日志输出目的
+		ice::lib_log_t::E_LOG_DEST log_dest;//日志输出目的
 		uint32_t logtime_interval_sec;// 每个日志文件记录日志的总时间（秒）
 		bool has_init;//是否初始化了
 		log_info_t(){
 			this->init();
 		}
 		void init(){
-			this->level = ice::lib_log_t::e_lvl_debug;
+			this->level = ice::lib_log_t::E_LOG_LEVEL_DEBUG;
 			this->dir_name.clear();
 			this->file_pre_name.clear();
 			this->is_multi_thread = false;
-			this->log_dest = ice::lib_log_t::e_dest_terminal; // write log to terminal by default
+			this->log_dest = ice::lib_log_t::E_LOG_DEST_TERMINAL; // write log to terminal by default
 			this->logtime_interval_sec = 0;
 			this->has_init = false;
 		}
@@ -65,7 +65,7 @@ namespace{
 			this->base_file_name.clear();
 		}
 	};
-	fds_t s_fds_info[ice::lib_log_t::e_lvl_max];
+	fds_t s_fds_info[ice::lib_log_t::E_LOG_LEVEL_MAX];
 
 	/**
 	 * @brief	生成日志文件路径
@@ -76,19 +76,19 @@ namespace{
 	 */
 	inline void gen_log_file_path(int lvl, int seq, char* file_name, const struct tm& t_m)
 	{
-		assert((lvl >= ice::lib_log_t::e_lvl_emerg) && (lvl < ice::lib_log_t::e_lvl_max));
+		assert((lvl >= ice::lib_log_t::E_LOG_LEVEL_EMERG) && (lvl < ice::lib_log_t::E_LOG_LEVEL_MAX));
 
 		if (s_log_info.logtime_interval_sec) {
 			time_t t = ::time(0) / s_log_info.logtime_interval_sec * s_log_info.logtime_interval_sec;
 			struct tm tmp_tm;
-			localtime_r(&t, &tmp_tm);
+			::localtime_r(&t, &tmp_tm);
 
-			sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", 
+			::sprintf(file_name, "%s/%s%04d%02d%02d%02d%02d", 
 				s_log_info.dir_name.c_str(), s_fds_info[lvl].base_file_name.c_str(),
 				tmp_tm.tm_year + 1900, tmp_tm.tm_mon + 1, 
 				tmp_tm.tm_mday, tmp_tm.tm_hour, tmp_tm.tm_min);
 		} else {
-			sprintf(file_name, "%s/%s%04d%02d%02d%07d", 
+			::sprintf(file_name, "%s/%s%04d%02d%02d%07d", 
 				s_log_info.dir_name.c_str(), s_fds_info[lvl].base_file_name.c_str(),
 				t_m.tm_year + 1900, t_m.tm_mon + 1, t_m.tm_mday, seq);
 		}
@@ -191,7 +191,7 @@ namespace{
 
 }//end of namespace 
 
-int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre_name, uint32_t logtime )
+int ice::lib_log_t::setup_by_time( const char* dir, E_lOG_LEVEL lvl, const char* pre_name, uint32_t logtime )
 {
 	int ret_code = -1;
 	assert(logtime <= 30000000);
@@ -204,7 +204,7 @@ int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre
 		goto loop_return;
 	}
 
-	if ((lvl < e_lvl_emerg) || (lvl >= e_lvl_max)) {
+	if ((lvl < E_LOG_LEVEL_EMERG) || (lvl >= E_LOG_LEVEL_MAX)) {
 		::fprintf(::stderr, "init log error, invalid log level=%d\n", lvl);
 		goto loop_return;
 	}
@@ -224,7 +224,7 @@ int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre
 		s_log_info.file_pre_name = pre_name;
 	}
 
-	for (int i = e_lvl_emerg; i < e_lvl_max; i++) {
+	for (int i = E_LOG_LEVEL_EMERG; i < E_LOG_LEVEL_MAX; i++) {
 		static const char* log_names[] = { "emerg", "alert", "crit", 
 			"error", "warn", "notice", "info", "debug", "trace" };
 		s_fds_info[i].init();
@@ -235,7 +235,7 @@ int ice::lib_log_t::setup_by_time( const char* dir, E_LEVEL lvl, const char* pre
 		}
 	}
 
-	s_log_info.log_dest = e_dest_file;
+	s_log_info.log_dest = E_LOG_DEST_FILE;
 	s_log_info.has_init = true;
 	ret_code    = 0;
 
@@ -260,7 +260,7 @@ void ice::lib_log_t::enable_multi_thread()
 	s_log_info.is_multi_thread = true;
 }
 
-void ice::lib_log_t::set_dest( E_DEST dest )
+void ice::lib_log_t::set_dest( E_LOG_DEST dest )
 {
 	assert(s_log_info.has_init);
 	s_log_info.log_dest = dest;
@@ -274,18 +274,18 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 
 	va_list ap;
 
-	const struct tm* t_m = lib_timer_t::get_now_tm();
+	const struct tm* t_m = &lib_timer_t::now_tm;
 	
 	::va_start(ap, fmt);
 
-	if (unlikely(!s_log_info.has_init || (e_dest_terminal & s_log_info.log_dest))) {
+	if (unlikely(!s_log_info.has_init || (E_LOG_DEST_TERMINAL & s_log_info.log_dest))) {
 		va_list aq;
 		::va_copy(aq, ap);
 		switch (lvl) {
-		case e_lvl_emerg:
-		case e_lvl_alert:
-		case e_lvl_crit:		
-		case e_lvl_error:
+		case E_LOG_LEVEL_EMERG:
+		case E_LOG_LEVEL_ALERT:
+		case E_LOG_LEVEL_CRIT:		
+		case E_LOG_LEVEL_ERROR:
 			::fprintf(stderr, "%s%02d:%02d:%02d ", s_log_color[lvl],
 				t_m->tm_hour, t_m->tm_min, t_m->tm_sec);
 			::vfprintf(stderr, fmt, aq);
@@ -301,7 +301,7 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 		::va_end(aq);
 	}
 
-	if (unlikely(!(s_log_info.log_dest & e_dest_file) || (shift_fd(lvl, *t_m) < 0))) {
+	if (unlikely(!(s_log_info.log_dest & E_LOG_DEST_FILE) || (shift_fd(lvl, *t_m) < 0))) {
 		::va_end(ap);
 		return;
 	}
@@ -327,16 +327,16 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 	}
 
 	va_list ap;
-	const struct tm* t_m = lib_timer_t::get_now_tm();
+	const struct tm* t_m = &lib_timer_t::now_tm;
 
 	::va_start(ap, fmt);
 
-	if (unlikely(!s_log_info.has_init || e_dest_terminal & s_log_info.log_dest)) {
+	if (unlikely(!s_log_info.has_init || E_LOG_DEST_TERMINAL & s_log_info.log_dest)) {
 		switch (lvl) {
-		case e_lvl_emerg:
-		case e_lvl_alert:
-		case e_lvl_crit:		
-		case e_lvl_error:
+		case E_LOG_LEVEL_EMERG:
+		case E_LOG_LEVEL_ALERT:
+		case E_LOG_LEVEL_CRIT:		
+		case E_LOG_LEVEL_ERROR:
 			::fprintf(::stderr, "%s%02d:%02d:%02d ", s_log_color[lvl],
 				t_m->tm_hour, t_m->tm_min, t_m->tm_sec);
 			::vfprintf(::stderr, fmt, ap);
@@ -351,7 +351,7 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 		}
 	}
 
-	if (e_dest_file & s_log_info.log_dest) {		
+	if (E_LOG_DEST_FILE & s_log_info.log_dest) {		
 		char log_buffer[LOG_BUF_SIZE];
 		int pos = ::snprintf(log_buffer, LOG_BUF_SIZE, "[%02d:%02d:%02d][%05d]",
 			t_m->tm_hour, t_m->tm_min, t_m->tm_sec, ::getpid());
@@ -359,7 +359,7 @@ void ice::lib_log_t::write_sys( int lvl, const char* fmt, ... )
 		::syslog(lvl, "%s", log_buffer);
 	}
 
-	va_end(ap);
+	::va_end(ap);
 }
 
 void ice::lib_log_t::boot( int ok, int space, const char* fmt, ... )

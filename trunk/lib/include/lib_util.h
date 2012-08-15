@@ -55,6 +55,10 @@
 	public:		inline const varType& get_##varName(void){return this->varName;} \
 	public:		inline void set_##varName(const varType& var){this->varName = var;}
 
+#define PRIVATE_SATAIC_R(varType, varName)\
+	private:	static varType varName;\
+	public:		static inline varType get_##varName(void){return this->varName;}
+
 #define SAFE_DELETE(p__){\
 		delete p__;\
 		p__ = NULL;\
@@ -70,6 +74,15 @@
 		(p__) = NULL;\
 	}
 
+#define SAFE_STRNCPY(dst, src) {\
+	if (src){\
+		::strncpy(dst, src, sizeof(dst) - 1); \
+		dst[sizeof(dst) - 1] = '\0'; \
+	}else{\
+		dst[0] = '\0'; \
+	}\
+}
+
 //处理可被系统中断的函数返回EINTR时循环处理.(函数返回值必须为int)
 //example:int nRes = HANDLE_EINTR(::close(s));
 #define HANDLE_EINTR(x) ({\
@@ -83,6 +96,7 @@
 namespace ice{
 	#define SUCC 0
 	#define ERR  -1
+	#define FAIL -1
 
 	//协助
 	#define NOTE//需要注意
@@ -235,20 +249,6 @@ namespace ice{
 		lib_non_copyable( const lib_non_copyable& );
 		const lib_non_copyable& operator=( const lib_non_copyable& );
 	};
-
-	/**
-	 * @brief 根据输入的字符串，生成一个32位的哈希值
-	 * @param p 需要生成哈希值的字符串
-	 * @return 字符串对应的哈希值
-	 */
-	static inline uint32_t gen_u32_hash(const char* p){
-		uint32_t h = 0;
-		while (*p) {
-			h = h * 11 + (*p << 4) + (*p >> 4);
-			p++;
-		}
-		return h;
-	}
 
 	/**
 	 * @brief	是否小端字节序

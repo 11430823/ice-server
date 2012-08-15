@@ -102,7 +102,7 @@ namespace ice{
 			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
 				assert(0);
 			} else {
-				strncpy(val, reinterpret_cast<char*>(str), len - 1);
+				::strncpy(val, reinterpret_cast<char*>(str), len - 1);
 				val[len - 1] = '\0';
 				xmlFree(str);
 			}
@@ -115,10 +115,10 @@ namespace ice{
 		inline void get_xml_prop_raw_str_def(xmlNodePtr cur, char (&val)[len], const void* prop, const char* def){
 			xmlChar* str;
 			if (!cur || !(str = xmlGetProp(cur, reinterpret_cast<const xmlChar*>(prop)))) {
-				strncpy(val, def, len - 1);
+				::strncpy(val, def, len - 1);
 				val[len - 1] = '\0';
 			} else {
-				strncpy(val, reinterpret_cast<char*>(str), len - 1);
+				::strncpy(val, reinterpret_cast<char*>(str), len - 1);
 				val[len - 1] = '\0';
 				xmlFree(str);
 			}
