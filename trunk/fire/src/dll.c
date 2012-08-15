@@ -109,7 +109,7 @@ int dll_t::on_pipe_event( int fd, epoll_event& r_evs )
 						rename_core(pid);
 						// prevent child process from being restarted again and again forever
 						if (++elem.restart_cnt <= g_bench_conf.get_restart_cnt_max()) {
-							g_daemon.restart_child_process(&elem);
+							g_daemon.restart_child_process(&elem, i);
 						}else{
 							//关闭pipe(不使用PIPE,并且epoll_wait不再监控PIPE)
 							ice::lib_file_t::close_fd(elem.recv_pipe.handles[E_PIPE_INDEX_WRONLY]);

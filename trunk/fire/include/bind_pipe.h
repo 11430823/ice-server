@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	
+	purpose:	ok
 	brief:		绑定的子进程与父进程之间的PIPE
 *********************************************************************/
 

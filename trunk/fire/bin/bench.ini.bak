@@ -8,8 +8,10 @@ liblogic=./liblogic.so
 #is_daemon=1
 #连接FD超时秒数.默认0:连接FD无超时
 #fd_time_out=0
-#数据包最大字节数.默认8192
-#page_size_max=8192
+#数据包最大字节数.默认81920
+#page_size_max=81920
+#tcp listen 数量.默认1024
+#listen_num=1024
 
 [log]
 #日志目录
@@ -21,14 +23,14 @@ dir=../log
 
 [core]
 #文件大小(字节).默认1073741824*2:2GB
-#size=1073741824
+#size=2147483648
 #最大重启次数.默认20
 #restart_cnt_max=10
 
 [net]
 #服务IP.守护进程的链接信息(注释掉表明不需要链接)
 #daemon_tcp_ip=192.168.1.19
-#服务端口号,默认9999
+#服务端口号,默认0
 #daemon_tcp_port=9999
 #打开FD的最大值,默认20000
 #daemon_tcp_max_fd_num=20000

@@ -74,7 +74,8 @@ int main(int argc, char* argv[])
 
 	//parent process
 	if (!g_bench_conf.get_daemon_tcp_ip().empty()){
-		if (0 != g_net_server.get_server_epoll()->listen(g_bench_conf.get_daemon_tcp_ip().c_str(), g_bench_conf.get_daemon_tcp_port(), LISTEN_NUM, SEND_RECV_BUF)){
+		if (0 != g_net_server.get_server_epoll()->listen(g_bench_conf.get_daemon_tcp_ip().c_str(),
+			g_bench_conf.get_daemon_tcp_port(), g_bench_conf.get_listen_num(), g_bench_conf.get_page_size_max())){
 			BOOT_LOG(-1, "daemon listen err [ip:%s, port:%u]", 
 				g_bench_conf.get_daemon_tcp_ip().c_str(), g_bench_conf.get_daemon_tcp_port());
 		}

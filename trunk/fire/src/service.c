@@ -53,7 +53,8 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 
 	g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
 
-	if (0 != g_net_server.get_server_epoll()->listen(this->bind_elem->ip.c_str(), this->bind_elem->port, LISTEN_NUM, SEND_RECV_BUF)){
+	if (0 != g_net_server.get_server_epoll()->listen(this->bind_elem->ip.c_str(),
+		this->bind_elem->port, g_bench_conf.get_listen_num(), g_bench_conf.get_page_size_max())){
 		BOOT_LOG_VOID(-1, "server listen err [ip:%s, port:%u]", this->bind_elem->ip.c_str(), this->bind_elem->port);
 	}
 
@@ -67,7 +68,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		if (0 != g_mcast.create(g_bench_conf.get_mcast_ip(), 
 			g_bench_conf.get_mcast_port(), g_bench_conf.get_mcast_incoming_if(),
 			g_bench_conf.get_mcast_outgoing_if())){
-			ALERT_LOG("mcast.create err");
+				ALERT_LOG("mcast.create err[ip:%s]", g_bench_conf.get_mcast_ip().c_str());
 			return;
 		}else{
 			g_net_server.get_server_epoll()->add_connect(g_mcast.get_fd(),
@@ -80,7 +81,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		if (0 != g_addr_mcast.create(g_bench_conf.get_addr_mcast_ip(),
 			g_bench_conf.get_addr_mcast_port(), g_bench_conf.get_addr_mcast_incoming_if(),
 			g_bench_conf.get_addr_mcast_outgoing_if())){
-				ALERT_LOG("addr mcast.create err");
+				ALERT_LOG("addr mcast.create err [ip:%s]", g_bench_conf.get_addr_mcast_ip.c_str());
 				return;
 		} else {
 			g_net_server.get_server_epoll()->add_connect(g_addr_mcast.get_fd(),

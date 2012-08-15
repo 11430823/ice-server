@@ -180,7 +180,7 @@ void daemon_t::killall_children()
 	}
 }
 
-void daemon_t::restart_child_process( bind_config_elem_t* elem )
+void daemon_t::restart_child_process( bind_config_elem_t* elem, uint32_t elem_idx)
 {
 	if (g_daemon.stop && !g_daemon.restart){
 		//在关闭服务器时,防止子进程先收到信号退出,父进程再次创建子进程.
@@ -195,20 +195,19 @@ void daemon_t::restart_child_process( bind_config_elem_t* elem )
 		return;
 	}
 
-	int i = g_bind_conf.get_elem_idx(elem);
 	pid_t pid;
 
 	if ( (pid = fork ()) < 0 ) {
 		CRIT_LOG("fork failed: %s", strerror(errno));
 	} else if (pid > 0) {
 		//parent process
-		ice::lib_file_t::close_fd(g_bind_conf.elems[i].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
-		ice::lib_file_t::close_fd(g_bind_conf.elems[i].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
+		ice::lib_file_t::close_fd(g_bind_conf.elems[elem_idx].recv_pipe.handles[E_PIPE_INDEX_RDONLY]);
+		ice::lib_file_t::close_fd(g_bind_conf.elems[elem_idx].send_pipe.handles[E_PIPE_INDEX_WRONLY]);
 		g_net_server.get_server_epoll()->add_connect(elem->send_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
-		atomic_set(&g_daemon.child_pids[i], pid);
+		atomic_set(&g_daemon.child_pids[elem_idx], pid);
 	} else { 
 		//child process
-		g_service.run(&g_bind_conf.elems[i], g_bind_conf.elems.size());
+		g_service.run(&g_bind_conf.elems[elem_idx], g_bind_conf.elems.size());
 	}
 }
 

@@ -89,16 +89,3 @@ int bind_config_t::load()
 	g_daemon.child_pids.resize(this->elems.size(), t);
 	return 0;
 }
-
-int bind_config_t::get_elem_idx( const bind_config_elem_t* bc_elem )
-{
-	uint32_t i = 0;
-	FOREACH(this->elems, it){
-		bind_config_elem_t& elem = *it;
-		if (bc_elem->id == elem.id){
-			return i;
-		}
-		i++;		
-	}
-	return -1;
-}
