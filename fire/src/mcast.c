@@ -33,8 +33,7 @@ void addr_mcast_t::mcast_notify_addr( E_MCAST_CMD pkg_type )
 	memcpy(data + sizeof(this->hdr), &(pkg), sizeof(pkg));
 	this->send(data, sizeof(this->hdr) + sizeof(pkg));
 	SAFE_DELETE_ARR(data);
-
-	this->next_notify_sec = ice::lib_random_t::random(20, 40) + ice::get_now_tv()->tv_sec;
+	this->next_notify_sec = ice::lib_random_t::random(20, 40) + ice::lib_timer_t::now.tv_sec;
 }
 
 void addr_mcast_t::syn_info()
@@ -47,7 +46,7 @@ void addr_mcast_t::syn_info()
 		for (ADDR_MCAST_SVR_MAP::iterator it2 = info.begin(); info.end() != it2;){
 			uint32_t svr_id = it2->first;
 			addr_mcast_pkg_t& syn = it2->second;
-			if ((ice::get_now_tv()->tv_sec - syn.syn_time) > ADDR_MCAST_SYN_TIME_OUT_SEC){
+			if ((ice::lib_timer_t::now.tv_sec - syn.syn_time) > ADDR_MCAST_SYN_TIME_OUT_SEC){
 				g_dll.functions.on_addr_mcast_pkg(svr_id, svr_name.c_str(),
 					syn.ip, syn.port, 0);
 				info.erase(it2++);
@@ -63,7 +62,7 @@ void addr_mcast_t::syn_info()
 	}
 
 	//定时广播自己的地址信息
-	if (this->next_notify_sec < ice::get_now_tv()->tv_sec){
+	if (this->next_notify_sec < ice::lib_timer_t::now.tv_sec){
 		this->mcast_notify_addr();
 	}
 }
@@ -109,7 +108,7 @@ void addr_mcast_t::handle_msg(ice::lib_active_buf_t& recv_buf)
 			if (this->addr_mcast_map.end() != it
 				&& it->second.end() != it->second.find(add_mcast_info->svr_id)){
 					addr_mcast_pkg_t& syn_info = it->second[add_mcast_info->svr_id];
-					syn_info.syn_time = ice::get_now_tv()->tv_sec;
+					syn_info.syn_time = ice::lib_timer_t::now.tv_sec;
 			} else {
 				this->add_svr_info(*add_mcast_info);
 				this->mcast_notify_addr();
@@ -158,5 +157,5 @@ mcast_cmd_addr_1st_t::mcast_cmd_addr_1st_t()
 addr_mcast_t::addr_mcast_pkg_t::addr_mcast_pkg_t()
 {
 	memset(this->ip, 0, sizeof(this->ip));
-	this->syn_time = ice::get_now_tv()->tv_sec;
+	this->syn_time = ice::lib_timer_t::now.tv_sec;
 }

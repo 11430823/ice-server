@@ -87,7 +87,7 @@ public:
 //itemcount: 个数
 //注意事项：pstru_item所指向的空间应是molloc得到的,:free(pstru_item);
 #define STD_RETURN_WITH_STRUCT_LIST(ret,stru_header,pstru_item ,itemcount) \
-	if (ret==DB_SUCC){ \
+	if (ret==SUCC){ \
 		uint32_t stru_header_size=sizeof(stru_header );\
 		uint32_t out_list_size= sizeof(*pstru_item ) * (itemcount);\
 		SET_SNDBUF(stru_header_size + out_list_size);\
@@ -103,7 +103,7 @@ public:
 #else
 
 #define STD_RETURN_WITH_STRUCT_LIST(ret,stru_header,pstru_item ,itemcount) \
-	if (ret==DB_SUCC){ \
+	if (ret==SUCC){ \
 		uint32_t stru_header_size=sizeof(stru_header );\
 		uint32_t out_list_size= sizeof(*pstru_item ) * (itemcount);\
 		SET_SNDBUF(stru_header_size + out_list_size);\

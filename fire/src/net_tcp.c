@@ -83,7 +83,7 @@ int tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 	epoll_event evs[this->cli_fd_value_max];
 	while(check_run_fn()){
 		event_num = HANDLE_EINTR(::epoll_wait(this->fd, evs, this->cli_fd_value_max, this->epoll_wait_time_out));
-		ice::renew_now();
+		ice::lib_timer_t::renew_now();
 		if (!g_is_parent){
 			g_addr_mcast.syn_info();
 		}

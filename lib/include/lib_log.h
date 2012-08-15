@@ -17,45 +17,45 @@ namespace ice{
 	class lib_log_t{
 	public:
 		/**
-		 * @enum  E_LEVEL
+		 * @enum  E_lOG_LEVEL
 		 * @brief 日志等级
 		 */
-		enum E_LEVEL {
+		enum E_lOG_LEVEL {
 			/*! system is unusable -- 0 */
-			e_lvl_emerg,
+			E_LOG_LEVEL_EMERG = 0,
 			/*! action must be taken immediately -- 1 */
-			e_lvl_alert,//黄色
+			E_LOG_LEVEL_ALERT = 1,//黄色
 			/*! critical conditions -- 2 */
-			e_lvl_crit,//深蓝
+			E_LOG_LEVEL_CRIT = 2,//深蓝
 			/*! error conditions -- 3 */
-			e_lvl_error,
+			E_LOG_LEVEL_ERROR = 3,
 			/*! warning conditions  -- 4 */
-			e_lvl_warning,
+			E_LOG_LEVEL_WARNING = 4,
 			/*! normal but significant condition -- 5 */
-			e_lvl_notice,
+			E_LOG_LEVEL_NOTICE = 5,
 			/*! informational -- 6 */
-			e_lvl_info,
+			E_LOG_LEVEL_INFO = 6,
 			/*! debug-level messages -- 7 */
-			e_lvl_debug,
+			E_LOG_LEVEL_DEBUG = 7,
 			/*! trace-level messages -- 8。如果定义了宏LOG_USE_SYSLOG，则log_lvl_trace==log_lvl_debug */
 		#ifndef LOG_USE_SYSLOG
-			e_lvl_trace,
+			E_LOG_LEVEL_TRACE,
 		#else
-			e_lvl_trace = e_lvl_debug,
+			E_LOG_LEVEL_TRACE = E_LOG_LEVEL_DEBUG,
 		#endif
-			e_lvl_max
+			E_LOG_LEVEL_MAX
 		};
 		/**
 		 * @enum  log_dest
 		 * @brief 日志输出方式
 		 */
-		enum E_DEST {//使用BIT位来写入数据.
+		enum E_LOG_DEST {//使用BIT位来写入数据.
 			/*! 仅输出到屏幕  */
-			e_dest_terminal	= 1,
+			E_LOG_DEST_TERMINAL	= 1,
 			/*! 仅输出到文件 */
-			e_dest_file		= 2,
+			E_LOG_DEST_FILE		= 2,
 			/*! 既输出到屏幕，也输出到文件 */
-			e_dest_both		= 3
+			E_LOG_DEST_BOTH		= 3
 		};
 	public:
 		/**
@@ -69,7 +69,7 @@ namespace ice{
 		*
 		* @return 成功返回0，失败返回-1。
 		*/
-		static int setup_by_time(const char* dir, E_LEVEL lvl, const char* pre_name, uint32_t logtime);
+		static int setup_by_time(const char* dir, E_lOG_LEVEL lvl, const char* pre_name, uint32_t logtime);
 		/**
 		* @brief 销毁日志记录功能，所有打开的日志文件fd都会被关闭。不再需要日志功能时，可以调用这个函数。
 		*        或者当你想重新设置日志目录、日志等级等参数数，可以先调用该函数，然后调用setup_by_time。
@@ -88,7 +88,7 @@ namespace ice{
 		*
 		* @see setup_by_time
 		*/
-		static void set_dest(E_DEST dest);
+		static void set_dest(E_LOG_DEST dest);
 
 		#ifdef __GNUC__
 			#define LOG_CHECK_FMT(a,b) __attribute__((format(printf, a, b)))
@@ -131,14 +131,14 @@ namespace ice{
  *        用法示例：EMERG_LOG("dlopen error, %s", error);
  */
 #define EMERG_LOG(fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_emerg, 0, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_EMERG, 0, fmt, ##args)
 /**
  * @def KEMERG_LOG
  * @brief 输出log_lvl_emerg等级日志。比EMERG_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_EMERG_LOG，则可以在编译期把KEMERG_LOG去除。\n
  *        用法示例：KEMERG_LOG(userid, "dlopen error, %s", error);
  */
 #define KEMERG_LOG(key, fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_emerg, key, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_EMERG, key, fmt, ##args)
 #else
 #define EMERG_LOG(fmt, args...)
 #define KEMERG_LOG(key, fmt, args...) 
@@ -151,14 +151,14 @@ namespace ice{
  *        用法示例：ALERT_LOG("dlopen error, %s", error);
  */
 #define ALERT_LOG(fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_alert, 0, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_ALERT, 0, fmt, ##args)
 /**
  * @def KALERT_LOG
  * @brief 输出log_lvl_alert等级日志。比ALERT_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_ALERT_LOG，则可以在编译期把KALERT_LOG去除。\n
  *        用法示例：KALERT_LOG(userid, "dlopen error, %s", error);
  */
 #define KALERT_LOG(key, fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_alert, key, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_ALERT, key, fmt, ##args)
 #else
 #define ALERT_LOG(fmt, args...)
 #define KALERT_LOG(key, fmt, args...) 
@@ -171,14 +171,14 @@ namespace ice{
  *        用法示例：CRIT_LOG("dlopen error, %s", error);
  */
 #define CRIT_LOG(fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_crit, 0, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_CRIT, 0, fmt, ##args)
 /**
  * @def KCRIT_LOG
  * @brief 输出log_lvl_crit等级日志。比CRIT_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_CRIT_LOG，则可以在编译期把KCRIT_LOG去除。\n
  *        用法示例：KCRIT_LOG(userid, "dlopen error, %s", error);
  */
 #define KCRIT_LOG(key, fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_crit, key, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_CRIT, key, fmt, ##args)
 #else
 #define CRIT_LOG(fmt, args...)
 #define KCRIT_LOG(key, fmt, args...) 
@@ -191,14 +191,14 @@ namespace ice{
  *        用法示例：ERROR_LOG("dlopen error, %s", error);
  */
 #define ERROR_LOG(fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_error, 0, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_ERROR, 0, fmt, ##args)
 /**
  * @def KERROR_LOG
  * @brief 输出log_lvl_error等级日志。比ERROR_LOG多一个参数 key,一般写入userid。 如果定义宏DISABLE_ERROR_LOG，则可以在编译期把ERROR_LOG去除。\n
  *        用法示例：KERROR_LOG(userid, "dlopen error, %s", error);
  */
 #define KERROR_LOG(key, fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_error, key, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_ERROR, key, fmt, ##args)
 #else
 #define ERROR_LOG(fmt, args...)
 #define KERROR_LOG(key, fmt, args...) 
@@ -211,14 +211,14 @@ namespace ice{
  *        用法示例：WARN_LOG("dlopen error, %s", error);
  */
 #define WARN_LOG(fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_warning, 0, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_WARNING, 0, fmt, ##args)
 /**
  * @def KWARN_LOG
  * @brief 输出log_lvl_warning等级日志。比WARN_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_WARN_LOG，则可以在编译期把KWARN_LOG去除。\n
  *        用法示例：KWARN_LOG(userid, "dlopen error, %s", error);
  */
 #define KWARN_LOG(key, fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_warning, key, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_WARNING, key, fmt, ##args)
 #else
 #define WARN_LOG(fmt, args...)
 #define KWARN_LOG(key, fmt, args...) 
@@ -231,14 +231,14 @@ namespace ice{
  *        用法示例：NOTI_LOG("dlopen error, %s", error);
  */
 #define NOTI_LOG(fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_notice, 0, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_NOTICE, 0, fmt, ##args)
 /**
  * @def KNOTI_LOG
  * @brief 输出log_lvl_notice等级日志。比NOTI_LOG多一个参数 key,一般写入userid。 如果定义宏DISABLE_NOTI_LOG，则可以在编译期把KNOTI_LOG去除。\n
  *        用法示例：KNOTI_LOG(userid, "dlopen error, %s", error);
  */
 #define KNOTI_LOG(key, fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_notice, key, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_NOTICE, key, fmt, ##args)
 #else
 #define NOTI_LOG(fmt, args...)
 #define KNOTI_LOG(key, fmt, args...) 
@@ -251,14 +251,14 @@ namespace ice{
  *        用法示例：INFO_LOG("dlopen error, %s", error);
  */
 #define INFO_LOG(fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_info, 0, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_INFO, 0, fmt, ##args)
 /**
  * @def KINFO_LOG
  * @brief 输出log_lvl_info等级日志。比ERROR_LOG多一个参数 key,一般写入userid。如果定义宏DISABLE_INFO_LOG，则可以在编译期把KINFO_LOG去除。\n
  *        用法示例：KINFO_LOG(userid, "dlopen error, %s", error);
  */
 #define KINFO_LOG(key, fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_info, key, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_INFO, key, fmt, ##args)
 #else
 #define INFO_LOG(fmt, args...)
 #define KINFO_LOG(key, fmt, args...) 
@@ -271,14 +271,14 @@ namespace ice{
  *        用法示例：DEBUG_LOG("dlopen error, %s", error);
  */
 #define DEBUG_LOG(fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_debug, 0, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_DEBUG, 0, fmt, ##args)
 /**
  * @def KDEBUG_LOG
  * @brief 输出log_lvl_debug等级日志。比DEBUG_LOG 多一个参数 key,一般写入userid。 如果定义宏DISABLE_DEBUG_LOG，则可以在编译期把KDEBUG_LOG去除。\n
  *        用法示例：KDEBUG_LOG(userid, "dlopen error, %s", error);
  */
 #define KDEBUG_LOG(key, fmt, args...) \
-		SIMPLY(ice::lib_log_t::e_lvl_debug, key, fmt, ##args)
+		SIMPLY(ice::lib_log_t::E_LOG_LEVEL_DEBUG, key, fmt, ##args)
 #else
 #define DEBUG_LOG(fmt, args...)
 #define KDEBUG_LOG(key, fmt, args...) 
@@ -292,7 +292,7 @@ namespace ice{
  *        用法示例：TRACE_LOG("dlopen error, %s", error);
  */
 #define TRACE_LOG(fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_trace, 0, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_TRACE, 0, fmt, ##args)
 /**
  * @def KTRACE_LOG
  * @brief 输出log_lvl_trace等级日志。比KTRACE_LOG多一个参数 key,一般写入userid。如果不定义宏ENABLE_TRACE_LOG，则可以在编译期把KTRACE_LOG去除。\n
@@ -300,7 +300,7 @@ namespace ice{
  *        用法示例：KTRACE_LOG(userid, "dlopen error, %s", error);
  */
 #define KTRACE_LOG(key, fmt, args...) \
-		DETAIL(ice::lib_log_t::e_lvl_trace, key, fmt, ##args)
+		DETAIL(ice::lib_log_t::E_LOG_LEVEL_TRACE, key, fmt, ##args)
 #else
 #define TRACE_LOG(fmt, args...)
 #define KTRACE_LOG(key, fmt, args...) 

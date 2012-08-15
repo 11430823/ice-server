@@ -13,7 +13,7 @@
 
 int main(int argc, char* argv[])
 {
-	ice::renew_now();
+	ice::lib_timer_t::renew_now();
 	if (ice::is_little_endian()){
 		DEBUG_LOG("LITTLE ENDIAN");
 	} else {
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
 
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
-		(ice::lib_log_t::E_LEVEL)g_bench_conf.get_log_level(),
+		(ice::lib_log_t::E_lOG_LEVEL)g_bench_conf.get_log_level(),
 		NULL, g_bench_conf.get_log_save_next_file_interval_min());
 	if (0 != g_dll.functions.on_init()) {
 		BOOT_LOG(-1, "FAILED TO INIT PARENT PROCESS");

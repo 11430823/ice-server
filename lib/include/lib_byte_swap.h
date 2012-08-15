@@ -22,29 +22,29 @@ namespace ice{
 			return x;
 		}
 		static inline int16_t bswap(int16_t x){
-			return bswap_16(x);
+			return ::bswap_16(x);
 		}
 		static inline uint16_t bswap(uint16_t x){
-			return bswap_16(x);
+			return ::bswap_16(x);
 		}
 		static inline int32_t bswap(int32_t x){
-			return bswap_32(x);
+			return ::bswap_32(x);
 		}
 		static inline uint32_t bswap(uint32_t x){
-			return bswap_32(x);
+			return ::bswap_32(x);
 		}
 		static inline int64_t bswap(int64_t x){
-			return bswap_64(x);
+			return ::bswap_64(x);
 		}
 		static inline uint64_t bswap(uint64_t x){
-			return bswap_64(x);
+			return ::bswap_64(x);
 		}
 #if __WORDSIZE == 32
 		static inline long bswap(long x){
-			return bswap_32(x);
+			return ::bswap_32(x);
 		}
 		static inline unsigned long bswap(unsigned long x){
-			return bswap_32(x);
+			return ::bswap_32(x);
 		}
 #endif
 	protected:

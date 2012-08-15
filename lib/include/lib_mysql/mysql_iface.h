@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include <stdlib.h>
-#include <inttypes.h>
-#include <string>
+#include <lib_include.h>
 
 #include <mysql/mysql.h>
 
