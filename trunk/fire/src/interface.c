@@ -23,14 +23,14 @@ int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_
 	return send_len;
 }
 
-ice::lib_tcp_peer_info_t* fire::connect( const char* ip, uint16_t port )
+ice::lib_tcp_peer_info_t* fire::connect( const std::string& ip, uint16_t port )
 {
 	int fd = ice::lib_tcp_t::connect(ip, port, 1, false);
 	if (-1 == fd){
-		ERROR_LOG("[ip:%s, port:%u]", ip, port);
+		ERROR_LOG("[ip:%s, port:%u]", ip.c_str(), port);
 	}else{
-		TRACE_LOG("[ip:%s, port:%u]", ip, port);
-		return g_net_server.get_server_epoll()->add_connect(fd, ice::FD_TYPE_SVR, ip, port);
+		TRACE_LOG("[ip:%s, port:%u]", ip.c_str(), port);
+		return g_net_server.get_server_epoll()->add_connect(fd, ice::FD_TYPE_SVR, ip.c_str(), port);
 	}
 
 	return NULL;
@@ -45,7 +45,7 @@ ice::lib_tcp_peer_info_t* fire::connect( const char* svr_name )
 		return NULL;
 	}
 	
-	return fire::connect(ip.c_str(), port);
+	return fire::connect(ip, port);
 }
 
 

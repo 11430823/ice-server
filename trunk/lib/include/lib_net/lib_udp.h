@@ -2,14 +2,13 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	todo
+	purpose:	ok
 	brief:		UDP
 *********************************************************************/
 
 #pragma once
 
-#include <netinet/in.h>
-
+#include "lib_include.h"
 #include "lib_net.h"
 
 namespace ice{
@@ -19,13 +18,8 @@ namespace ice{
 	public:
 		lib_udp_t(){}
 		virtual ~lib_udp_t(){}
-		virtual int send(const void* buf, int total){
-			return HANDLE_EINTR(::sendto(this->fd, buf, total, MSG_NOSIGNAL, (sockaddr*)&(this->addr), sizeof(this->addr)));
-		}
-		virtual int recv(void* buf, int bufsize){
-			return 0;
-		}
-
+		virtual int send(const void* buf, int total);
+		virtual int recv(void* buf, int bufsize);
 	protected:
 		
 	private:

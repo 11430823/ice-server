@@ -8,7 +8,7 @@ void ice::lib_timer_t::setup_timer()
 {
 	lib_timer_t::renew_now();
 	for (int i = 0; i < E_TIMER_VEC_SIZE; i++) {
-		this->vec[i].expire = gen_time_interval(i);
+		this->vec[i].expire = this->gen_time_interval(i);
 	}
 	INIT_LIST_HEAD(&this->micro_timer);
 }
@@ -38,17 +38,17 @@ void ice::lib_timer_t::handle_timer()
 	//second timer
 	if (last != lib_timer_t::now.tv_sec) {
 		last = lib_timer_t::now.tv_sec;
-		scan_sec_timer();
+		this->scan_sec_timer();
 	}
 	//microseconds timer
-	scan_micro_timer();
+	this->scan_micro_timer();
 }
 
 ice::lib_timer_t::lib_timer_sec_t* ice::lib_timer_t::add_sec_event( list_head_t* head, ON_TIMER_FUN func, void* owner, void* data, time_t expire, E_TIMER_CHG_MODE flag )
 {
 	lib_timer_sec_t* timer;
 	if (E_TIMER_REPLACE_TIMER == flag) {
-		timer = find_event(head, func);
+		timer = this->find_event(head, func);
 		if (NULL == timer){
 			goto new_timer;
 		}
@@ -64,7 +64,7 @@ new_timer:
 	timer->data      = data;
 
 	list_add_tail(&timer->sprite_list, head);
-	add_timer(timer);
+	this->add_timer(timer);
 	return timer;
 }
 
@@ -72,11 +72,11 @@ void ice::lib_timer_t::mod_expire_time( lib_timer_sec_t* t, time_t expiretime )
 {
 	t->expire = expiretime;
 
-	int idx = find_root_idx(expiretime);
+	int idx = this->find_root_idx(expiretime);
 
 	list_del_init(&t->entry);
-	list_add_tail(&t->entry, &vec[idx].head);
-	set_min_exptm(t->expire, idx);
+	list_add_tail(&t->entry, &this->vec[idx].head);
+	this->set_min_exptm(t->expire, idx);
 }
 
 void ice::lib_timer_t::remove_sec_timer( lib_timer_sec_t* t, int freed /*= 1*/ )
@@ -112,7 +112,7 @@ ice::lib_timer_t::lib_timer_micro_t* ice::lib_timer_t::add_micro_event( ON_TIMER
 	timer->owner     = owner;
 	timer->data      = data;
 
-	list_add_tail(&timer->entry, &micro_timer);
+	list_add_tail(&timer->entry, &this->micro_timer);
 	return timer;
 }
 
@@ -131,7 +131,7 @@ void ice::lib_timer_t::remove_micro_timers( void* owner )
 	list_head_t *l, *p;
 	lib_timer_micro_t* t;
 
-	list_for_each_safe(l, p, &micro_timer) {
+	list_for_each_safe(l, p, &this->micro_timer) {
 		t = list_entry(l, lib_timer_micro_t, entry);
 		if (t->owner == owner) {
 			this->remove_micro_timer(t, 0);
@@ -152,7 +152,7 @@ void ice::lib_timer_t::renew_sec_timer_list( const int idx )
 			if (i != idx) {
 				list_del(&t->entry);
 				list_add_tail(&t->entry, &this->vec[i].head);
-				set_min_exptm(t->expire, i);
+				this->set_min_exptm(t->expire, i);
 			} else if ((t->expire < min_exptm) || 0 == min_exptm) {
 				min_exptm = t->expire;
 			}
@@ -169,7 +169,7 @@ void ice::lib_timer_t::scan_micro_timer()
 	list_head_t *l, *p;
 	lib_timer_micro_t* t;
 
-	list_for_each_safe(l, p, &micro_timer) {
+	list_for_each_safe(l, p, &this->micro_timer) {
 		t = list_entry(l, lib_timer_micro_t, entry);
 		if (NULL == (t->function)) {
 			this->remove_micro_timer(t);
@@ -187,7 +187,7 @@ void ice::lib_timer_t::scan_sec_timer()
 	list_head_t *l, *p;
 	lib_timer_sec_t* t;
 
-	list_for_each_safe(l, p, &vec[0].head) {
+	list_for_each_safe(l, p, &this->vec[0].head) {
 		t = list_entry(l, lib_timer_sec_t, entry);
 		if (NULL == t->function) {
 			this->remove_sec_timer(t);
@@ -203,4 +203,14 @@ void ice::lib_timer_t::scan_sec_timer()
 			this->renew_sec_timer_list(i);
 		}
 	}
+}
+
+ice::lib_timer_t::lib_timer_t()
+{
+	this->setup_timer();
+}
+
+ice::lib_timer_t::~lib_timer_t()
+{
+	this->destroy_timer();
 }

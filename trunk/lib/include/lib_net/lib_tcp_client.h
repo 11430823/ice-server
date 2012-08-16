@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	todo
+	purpose:	ok
 	brief:		tcp客户端
 *********************************************************************/
 
@@ -17,20 +17,17 @@
 namespace ice{
 	class lib_tcp_peer_info_t : public lib_tcp_t
 	{
-		PROTECTED_RW(uint32_t, last_tm);
+		PROTECTED_RW(uint32_t, last_tm);//todo 暂时没有使用
+		PROTECTED_RW(uint8_t, fd_type);
 	public:
-		uint8_t		fd_type;
 		lib_active_buf_t recv_buf;
 		lib_active_buf_t send_buf;
 	public:
 		lib_tcp_peer_info_t();
 		virtual ~lib_tcp_peer_info_t();
-		virtual uint32_t get_ip();
-		virtual uint16_t get_port();
 	public:
 		void close();
 		void init();
-
 	protected:
 	private:
 		lib_tcp_peer_info_t(const lib_tcp_peer_info_t& cr);

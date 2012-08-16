@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	ok
+	purpose:	
 	brief:		×é²¥
 *********************************************************************/
 

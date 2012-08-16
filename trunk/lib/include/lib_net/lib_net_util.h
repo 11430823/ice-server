@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <string>
+#include "lib_include.h"
 
 namespace ice{
 	enum E_FD_TYPE{

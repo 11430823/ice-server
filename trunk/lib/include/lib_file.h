@@ -36,8 +36,8 @@ namespace ice{
 		// 其中判定 -1 != fd  时才可关闭
 		//************************************
 		static inline int close_fd(int& fd){
-			int nRes = 0;
-			if (-1 != fd){
+			int nRes = SUCC;
+			if (INVALID_FD != fd){
 				nRes = HANDLE_EINTR(::close(fd));
 				if(-1 != nRes){
 					fd = -1;
