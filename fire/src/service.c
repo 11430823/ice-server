@@ -81,7 +81,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		if (0 != g_addr_mcast.create(g_bench_conf.get_addr_mcast_ip(),
 			g_bench_conf.get_addr_mcast_port(), g_bench_conf.get_addr_mcast_incoming_if(),
 			g_bench_conf.get_addr_mcast_outgoing_if())){
-				ALERT_LOG("addr mcast.create err [ip:%s]", g_bench_conf.get_addr_mcast_ip.c_str());
+				ALERT_LOG("addr mcast.create err [ip:%s]", g_bench_conf.get_addr_mcast_ip().c_str());
 				return;
 		} else {
 			g_net_server.get_server_epoll()->add_connect(g_addr_mcast.get_fd(),

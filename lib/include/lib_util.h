@@ -95,8 +95,9 @@
 
 namespace ice{
 	#define SUCC 0
-	#define ERR  -1
+	#define ERR -1
 	#define FAIL -1
+	#define INVALID_FD -1
 
 	//协助
 	#define NOTE//需要注意
@@ -106,11 +107,10 @@ namespace ice{
 	#define IN//输入参数
 	//判断
 	#define	IS_NULL(p_)	(NULL == (p_))
-	#define	NO_NULL(p_)	(NULL != (p_))
 	#define	IS_ZERO(n_)	(0 == (n_))
-	#define	NO_ZERO(n_)	(0 != (n_))
 	#define IS_SUCC(n_) (SUCC == (n_))
-	#define IS_ERR(n_) (SUCC != (n_))
+	#define IS_ERR(n_) (ERR == (n_))
+	#define IS_FAIL(n_) (FAIL == (n_))
 
 	#define FOREACH(container, it) \
 		for(typeof((container).begin()) it = (container).begin(); (it) != (container).end(); ++(it))

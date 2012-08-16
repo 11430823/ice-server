@@ -20,10 +20,11 @@ int ice::lib_tcp_t::send( const void* buf, int total )
 			if (EINTR == errno) {
 				cur_len = 0;
 			} else if (EAGAIN == errno || EWOULDBLOCK == errno) {
+				ALERT_LOG("send err [err_code:%u, err_msg:%s]", errno, ::strerror(errno));
 				break;
 			} else {
 				ALERT_LOG("send err [err_code:%u, err_msg:%s]", errno, ::strerror(errno));
-				return -1;
+				return ERR;
 			}
 		}
 	}
@@ -40,20 +41,20 @@ std::string ice::lib_tcp_t::get_ip_str()
 	return ice::lib_net_util_t::ip2str(this->ip);
 }
 
-int ice::lib_tcp_t::connect( const char* ip, uint16_t port, int timeout, bool block )
+int ice::lib_tcp_t::connect( const std::string& ip, uint16_t port, int timeout, bool block )
 {
 	struct sockaddr_in peer;
 	::memset(&peer, 0, sizeof(peer));
 	peer.sin_family  = AF_INET;
 	peer.sin_port    = ::htons(port);
-	if (::inet_pton(AF_INET, ip, &peer.sin_addr) <= 0) {
-		return -1;
+	if (::inet_pton(AF_INET, ip.c_str(), &peer.sin_addr) <= 0) {
+		return ERR;
 	}
 
 	int fd = ::socket(PF_INET, SOCK_STREAM, 0);
-	if ( -1 == fd) {
+	if ( INVALID_FD == fd) {
 		ALERT_LOG("create socket err [%s]", ::strerror(errno));
-		return -1;
+		return ERR;
 	}
 
 	//todo 可设置发送与接收缓存大小
@@ -66,9 +67,9 @@ int ice::lib_tcp_t::connect( const char* ip, uint16_t port, int timeout, bool bl
 	// 			}
 	if (-1 == HANDLE_EINTR(::connect(fd, (struct sockaddr*)&peer, sizeof(peer)))) {
 		ALERT_LOG("connect err [errno:%s, ip:%s, port:%u]", 
-			::strerror(errno), ip, port);
+			::strerror(errno), ip.c_str(), port);
 		lib_file_t::close_fd(fd);
-		return -1;
+		return ERR;
 	}
 	// 			if (timeout > 0) {
 	// 				ice::lib_tcp_t::set_sock_send_timeo(sockfd, 0);

@@ -66,7 +66,6 @@ extern "C" int on_init(int isparent)
 		DEBUG_LOG("======daemon start======");
 	}else{
 		DEBUG_LOG("======server start======");
-		g_timer.setup_timer();
 		p = new test_timer;
 
 		//test g_slice_alloc
@@ -112,7 +111,6 @@ extern "C" int on_fini(int isparent)
 		DEBUG_LOG("======daemon done======");
 	}else{
 		delete p;
-		ice::destroy_timer();
 		DEBUG_LOG("======server done======");
 	}
 	return 0;

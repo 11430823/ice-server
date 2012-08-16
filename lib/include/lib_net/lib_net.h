@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	ok
+	purpose:	OK
 	brief:		ÍøÂç
 *********************************************************************/
 
@@ -16,7 +16,7 @@ namespace ice{
 		PROTECTED_RW(int, fd);
 	public:
 		lib_net_t(){
-			this->fd = -1;
+			this->fd = INVALID_FD;
 		}
 		virtual ~lib_net_t(){
 			lib_file_t::close_fd(this->fd);

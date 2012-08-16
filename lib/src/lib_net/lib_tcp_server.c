@@ -106,7 +106,7 @@ ice::lib_tcp_srv_t::~lib_tcp_srv_t()
 	if (NULL != this->peer_fd_infos){
 		for (int i = 0; i < this->cli_fd_value_max; i++) {
 			lib_tcp_peer_info_t& cfi = this->peer_fd_infos[i];
-			if (FD_TYPE_UNUSED == cfi.fd_type){
+			if (FD_TYPE_UNUSED == cfi.get_fd_type()){
 				continue;
 			}
 			cfi.close();

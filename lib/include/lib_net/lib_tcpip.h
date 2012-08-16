@@ -8,16 +8,9 @@
 
 #pragma once
 
-#include <time.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-
+#include "lib_include.h"
 #include "lib_tcp.h"
-#include "../lib_file.h"
+#include "lib_file.h"
 #include "lib_net_util.h"
 
 struct stru_ip_port {
@@ -160,7 +153,7 @@ class Ctcp{
 				//小于失败时间 间隔，直接返回
 				return this->fd_;
 			}
-			this->fd_ = ice::lib_tcp_t::connect(this->ip_, this->port_, this->send_recv_timeout_, 0);
+			this->fd_ = ice::lib_tcp_t::connect(this->ip_, this->port_, this->send_recv_timeout_, false);
 			//this->fd_=open_socket(this->ip_, this->port_, this->send_recv_timeout_);	
 			if (this->fd_==-1){//连接失败
 				this->last_fail_connect_time_=time(NULL);

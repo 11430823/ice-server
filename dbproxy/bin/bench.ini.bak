@@ -6,7 +6,7 @@ liblogic=./liblogic.so
 #max_fd_num=1000
 #默认为1:守护进程模式
 #is_daemon=1
-#连接FD超时秒数.默认0:连接FD无超时
+#连接FD超时秒数.默认0:连接FD无超时//todo 未实现
 #fd_time_out=0
 #数据包最大字节数.默认8192
 #page_size_max=8192

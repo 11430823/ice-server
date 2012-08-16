@@ -3,7 +3,7 @@
 	author:		kevin
 	copyright:	All rights reserved.
 	purpose:	各种错误码定义
-	brief:		ok
+	brief:		todo
 *********************************************************************/
 #pragma once
 
