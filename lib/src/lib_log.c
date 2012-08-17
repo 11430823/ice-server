@@ -307,8 +307,9 @@ void ice::lib_log_t::write( int lvl,uint32_t key, const char* fmt, ... )
 	}
 
 	char log_buffer[LOG_BUF_SIZE];
-	int pos = ::snprintf(log_buffer, sizeof(log_buffer), "[%02d:%02d:%02d] %u [%05d,%05d]",
-		t_m->tm_hour, t_m->tm_min, t_m->tm_sec, key, ::getpid(), LOG_IDX++);
+	//int pid = ::getpid();
+	int pos = ::snprintf(log_buffer, sizeof(log_buffer), "[%02d:%02d:%02d][%05d][%u]",
+		t_m->tm_hour, t_m->tm_min, t_m->tm_sec, LOG_IDX++, key);
 	int end = ::vsnprintf(log_buffer + pos, sizeof(log_buffer) - pos, fmt, ap);
 	::va_end(ap);
 

@@ -4,14 +4,15 @@
 #include <bench_conf.h>
 #include <interface.h>
 #include <lib_timer.h>
-#include <lib_proto.h>
-#include <lib_msgbuf.h>
+#include <lib_proto/lib_proto.h>
+#include <lib_proto/lib_msgbuf.h>
 #include <lib_websocket/lib_websocket.h>
 #include <lib_util.h>
 
 #include "handle_cli.h"
 
 ice::lib_websocket_t g_lib_websocket;
+/*
 class test_timer;
 test_timer* p;
 
@@ -56,6 +57,7 @@ private:
 	test_timer & operator=( const test_timer &cr);
 };
 ice::lib_timer_t g_timer;
+*/
 /**
   * @brief Initialize service
   *
@@ -64,9 +66,15 @@ extern "C" int on_init(int isparent)
 {
 	if(isparent){
 		DEBUG_LOG("======daemon start======");
+		std::string sip;
+		ice::lib_net_util_t::get_ip_addr("eth0", AF_INET, sip);
+		DEBUG_LOG("======%s,%lu======", sip.c_str(), sip.size());
+		
+		ice::lib_net_util_t::get_local_ip(sip);
+		DEBUG_LOG(" %s", sip.c_str());
 	}else{
 		DEBUG_LOG("======server start======");
-		p = new test_timer;
+		//p = new test_timer;
 
 		//test g_slice_alloc
 		struct a 
@@ -110,7 +118,7 @@ extern "C" int on_fini(int isparent)
 	if (isparent) {
 		DEBUG_LOG("======daemon done======");
 	}else{
-		delete p;
+		//delete p;
 		DEBUG_LOG("======server done======");
 	}
 	return 0;
@@ -124,7 +132,7 @@ extern "C" void on_events()
 {
 	if (fire::is_parent()){
 	}else{
-		ice::handle_timer();
+		//ice::lib_timer_t::handle_timer();
 	}
 }
 

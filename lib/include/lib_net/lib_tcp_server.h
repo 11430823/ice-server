@@ -2,7 +2,7 @@
 	platform:	
 	author:		kevin
 	copyright:	All rights reserved.
-	purpose:	todo
+	purpose:	OK
 	brief:		tcp server
 *********************************************************************/
 
@@ -20,7 +20,7 @@ namespace ice{
 	//服务器回调函数
 	struct on_functions_tcp_srv
 	{
-	//The following interfaces are called only by the child process
+//The following interfaces are called only by the child process
 		//************************************
 		// Brief:	Called each time before processing packages from clients.
 		//			Calling interval of this interface is no much longer than 100ms at maximum.
@@ -32,12 +32,12 @@ namespace ice{
 		// 			Return non-zero if you want to close the client connection from which the `pkg` is sent,
 		// 			otherwise returns 0. If non-zero is returned, `on_cli_conn_closed` will be called too. 
 		//************************************
-		typedef int (*ON_CLI_PKG)(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info);
+		typedef int (*ON_CLI_PKG)(const void* data, int len, ice::lib_tcp_peer_info_t* peer_fd_info);
 		ON_CLI_PKG on_cli_pkg;
 		//************************************
 		// Brief:	Called to process packages from servers that the child connects to. Called once for each package.
 		//************************************
-		typedef void (*ON_SRV_PKG)(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t* peer_fd_info);
+		typedef void (*ON_SRV_PKG)(const void* data, int len, ice::lib_tcp_peer_info_t* peer_fd_info);
 		ON_SRV_PKG on_srv_pkg;
 		//************************************
 		// Brief:	Called each time when a client close a connection, or when `on_cli_pkg` returns non-zero.
@@ -50,7 +50,7 @@ namespace ice{
 		typedef void (*ON_SVR_CONN_CLOSED)(int fd);
 		ON_SVR_CONN_CLOSED on_svr_conn_closed;
 
-	//The following interfaces are called both by the parent and child process
+//The following interfaces are called both by the parent and child process
 		//************************************
 		// Brief:	//Called only once at server startup by both the parent and child process.
 					//You should initialize your service program (allocate memory, create objects, etc) here.
@@ -65,7 +65,7 @@ namespace ice{
 		//************************************
 		typedef int (*ON_FINI)();
 		ON_FINI on_fini;
-		/*!
+		/*
 		  * This interface will be called both by the parent and child process.
 		  * You must return 0 if you cannot yet determine the length of the incoming package,
 		  * return -1 if you find that the incoming package is invalid and ice-server will close the connection,
@@ -74,14 +74,15 @@ namespace ice{
 		typedef int	(*ON_GET_PKG_LEN)(ice::lib_tcp_peer_info_t* peer_fd_info, const void* data, uint32_t len);
 		ON_GET_PKG_LEN on_get_pkg_len;
 
-		/*! Called to process multicast packages from the specified `mcast_ip` and `mcast_port`. Called once for each package. */
-		typedef void (*ON_MCAST_PKG)(const void* pkg, int len);
+		/* Called to process multicast packages from the specified `mcast_ip` and `mcast_port`. Called once for each package. */
+		typedef void (*ON_MCAST_PKG)(const void* data, int len);
 		ON_MCAST_PKG on_mcast_pkg;
 
-		/*! Called to process multicast packages from the specified `addr_mcast_ip` and `addr_mcast_port`. Called once for each package. */
+		/* Called to process multicast packages from the specified `addr_mcast_ip` and `addr_mcast_port`. Called once for each package. */
 		typedef void (*ON_ADDR_MCAST_PKG)(uint32_t id, const char* name, const char* ip, uint16_t port, int flag/*1:可用.0:不可用*/);
 		ON_ADDR_MCAST_PKG on_addr_mcast_pkg;
 
+		//todo 未使用
 		typedef void (*ON_UDP_PKG)(int fd, const void* data, int len ,struct sockaddr_in* from, socklen_t fromlen);
 		ON_UDP_PKG on_udp_pkg;
 		on_functions_tcp_srv();
@@ -90,9 +91,8 @@ namespace ice{
 	class lib_tcp_srv_t : public lib_tcp_t
 	{
 	public:
-		typedef bool (*CHECK_RUN)();
-		PROTECTED_R(CHECK_RUN, check_run);//服务器循环时检测是否继续执行
-		PROTECTED_RW(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时
+		typedef bool (*CHECK_RUN)();//服务器循环时检测是否继续执行
+		PROTECTED_RW(uint32_t, cli_time_out_sec);//连接上来的超时时间(秒) 0:不超时 todo 尚未使用
 		PROTECTED_R(lib_tcp_peer_info_t*, peer_fd_infos);//连接用户的信息
 		PROTECTED_R(int, cli_fd_value_max);//连接上的FD中的最大值
 		PROTECTED_R(int, listen_fd);//监听FD
@@ -113,7 +113,7 @@ namespace ice{
 		* @param int block,  true and the accepted fd will be set blocking, false and the fd will be set nonblocking.
 		* @return int, the accpected fd on success, -1 on error.
 		*/
-		virtual int accept(struct sockaddr_in& peer, bool block);
+		virtual int accept(struct sockaddr_in& peer, bool block = false);
 	public:
 		/** todo
 		* @brief 创建一个TCP listen socket或者UDP socket，用于接收客户端数据。支持IPv4和IPv6。
@@ -121,10 +121,11 @@ namespace ice{
 		* @param serv 监听的端口。可以是数字端口，也可以是端口对应的服务名，如dns、time、ftp等。
 		* @param backlog 未完成连接队列的大小。一般用1024足矣。
 		* @param bufsize socket接收/发送缓冲大小（字节），必须小于10 * 1024 * 1024。
+		* @param socktype socket的类型，可以是SOCK_STREAM（TCP）或者SOCK_DGRAM（UDP）。
 		* @return 成功返回新创建的fd，失败返回-1。fd不用时必须使用close关闭。
 		* @see safe_socket_listen
 		*/
-		static int create_passive_endpoint(const char* host, const char* serv, int backlog, int bufsize);
+		static int create_passive_endpoint(const char* host, const char* serv, int backlog, int bufsize, int socktype);
 	protected:
 		virtual int bind(const char* ip,uint16_t port);
 	private:

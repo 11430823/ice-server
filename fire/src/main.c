@@ -38,9 +38,10 @@ int main(int argc, char* argv[])
 
 	g_daemon.prase_args(argc, argv);
 
-	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
-	g_net_server.get_server_epoll()->set_on_pipe_event(dll_t::on_pipe_event);
-	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
+	tcp_server_epoll_t* ser = g_net_server.get_server_epoll();
+	ser->register_on_functions(&g_dll.functions);
+	ser->set_on_pipe_event(dll_t::on_pipe_event);
+	ser->set_epoll_wait_time_out(EPOLL_TIME_OUT);
 
 	ice::lib_log_t::setup_by_time(g_bench_conf.get_log_dir().c_str(),
 		(ice::lib_log_t::E_lOG_LEVEL)g_bench_conf.get_log_level(),
