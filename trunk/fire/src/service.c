@@ -47,13 +47,14 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 		ALERT_LOG("g_net_server.create err [ret:%d]", ret);
 		return;
 	}
-	g_net_server.get_server_epoll()->register_on_functions(&g_dll.functions);
-	g_net_server.get_server_epoll()->set_on_pipe_event(dll_t::on_pipe_event);
-	g_net_server.get_server_epoll()->set_epoll_wait_time_out(EPOLL_TIME_OUT);
+	tcp_server_epoll_t* ser = g_net_server.get_server_epoll();
+	ser->register_on_functions(&g_dll.functions);
+	ser->set_on_pipe_event(dll_t::on_pipe_event);
+	ser->set_epoll_wait_time_out(EPOLL_TIME_OUT);
 
-	g_net_server.get_server_epoll()->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
+	ser->add_connect(this->bind_elem->recv_pipe.handles[E_PIPE_INDEX_RDONLY], ice::FD_TYPE_PIPE, NULL, 0);
 
-	if (0 != g_net_server.get_server_epoll()->listen(this->bind_elem->ip.c_str(),
+	if (0 != ser->listen(this->bind_elem->ip.c_str(),
 		this->bind_elem->port, g_bench_conf.get_listen_num(), g_bench_conf.get_page_size_max())){
 		BOOT_LOG_VOID(-1, "server listen err [ip:%s, port:%u]", this->bind_elem->ip.c_str(), this->bind_elem->port);
 	}
@@ -71,7 +72,7 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 				ALERT_LOG("mcast.create err[ip:%s]", g_bench_conf.get_mcast_ip().c_str());
 			return;
 		}else{
-			g_net_server.get_server_epoll()->add_connect(g_mcast.get_fd(),
+			ser->add_connect(g_mcast.get_fd(),
 				ice::FD_TYPE_MCAST, g_bench_conf.get_mcast_ip().c_str(), g_bench_conf.get_mcast_port());
 		}
 	}
@@ -84,13 +85,13 @@ void service_t::run( bind_config_elem_t* bind_elem, int n_inited_bc )
 				ALERT_LOG("addr mcast.create err [ip:%s]", g_bench_conf.get_addr_mcast_ip().c_str());
 				return;
 		} else {
-			g_net_server.get_server_epoll()->add_connect(g_addr_mcast.get_fd(),
+			ser->add_connect(g_addr_mcast.get_fd(),
 				ice::FD_TYPE_ADDR_MCAST, g_bench_conf.get_addr_mcast_ip().c_str(), g_bench_conf.get_addr_mcast_port());
 			g_addr_mcast.mcast_notify_addr(MCAST_CMD_ADDR_1ST);
 		}
 	}
 
-	g_net_server.get_server_epoll()->run(service_check_run);
+	ser->run(service_check_run);
 
 fail:
 	g_net_server.destroy();

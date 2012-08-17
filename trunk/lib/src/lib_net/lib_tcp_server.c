@@ -11,12 +11,13 @@ int ice::lib_tcp_srv_t::accept( struct sockaddr_in& peer, bool block )
 	if (newfd < 0){
 		return -1;
 	}
-	lib_file_t::set_io_block(newfd, false);
+
+	lib_file_t::set_io_block(newfd, block);
 
 	return newfd;
 }
 
-int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* serv, int backlog, int bufsize )
+int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* serv, int backlog, int bufsize, int socktype )
 {
 	assert((backlog > 0) && (bufsize > 0) && (bufsize <= (10 * 1024 * 1024)));
 
@@ -26,7 +27,7 @@ int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* s
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags    = AI_PASSIVE;
 	hints.ai_family   = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_socktype = socktype;
 
 	int err = getaddrinfo(host, serv, &hints, &res);
 	if (err != 0) {
@@ -40,16 +41,18 @@ int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* s
 		return -1;
 	}
 
-	err = lib_tcp_t::set_reuse_addr(listenfd);
-	if (err == -1) {
-		goto ret;
+	if (SOCK_DGRAM != socktype) {
+		err = lib_tcp_t::set_reuse_addr(listenfd);
+		if (err == -1) {
+			goto ret;
+		}
 	}
 
-	err = ::setsockopt(listenfd, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(int));
+	err = lib_net_util_t::set_recvbuf(listenfd, bufsize);
 	if (err == -1) {
 		goto ret;
 	}
-	err = ::setsockopt(listenfd, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(int));
+	err = lib_net_util_t::set_sendbuf(listenfd, bufsize);
 	if (err == -1) {
 		goto ret;
 	}
@@ -59,7 +62,8 @@ int ice::lib_tcp_srv_t::create_passive_endpoint( const char* host, const char* s
 		goto ret;
 	}
 
-	if (-1 == ::listen(listenfd, backlog)) {
+	if ((socktype == SOCK_STREAM) 
+		&& (-1 == ::listen(listenfd, backlog))) {
 		err = -1;
 		goto ret;
 	}
@@ -68,7 +72,7 @@ ret:
 	if (err) {
 		err      = errno;
 		close(listenfd);
-		listenfd = -1;
+		listenfd = INVALID_FD;
 	}
 	freeaddrinfo(res);
 	errno = err;
@@ -96,9 +100,8 @@ ice::lib_tcp_srv_t::lib_tcp_srv_t()
 {
 	this->cli_time_out_sec = 0;
 	this->peer_fd_infos = NULL;
-	this->listen_fd = -1;
+	this->listen_fd = INVALID_FD;
 	this->cli_fd_value_max = 0;
-	this->check_run = NULL;
 }
 
 ice::lib_tcp_srv_t::~lib_tcp_srv_t()

@@ -28,7 +28,7 @@ public:
 	PRIVATE_RW(int, epoll_wait_time_out);//epoll_wait函数调用时超时时间间隔
 	PRIVATE_R(on_functions_tcp_server_epoll*, on_functions);//回调函数
 public:
-	tcp_server_epoll_t(uint32_t max_events_num);
+	tcp_server_epoll_t(uint32_t max_events_num, uint32_t cli_time_out);
 	virtual ~tcp_server_epoll_t();
 	virtual void register_on_functions(const ice::on_functions_tcp_srv* functions);
 	virtual int create();

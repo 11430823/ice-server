@@ -1,5 +1,5 @@
 #include <lib_log.h>
-#include <lib_proto.h>
+#include <lib_proto/lib_proto.h>
 
 #include "handle_cli.h"
 

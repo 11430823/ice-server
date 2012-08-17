@@ -51,7 +51,7 @@ namespace {
 
 int net_server_t::create(uint32_t max_fd_num)
 {
-	this->server_epoll = new tcp_server_epoll_t(max_fd_num);
+	this->server_epoll = new tcp_server_epoll_t(max_fd_num, g_bench_conf.get_fd_time_out());
 	if (NULL == this->server_epoll){
 		ALERT_LOG("new tcp_server_epoll err [maxevents:%u]", max_fd_num);
 		return -1;
@@ -169,12 +169,13 @@ int tcp_server_epoll_t::run( CHECK_RUN check_run_fn )
 	return 0;
 }
 
-tcp_server_epoll_t::tcp_server_epoll_t(uint32_t max_events_num)
+tcp_server_epoll_t::tcp_server_epoll_t(uint32_t max_events_num, uint32_t cli_time_out)
 {
 	this->cli_fd_value_max = max_events_num;
 	this->epoll_wait_time_out = -1;
 	this->on_pipe_event = NULL;
 	this->on_functions = NULL;
+	this->cli_time_out_sec = cli_time_out;
 }
 
 int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_num, int bufsize)
@@ -184,7 +185,7 @@ int tcp_server_epoll_t::listen(const char* ip, uint16_t port, uint32_t listen_nu
 #else
 	this->listen_fd = ::socket(PF_INET, SOCK_STREAM, 0);
 #endif
-	if (-1 == this->listen_fd){
+	if (INVALID_FD == this->listen_fd){
 		ALERT_LOG("create socket err [%s]", ::strerror(errno));
 		return -1;
 	}
@@ -327,7 +328,7 @@ void tcp_server_epoll_t::handle_listen()
 	int peer_fd = -1;
 	sockaddr_in peer;
 	memset(&peer,0,sizeof(peer));
-	peer_fd = this->accept(peer, false);
+	peer_fd = this->accept(peer);
 	if (unlikely(peer_fd < 0)){
 		ALERT_LOG("accept err [%s]", ::strerror(errno));
 	}else{

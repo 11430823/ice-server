@@ -15,8 +15,8 @@ int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
 	this->mcast_outgoing_if = mcast_outgoing_if;
 
 	this->fd = ::socket(AF_INET, SOCK_DGRAM, 0);
-	if (-1 == this->fd) {
-		ERROR_RETURN(-1, ("failed to create mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
+	if (INVALID_FD == this->fd) {
+		ERROR_RETURN(ERR, ("failed to create mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	lib_file_t::set_io_block(this->fd, false);
@@ -39,19 +39,19 @@ int ice::lib_mcast_t::create(const std::string& mcast_ip, uint16_t mcast_port,
 
 	int loop = 1;
 	if (-1 == ::setsockopt(this->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop))){
-		ERROR_RETURN(-1, ("failed to set ip_multicast_loop [err_code:%d, err:%s]", errno, strerror(errno)));
+		ERROR_RETURN(ERR, ("failed to set ip_multicast_loop [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	// set default interface for outgoing multicasts
 	in_addr_t ipaddr;
 	::inet_pton(AF_INET, this->mcast_outgoing_if.c_str(), &ipaddr);
 	if (::setsockopt(this->fd, IPPROTO_IP, IP_MULTICAST_IF, &ipaddr, sizeof ipaddr) == -1) {
-		ERROR_RETURN(-1, ("failed to set outgoing interface [err_code:%d, err:%s, ip:%s]",
+		ERROR_RETURN(ERR, ("failed to set outgoing interface [err_code:%d, err:%s, ip:%s]",
 			errno, strerror(errno), this->mcast_outgoing_if.c_str()));
 	}
 
 	if (::bind(this->fd, (struct sockaddr*)&this->addr, sizeof(this->addr)) == -1) {
-		ERROR_RETURN(-1, ("failed to bind mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
+		ERROR_RETURN(ERR, ("failed to bind mcast_fd [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
 	return this->mcast_join();
@@ -64,7 +64,7 @@ int ice::lib_mcast_t::mcast_join()
 	req.gr_interface = if_nametoindex(this->mcast_incoming_if.c_str());
 	if (req.gr_interface == 0) {
 		errno = ENXIO; /* i/f name not found */
-		return -1;
+		return ERR;
 	}
 
 	memcpy(&req.gr_group, &this->addr, sizeof(this->addr));
@@ -72,7 +72,7 @@ int ice::lib_mcast_t::mcast_join()
 		ERROR_RETURN(-1, ("failed to join mcast grp [err_code:%d, err:%s]", errno, strerror(errno)));
 	}
 
-	return 0;
+	return SUCC;
 }
 
 

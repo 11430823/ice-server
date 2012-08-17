@@ -16,10 +16,13 @@ namespace ice{
 	{
 		PROTECTED_RW(sockaddr_in, addr);
 	public:
-		lib_udp_t(){}
+		lib_udp_t(){
+			bzero(this->addr, sizeof(this->addr));
+		}
 		virtual ~lib_udp_t(){}
-		virtual int send(const void* buf, int total);
-		virtual int recv(void* buf, int bufsize);
+		virtual int send(const void* data, int len);
+		virtual int recv(void* data, int len);
+		int connect(const std::string& ip, uint16_t port);
 	protected:
 		
 	private:

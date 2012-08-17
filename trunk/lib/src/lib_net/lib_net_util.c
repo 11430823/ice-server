@@ -28,9 +28,10 @@ int ice::lib_net_util_t::eai_to_errno( int eai )
 	return EADDRNOTAVAIL;
 }
 
-int ice::lib_net_util_t::get_ip_addr( const char* nif, int af, void* ipaddr, size_t len )
+int ice::lib_net_util_t::get_ip_addr( const char* nif, int af, std::string& ipaddr )
 {
-	assert(((af == AF_INET) && (len >= INET_ADDRSTRLEN)) || ((af == AF_INET6) && (len >= INET6_ADDRSTRLEN)));
+	char ip[INET6_ADDRSTRLEN] = {0};
+	assert((af == AF_INET) || (af == AF_INET6));
 
 	// get a list of network interfaces
 	struct ifaddrs* ifaddr;
@@ -45,12 +46,12 @@ int ice::lib_net_util_t::get_ip_addr( const char* nif, int af, void* ipaddr, siz
 	for (ifa = ifaddr; ifa != 0; ifa = ifa->ifa_next) {
 		if ((ifa->ifa_addr == 0) || (ifa->ifa_addr->sa_family != af)
 			|| ::strcmp(ifa->ifa_name, nif)) {
-				continue;
+			continue;
 		}
 		// convert binary form ip address to numeric string form
 		ret_code = getnameinfo(ifa->ifa_addr,
 			(af == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
-			(char*)ipaddr, len, 0, 0, NI_NUMERICHOST);
+			(char*)ip, INET6_ADDRSTRLEN, 0, 0, NI_NUMERICHOST);
 		if (ret_code != 0) {
 			if (ret_code == EAI_SYSTEM) {
 				err = errno;
@@ -62,6 +63,7 @@ int ice::lib_net_util_t::get_ip_addr( const char* nif, int af, void* ipaddr, siz
 
 	::freeifaddrs(ifaddr);
 	errno = err;
+	ipaddr = ip;
 	return ret_code;
 }
 
