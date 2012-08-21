@@ -13,10 +13,10 @@ int ice::lib_udp_t::recv( void* buf, int bufsize )
 
 int ice::lib_udp_t::connect( const std::string& ip, uint16_t port )
 {
-	bzero(this->addr, sizeof(this->addr));
-	this->addr->sin_family = AF_INET;
-	this->addr->sin_port = htons(port);
-	inet_pton(AF_INET, ip.c_str(), &(this->addr->sin_addr));
+	bzero(&(this->addr), sizeof(this->addr));
+	this->addr.sin_family = AF_INET;
+	this->addr.sin_port = htons(port);
+	inet_pton(AF_INET, ip.c_str(), &(this->addr.sin_addr));
 	this->fd = socket(AF_INET, SOCK_DGRAM, 0);
 	return this->fd;
 }

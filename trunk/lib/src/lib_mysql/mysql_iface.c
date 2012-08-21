@@ -6,27 +6,27 @@
 
 #include "mysql_iface.h"
 
-mysql_interface::mysql_interface (std::string h, std::string user, std::string pass,
-								  uint16_t port,const char * a_unix_socket)
+mysql_interface::mysql_interface (const std::string& h, const std::string& user,
+								  const std::string& pass,
+								  uint16_t port, bool log_sql, const char * a_unix_socket)
 {
 	this->id = 0;
 	this->host = h;
 	this->user = user;
 	this->pass = pass;
 	this->port = port;
+	this->is_log_sql = log_sql;
+	memset(this->unix_socket, 0, sizeof(this->unix_socket));
 
 	mysql_init(&handle);
 
 	if (a_unix_socket!=NULL) {
 		SAFE_STRNCPY(this->unix_socket , a_unix_socket);
-	}else{
-		this->unix_socket[0]='\0';
 	}
 
-	this->is_log_sql = false;
-
-	DEBUG_LOG("DB conn msg [host:%s][user:%s][pass:%s][port:%u][unix_socket:%s]", this->host.c_str(), 
-		this->user.c_str(), this->pass.c_str(), this->port, this->unix_socket);
+	DEBUG_LOG("======DB conn msg [host:%s][user:%s][pass:%s][port:%u][is_log_sql:%u][unix_socket:%s]======",
+		this->host.c_str(), this->user.c_str(), this->pass.c_str(), 
+		this->port, this->is_log_sql, this->unix_socket);
 	connect_server();
 }
 
@@ -48,8 +48,8 @@ int mysql_interface::connect_server ()
 	}
 	//CLIENT_FOUND_ROWS	//Return the number of found (matched) rows, not the number of changed rows.
 	unsigned long flag = CLIENT_FOUND_ROWS;
-	if (!mysql_real_connect(&this->handle, this->host.c_str(), this->user.c_str(), this->pass.c_str(), NULL, this->port, us, flag))
-	{
+	if (!mysql_real_connect(&this->handle, this->host.c_str(), 
+		this->user.c_str(), this->pass.c_str(), NULL, this->port, us, flag)){
 		ERROR_LOG("db connect is err [%d, %s]\n", this->get_errno(), this->get_error());
 		return DB_ERR;
 	}

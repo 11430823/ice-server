@@ -1,4 +1,4 @@
-#include <string.h>
+#include <lib_include.h>
 
 #include <lib_util.h>
 #include <lib_log.h>
@@ -10,6 +10,7 @@
 #include "service.h"
 #include "bind_conf.h"
 #include "net_tcp.h"
+#include "bench_conf.h"
 
 net_server_t g_net_server;
 

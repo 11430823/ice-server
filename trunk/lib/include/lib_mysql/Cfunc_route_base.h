@@ -17,6 +17,30 @@
 
 class Cfunc_route;
 
+//发送给客户端的数据
+class send_data_cli_t : public lib_send_data_t<proto_head_t>{
+public:
+	send_data_cli_t()
+		:lib_send_data_t<proto_head_t>(send_data){
+	}
+	virtual void set_head(const proto_head_t& rhead){//uint32_t cmd, uint32_t seq, uint32_t userid, uint32_t ret = 0){
+		const uint32_t all_len = this->write_pos;
+		this->write_pos = 0;
+		*this<<all_len
+			<<rhead.cmd
+			<<rhead.id
+			<<rhead.seq
+			<<rhead.ret;
+		this->write_pos = all_len;
+	}
+protected:
+private:
+	static const uint32_t PACK_DEFAULT_SIZE = 81920;//去掉包头,大概相等
+	char send_data[PACK_DEFAULT_SIZE];
+	send_data_cli_t(const send_data_cli_t& cr); // 拷贝构造函数
+	send_data_cli_t& operator=( const send_data_cli_t& cr); // 赋值函数
+};
+
 class Cfunc_route_base
 {
 	PROTECTED_R(mysql_interface*, db);//db 连接

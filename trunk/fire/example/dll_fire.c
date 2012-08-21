@@ -62,6 +62,7 @@ ice::lib_timer_t g_timer;
   * @brief Initialize service
   *
   */
+#include <lib_net/lib_udp.h>
 extern "C" int on_init(int isparent)
 {
 	if(isparent){
@@ -72,6 +73,10 @@ extern "C" int on_init(int isparent)
 		
 		ice::lib_net_util_t::get_local_ip(sip);
 		DEBUG_LOG(" %s", sip.c_str());
+		ice::lib_udp_t udp;
+		udp.connect("192.168.0.102", 8001);
+		int num = udp.send("1234567", 7);
+		DEBUG_LOG("udp send num=%u", num);
 	}else{
 		DEBUG_LOG("======server start======");
 		//p = new test_timer;

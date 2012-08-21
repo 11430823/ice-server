@@ -17,7 +17,7 @@ namespace ice{
 		PROTECTED_RW(sockaddr_in, addr);
 	public:
 		lib_udp_t(){
-			bzero(this->addr, sizeof(this->addr));
+			bzero(&(this->addr), sizeof(this->addr));
 		}
 		virtual ~lib_udp_t(){}
 		virtual int send(const void* data, int len);
