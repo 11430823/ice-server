@@ -16,7 +16,12 @@ namespace ice{
 	template <typename T> 
 	struct lib_cmd_t{
 		uint32_t cmd_id;
+		lib_msg_t* p_msg;
 		T func;
+		lib_cmd_t(){
+			cmd_id = 0;
+			p_msg = NULL;
+		}
 	};
 
 	//存放命令消息,与映射的命令数据

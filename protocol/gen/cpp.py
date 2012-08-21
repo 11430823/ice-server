@@ -29,15 +29,16 @@ def write_line(data, tab = 0, line = 1):
 	new_line(line);
 
 def gen_cpp_header_detailed():
-	write_line(r"#include <lib_include.h>", 0, 2);
+	write_line(r"#include <lib_include.h>", 0);
+	write_line(r"#include <lib_proto/lib_msg.h>", 0, 2);
 	write_line(r"#pragma once", 0, 0);
 
 #写cpp文件
-def gen_cpp(xml_data):
+def gen_cpp(xml_data, base_class_name):
 	for struct_data in xml_data:
 		new_line(2);
 		write_line(r"//" + struct_data.desc);
-		write_line(r"struct " + struct_data.name + r"{");
+		write_line(r"struct " + struct_data.name + base_class_name + r"{");
 		
 		init_string = [];
 		for field_data in struct_data.fields:
@@ -77,9 +78,9 @@ def main():
 	fd = open(CPP_NAME, "w");
 	gen_cpp_header_detailed();
 	parse.get_xml_data_structs(FILE_NAME);
-	gen_cpp(parse.g_structs_data);
+	gen_cpp(parse.g_structs_data, "");
 	parse.get_xml_data_protocols(FILE_NAME);
-	gen_cpp(parse.g_structs_data);
+	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
 	fd.close();
 
 	fd = open(CPP_CMD_NAME, "w");
