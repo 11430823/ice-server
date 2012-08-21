@@ -86,6 +86,8 @@ namespace ice{
 		typedef void (*ON_UDP_PKG)(int fd, const void* data, int len ,struct sockaddr_in* from, socklen_t fromlen);
 		ON_UDP_PKG on_udp_pkg;
 		on_functions_tcp_srv();
+
+		//todo 添加一个有新的链接成功的回调接口
 	};
 
 	class lib_tcp_srv_t : public lib_tcp_t

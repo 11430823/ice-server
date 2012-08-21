@@ -59,12 +59,7 @@ namespace ice{
 		* @return 0 on success, -1 on error and errno is set appropriately.
 		*/
 		static inline int set_sock_send_timeo(int sockfd, int millisec){
-			struct timeval tv;
-
-			tv.tv_sec  = millisec / 1000;
-			tv.tv_usec = (millisec % 1000) * 1000;
-
-			return ::setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+			return lib_net_util_t::set_sock_timeo(sockfd, SO_SNDTIMEO, millisec);
 		}
 
 		/**
@@ -77,12 +72,7 @@ namespace ice{
 		* @return 0 on success, -1 on error and errno is set appropriately.
 		*/
 		static inline int set_sock_rcv_timeo(int sockfd, int millisec){
-			struct timeval tv;
-
-			tv.tv_sec  = millisec / 1000;
-			tv.tv_usec = (millisec % 1000) * 1000;
-
-			return ::setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+			return lib_net_util_t::set_sock_timeo(sockfd, SO_RCVTIMEO, millisec);
 		}
 		//************************************
 		// Brief:	  Set the given fd recv buffer
@@ -108,6 +98,14 @@ namespace ice{
 	protected:
 		
 	private:
+		static inline int set_sock_timeo(int sockfd, int optname, int millisec){
+			struct timeval tv;
+
+			tv.tv_sec  = millisec / 1000;
+			tv.tv_usec = (millisec % 1000) * 1000;
+
+			return ::setsockopt(sockfd, SOL_SOCKET, optname, &tv, sizeof(tv));
+		}
 		lib_net_util_t(const lib_net_util_t& cr);
 		lib_net_util_t& operator=(const lib_net_util_t& cr);
 	};
