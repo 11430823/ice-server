@@ -1,21 +1,3 @@
-/*
- * =====================================================================================
- * 
- *	   Filename:  common.h
- * 
- *	Description:  
- * 
- *		Version:  1.0
- *		Created:  2007年11月02日 18时33分18秒 CST
- *	   Revision:  none
- *	   Compiler:  gcc
- * 
- *		 Author:  xcwen (xcwen), xcwenn@gmail.com
- *		Company:  TAOMEE
- * 
- * =====================================================================================
- */
-
 #ifndef  proxy_route   
 #define  proxy_route 
 

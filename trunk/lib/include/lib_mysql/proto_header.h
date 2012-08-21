@@ -1,21 +1,3 @@
-/*
- * =====================================================================================
- * 
- *	   Filename:  proto.h
- * 
- *	Description:  
- * 
- *		Version:  1.0
- *		Created:  2007年11月01日 14时10分21秒 CST
- *	   Revision:  none
- *	   Compiler:  gcc
- * 
- *		 Author:  xcwen (xcwen), xcwenn@gmail.com
- *		Company:  NULL
- * 
- * =====================================================================================
- */
-
 #pragma once
 
 #include <inttypes.h>

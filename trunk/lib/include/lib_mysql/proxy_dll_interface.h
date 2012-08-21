@@ -1,20 +1,4 @@
-/*
- * =====================================================================================
- *
- *       Filename:  proxy_dll_interface.h
- *
- *    Description: proxy dll 接口  
- *
- *        Version:  1.0
- *        Created:  03/08/2010 10:38:23 AM
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  jim (xcwen), jim@taomee.com
- *        Company:  taomee
- *
- * =====================================================================================
- */
+
 #ifndef  proxy_dll_interface_incl
 #define  proxy_dll_interface_incl
 extern "C" {
