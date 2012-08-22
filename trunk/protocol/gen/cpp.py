@@ -63,14 +63,43 @@ def gen_cpp(xml_data, base_class_name):
 		for i in init_string:
 			write_line(i, 2);
 		write_line(r"}", 1);
+
+		write_line(r"virtual bool read(ice::lib_msg_byte_t& msg_byte){", 1);
+		for field_data in struct_data.fields:
+			if "single" == field_data.mode:
+				if pro_type.is_sys_type(field_data.type):
+					write_line(r"if(!msg_byte.read_" + field_data.type + "(this->" + field_data.name + ")) return false;", 2);
+				else:
+					write_line(r"if(!this->" + field_data.name + ".read(msg_byte)) return false;", 2);
+			elif "list" == field_data.mode:
+				if pro_type.is_sys_type(field_data.type):
+					field_data_name_list_cnt = field_data.name + "_list_cnt__";
+					field_data_name_list_item = field_data.name + "_list_item__";
+					write_line(r"uint32_t " + field_data_name_list_cnt + ";", 2);
+					write_line(r"if(!msg_byte.read_uint32(" + field_data_name_list_cnt + ")) return false;", 2);
+					write_line(pro_type.get_type(field_data.type) + " " + field_data_name_list_item + ";", 2);
+					write_line(r"this->" + field_data.name + ".clear();", 2);
+					write_line(r"for(uint32_t i = 0; i < " + field_data_name_list_cnt + "; i++){", 2);
+					write_line(r"if(!msg_byte.read_" + field_data.type + "(" + field_data_name_list_item + ")) return false;", 3);
+					write_line(r"this->" + field_data.name + ".push_back(" + field_data_name_list_item + ");", 3);
+					write_line(r"}", 2);
+				else:
+					write_line(r"if(!this->" + field_data.name + ".read(msg_byte)) return false;", 2);
+				
+				
+		write_line(r"return true;", 2);
+		write_line(r"}", 1);
 		
+		write_line(r"virtual bool write(ice::lib_msg_byte_t& msg_byte){", 1);
+		write_line(r"return true;", 2);
+		write_line(r"}", 1);
 		write_line(r"};");
 
 
 #写cpp_bind文件
 def gen_cpp_cmd(xml_data):
 	for cmd_data in xml_data:
-		write_line(r"BIND_PROTO_CMD(" + cmd_data.id + r", " + cmd_data.name + r");");
+		write_line(r"BIND_PROTO_CMD(" + cmd_data.id + r", " + cmd_data.name + r", " + cmd_data.struct_in + r");");
 
 def main():
 	global fd;
@@ -78,7 +107,7 @@ def main():
 	fd = open(CPP_NAME, "w");
 	gen_cpp_header_detailed();
 	parse.get_xml_data_structs(FILE_NAME);
-	gen_cpp(parse.g_structs_data, "");
+	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
 	parse.get_xml_data_protocols(FILE_NAME);
 	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
 	fd.close();

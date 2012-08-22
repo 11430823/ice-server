@@ -191,6 +191,7 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	ice::proto_head_t* head = (ice::proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
 		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
+	
 	return g_handle_cli.handle(pkg, pkglen);
 	//fire::s2peer(peer_fd_info, pkg, pkglen);
 }

@@ -76,4 +76,8 @@ def get_xml_data_protocols_cmd(file_name):
 			print sd.id;
 			sd.name = get_attrvalue(node, "name");
 			print sd.name;
+			sd.struct_in = get_attrvalue(node, "struct_in");
+			print sd.struct_in;
+			sd.struct_out = get_attrvalue(node, "struct_out");
+			print sd.struct_out;
 			g_structs_data.append(sd);
