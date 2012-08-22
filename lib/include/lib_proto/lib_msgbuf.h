@@ -166,7 +166,12 @@ namespace ice{
 	public:
 		//前4个字节是整个包长度
 		inline uint32_t get_len(){
-			return (lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
+			return
+#if ICE_DEF_BIG_ENDIAN
+				(lib_byte_swap_t::bswap((uint32_t)(*(uint32_t*)this->recv_data)));
+#else
+				(uint32_t)(*(uint32_t*)this->recv_data);
+#endif
 		}
 		inline uint32_t remain_len() {
 			return get_len() - this->read_pos;

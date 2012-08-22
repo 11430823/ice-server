@@ -32,3 +32,7 @@ class cmd_t:
 		self.cmd_id = "";
 		#命令名称
 		self.cmd_name = "";
+		#输入
+		self.struct_in = "";
+		#输出
+		self.struct_out = "";
