@@ -32,7 +32,7 @@
 
 #define PROTECTED_R_REF(varType, varName)\
 	protected:	varType varName;\
-	public:		inline const varType& get_##varName(void){return this->varName;}
+	public:		inline varType& get_##varName(void){return this->varName;}
 
 #define PRIVATE_R(varType, varName)\
 	private:	varType varName;\
@@ -43,7 +43,7 @@
 
 #define PRIVATE_R_REF(varType, varName)\
 	private:	varType varName;\
-	public:		inline const varType& get_##varName(void){return this->varName;}
+	public:		inline varType& get_##varName(void){return this->varName;}
 
 #define PRIVATE_RW(varType, varName)\
 	private:	varType varName;\
@@ -52,7 +52,7 @@
 
 #define PRIVATE_RW_REF(varType, varName)\
 	private:	varType varName;\
-	public:		inline const varType& get_##varName(void){return this->varName;} \
+	public:		inline varType& get_##varName(void){return this->varName;} \
 	public:		inline void set_##varName(const varType& var){this->varName = var;}
 
 #define PRIVATE_SATAIC_R(varType, varName)\

@@ -22,10 +22,10 @@ int handle_cli::handle( const void* pkg, int pkglen )
 		p_cmd_item->p_msg->init();
 		ice::lib_msg_byte_t msg_byte((char*)pkg + sizeof(ice::proto_head_t), pkglen - sizeof(ice::proto_head_t));
 		if (!p_cmd_item->p_msg->read(msg_byte)){
-			ERROR_LOG("还原对象失败 [cmd=%u]", head->cmd);
+			ERROR_LOG("p_msg read false [cmd=%u]", head->cmd);
 			return -1;
 		} else if (!msg_byte.is_end()){
-			ERROR_LOG("还原对象失败,长度不符 [cmd=%u]", head->cmd);
+			ERROR_LOG("p_msg read false, len err [cmd=%u]", head->cmd);
 			return -1;
 		} else {
 			P_DEALFUN_T p_func = p_cmd_item->func;
@@ -50,10 +50,25 @@ handle_cli::handle_cli()
 int handle_cli::cli_walk(DEAL_FUN_ARG)
 {
 	cli_walk_in* p_in = P_IN;
-	DEBUG_LOG("cli_walk [x:%u, y:%u, size:%lu]", p_in->pos.x, p_in->pos.y, p_in->id.size());
-	FOREACH(p_in->id, it){
+	DEBUG_LOG("cli_walk [x.x:%u]", p_in->pos1.x.x);
+	FOREACH(p_in->pos1.x.y, it){
 		uint32_t id = *it;
-		DEBUG_LOG("[id:%u]", id);
+		DEBUG_LOG("[x.y:%u]", id);
 	}
+	DEBUG_LOG("cli_walk [x.ys:%s]", p_in->pos1.x.ys);
+
+	FOREACH(p_in->pos1.y, it){
+		object_pos_t& ropt = *it;
+		DEBUG_LOG("p_in->pos1.y [y.x:%u]", ropt.x);
+		FOREACH(ropt.y, it2){
+			uint32_t& r = *it2;
+			DEBUG_LOG("ropt->y [y.y:%u]", r);
+		}
+		DEBUG_LOG("ropt->ys [x.ys:%s]", ropt.ys);
+	}
+	for (int i = 0; i < 100; i++){
+		DEBUG_LOG("p_in->pos1.ys [p_in->pos1.ys:%u]", p_in->pos1.ys[i]);
+	}
+	
 	return 0;
 }
