@@ -17,7 +17,7 @@ namespace ice{
 	class lib_active_buf_t{
 		PRIVATE_R(char*, data);//数据头指针
 		PRIVATE_R(uint32_t, total_len);//已分配的总长度
-		PRIVATE_R(uint32_t, write_pos);//已使用到的位置
+		PRIVATE_RW(uint32_t, write_pos);//已使用到的位置
 	public:
 		lib_active_buf_t(){
 			this->init_data();

@@ -31,7 +31,9 @@ def write_line(data, tab = 0, line = 1):
 def gen_cpp_header_detailed():
 	write_line(r"#include <lib_include.h>", 0);
 	write_line(r"#include <lib_proto/lib_msg.h>", 0, 2);
-	write_line(r"#pragma once", 0, 0);
+	write_line(r"#pragma once", 0, 1);
+	write_line(r"#pragma pack(1)", 0, 0);
+	
 
 #写cpp文件
 def gen_cpp(xml_data, base_class_name):
@@ -64,6 +66,7 @@ def gen_cpp(xml_data, base_class_name):
 			write_line(i, 2);
 		write_line(r"}", 1);
 
+		#read();
 		write_line(r"virtual bool read(ice::lib_msg_byte_t& msg_byte){", 1);
 		for field_data in struct_data.fields:
 			if "single" == field_data.mode:
@@ -72,20 +75,28 @@ def gen_cpp(xml_data, base_class_name):
 				else:
 					write_line(r"if(!this->" + field_data.name + ".read(msg_byte)) return false;", 2);
 			elif "list" == field_data.mode:
+				field_data_name_list_cnt = field_data.name + "_list_cnt__";
+				field_data_name_list_item = field_data.name + "_list_item__";
+				write_line(r"uint32_t " + field_data_name_list_cnt + ";", 2);
+				write_line(r"if(!msg_byte.read_uint32(" + field_data_name_list_cnt + ")) return false;", 2);
 				if pro_type.is_sys_type(field_data.type):
-					field_data_name_list_cnt = field_data.name + "_list_cnt__";
-					field_data_name_list_item = field_data.name + "_list_item__";
-					write_line(r"uint32_t " + field_data_name_list_cnt + ";", 2);
-					write_line(r"if(!msg_byte.read_uint32(" + field_data_name_list_cnt + ")) return false;", 2);
 					write_line(pro_type.get_type(field_data.type) + " " + field_data_name_list_item + ";", 2);
-					write_line(r"this->" + field_data.name + ".clear();", 2);
-					write_line(r"for(uint32_t i = 0; i < " + field_data_name_list_cnt + "; i++){", 2);
-					write_line(r"if(!msg_byte.read_" + field_data.type + "(" + field_data_name_list_item + ")) return false;", 3);
-					write_line(r"this->" + field_data.name + ".push_back(" + field_data_name_list_item + ");", 3);
-					write_line(r"}", 2);
 				else:
-					write_line(r"if(!this->" + field_data.name + ".read(msg_byte)) return false;", 2);
+					write_line(field_data.type + " " + field_data_name_list_item + ";", 2);
+				write_line(r"this->" + field_data.name + ".clear();", 2);
+				write_line(r"for(uint32_t i = 0; i < " + field_data_name_list_cnt + "; i++){", 2);
+				if pro_type.is_sys_type(field_data.type):
+					write_line(r"if(!msg_byte.read_" + field_data.type + "(" + field_data_name_list_item + ")) return false;", 3);
+				else:
+					write_line(r"if(!" + field_data_name_list_item + ".read(msg_byte)) return false;", 3);
 				
+				write_line(r"this->" + field_data.name + ".push_back(" + field_data_name_list_item + ");", 3);
+				write_line(r"}", 2);
+			elif "array" == field_data.mode:
+				if pro_type.is_sys_type(field_data.type):
+					write_line(r"if(!msg_byte.read_buf((char*)this->" + field_data.name + ", " + field_data.size + " * sizeof(" + pro_type.get_type(field_data.type) + "))) return false;", 2);
+				else:
+					write_line(r"error!", 2);
 				
 		write_line(r"return true;", 2);
 		write_line(r"}", 1);
@@ -110,11 +121,13 @@ def main():
 	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
 	parse.get_xml_data_protocols(FILE_NAME);
 	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
+	write_line(r"#pragma pack()", 0, 0);
 	fd.close();
 
 	fd = open(CPP_CMD_NAME, "w");
 	parse.get_xml_data_protocols_cmd(FILE_NAME);
 	gen_cpp_cmd(parse.g_structs_data);
+
 	fd.close();
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
-#include <string.h>
-
+#include <lib_include.h>
 #include <lib_net/lib_tcp_client.h>
 #include <lib_net/lib_tcp.h>
 #include <lib_log.h>
+#include <lib_proto/lib_msg.h>
 
 #include "net_tcp.h"
 #include "service.h"
@@ -22,6 +22,17 @@ int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_
 	}
 	return send_len;
 }
+
+int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* head, uint32_t head_len, ice::lib_msg_t* msg )
+{
+	static ice::lib_msg_byte_t msg_byte;
+	ice::lib_active_buf_t& w_buf = msg_byte.get_w_buf();
+	w_buf.set_write_pos(0);
+	w_buf.push_back((char*)head, head_len);
+	msg->write(msg_byte);
+	return s2peer(peer_info, w_buf.get_data(), w_buf.get_write_pos());
+}
+
 
 ice::lib_tcp_peer_info_t* fire::connect( const std::string& ip, uint16_t port )
 {
