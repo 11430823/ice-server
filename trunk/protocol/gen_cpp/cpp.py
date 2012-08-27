@@ -94,14 +94,37 @@ def gen_cpp(xml_data, base_class_name):
 				write_line(r"}", 2);
 			elif "array" == field_data.mode:
 				if pro_type.is_sys_type(field_data.type):
-					write_line(r"if(!msg_byte.read_buf((char*)this->" + field_data.name + ", " + field_data.size + " * sizeof(" + pro_type.get_type(field_data.type) + "))) return false;", 2);
+					write_line(r"if(!msg_byte.read_buf((char*)this->" + field_data.name + ", sizeof(" + field_data.name + "))) return false;", 2);
 				else:
 					write_line(r"error!", 2);
 				
 		write_line(r"return true;", 2);
 		write_line(r"}", 1);
 		
+		#write();
 		write_line(r"virtual bool write(ice::lib_msg_byte_t& msg_byte){", 1);
+		for field_data in struct_data.fields:
+			if "single" == field_data.mode:
+				if pro_type.is_sys_type(field_data.type):
+					write_line(r"if(!msg_byte.write_" + field_data.type + "(this->" + field_data.name + ")) return false;", 2);
+				else:
+					write_line(r"if(!this->" + field_data.name + ".write(msg_byte)) return false;", 2);
+			elif "list" == field_data.mode:
+				write_line(r"if(!msg_byte.write_uint32(this->" + field_data.name + ".size())) return false;", 2);
+				write_line(r"for(uint32_t i = 0; i < this->" + field_data.name + ".size(); i++){", 2);
+				if pro_type.is_sys_type(field_data.type):
+					write_line("if(!msg_byte.write_" + field_data.type + "(this->" + field_data.name + "[i])) return false;", 3);
+				else:
+					write_line(r"if(!this->" + field_data.name + "[i].write(msg_byte)) return false;", 3);
+				write_line(r"}", 2);
+			elif "array" == field_data.mode:
+				if pro_type.is_sys_type(field_data.type):
+					if "char" != field_data.type and "uint8_t" != field_data.type and "int8_t" != field_data.type:
+						write_line(r"error! type", 2);
+					else:
+						write_line(r"if(!msg_byte.write_buf(this->" + field_data.name + ", sizeof(this->" + field_data.name +"))) return false;", 2);
+						
+			
 		write_line(r"return true;", 2);
 		write_line(r"}", 1);
 		write_line(r"};");
