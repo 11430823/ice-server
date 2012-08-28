@@ -4,14 +4,9 @@
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
-
 import parse
-
 import pro_type
 
-FILE_NAME = r"../xml/protocol_online.xml";
-CPP_NAME = r"../cpp/protocol_online.h";
-CPP_CMD_NAME = r"../cpp/protocol_online_cmd.h";
 #文件FD
 fd = "";
 
@@ -33,7 +28,6 @@ def gen_cpp_header_detailed():
 	write_line(r"#include <lib_proto/lib_msg.h>", 0, 2);
 	write_line(r"#pragma once", 0, 1);
 	write_line(r"#pragma pack(1)", 0, 0);
-	
 
 #写cpp文件
 def gen_cpp(xml_data, base_class_name):
@@ -135,23 +129,20 @@ def gen_cpp_cmd(xml_data):
 	for cmd_data in xml_data:
 		write_line(r"BIND_PROTO_CMD(" + cmd_data.id + r", " + cmd_data.name + r", " + cmd_data.struct_in + r");");
 
-def main():
+def _gen_cpp(xml_name, gen_cpp_name, gen_cpp_cmd_name):
 	global fd;
 	
-	fd = open(CPP_NAME, "w");
+	fd = open(gen_cpp_name, "w");
 	gen_cpp_header_detailed();
-	parse.get_xml_data_structs(FILE_NAME);
+	parse.get_xml_data_structs(xml_name);
 	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
-	parse.get_xml_data_protocols(FILE_NAME);
+	parse.get_xml_data_protocols(xml_name);
 	gen_cpp(parse.g_structs_data, " : public ice::lib_msg_t");
 	write_line(r"#pragma pack()", 0, 0);
 	fd.close();
-
-	fd = open(CPP_CMD_NAME, "w");
-	parse.get_xml_data_protocols_cmd(FILE_NAME);
+	
+	fd = open(gen_cpp_cmd_name, "w");
+	parse.get_xml_data_protocols_cmd(xml_name);
 	gen_cpp_cmd(parse.g_structs_data);
-
 	fd.close();
 
-if __name__ == "__main__":
-	main();
