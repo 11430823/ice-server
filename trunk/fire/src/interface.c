@@ -33,7 +33,6 @@ int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* head, uint32_
 	return s2peer(peer_info, w_buf.get_data(), w_buf.get_write_pos());
 }
 
-
 ice::lib_tcp_peer_info_t* fire::connect( const std::string& ip, uint16_t port )
 {
 	int fd = ice::lib_tcp_t::connect(ip, port, 1, false);
