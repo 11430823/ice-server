@@ -30,7 +30,7 @@ private:
 	#undef  BIND_PROTO_CMD
 	#define BIND_PROTO_CMD(cmd_id, fun_name, p_in)\
 		int fun_name(DEAL_FUN_ARG);
-	#include "../../protocol/cpp/protocol_online_cmd.h"
+	#include "../../protocol/gen_cpp/cpp_proto/protocol_online_cmd.h"
 	#undef  BIND_PROTO_CMD
 	
 

@@ -14,7 +14,7 @@
 #include "proto_header.h"
 #include "mysql_iface.h"
 
-#define  GEN_SQLSTR(sqlstr,...)  ::snprintf(sqlstr, sizeof(sqlstr), __VA_ARGS__)
+#define  GEN_SQLSTR(sqlstr, ...)  ::snprintf(this->sqlstr, sizeof(this->sqlstr), __VA_ARGS__)
 const uint32_t SQL_STR_MAX_LEN = 16384;//sql str 最大长度
 const uint32_t DB_NAME_MAX_LEN = 50;
 const uint32_t TABLE_NAME_MAX_LEN = 50;

@@ -8,11 +8,13 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <lib_include.h>
 
 #include <lib_net/lib_tcp_server.h>
 #include <lib_net/lib_tcp_client.h>
 #include <lib_proto/lib_msg.h>
+
+#include "bench_conf.h"
 
 namespace fire{
 	bool is_parent();

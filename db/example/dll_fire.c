@@ -1,6 +1,4 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <lib_include.h>
 
 #include <lib_msgbuf.h>
 #include <lib_log.h>

@@ -15,17 +15,17 @@ namespace ice{
 	{
 		E_LIB_ERR_CODE_DB_MIN = 4096,
 		//数据库出错
-#define DB_ERR   							4097
+ DB_ERR   	=						4097,
 		//系统出错 一般是内存出错
-#define SYS_ERR   							1001
+ SYS_ERR   					=		1001,
 
 		//命令ID没有定义
-#define CMDID_NODEFINE_ERR 			  		1004
+ CMDID_NODEFINE_ERR 			=  		1004,
 		//KEY 已经存在了
-#define KEY_EXISTED_ERR 					1014
+ KEY_EXISTED_ERR 			=		1014,
 		//在select update, delete 时，米米号不存在
-#define USER_ID_NOFIND_ERR				  	1105
-#define KEY_INEXISTENCE_ERR					1116  
+ USER_ID_NOFIND_ERR			=	  	1105,
+ KEY_INEXISTENCE_ERR			=		1116 , 
 		E_LIB_ERR_CODE_DB_MAX = 8191,
 	};
 	//////////////////////////////////////////////////////////////////////////

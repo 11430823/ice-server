@@ -24,7 +24,7 @@ class mysql_interface
 	PRIVATE_RW(uint32_t, id);//todo ?
 public:
 	MYSQL handle;
-	mysql_interface (const std::string& h, const std::string& user, const std::string& pass, uint16_t port = 3306,
+	mysql_interface(const std::string& h, const std::string& user, const std::string& pass, uint16_t port = 3306,
 		bool log_sql = false, const char * a_unix_socket = NULL);
 	virtual ~mysql_interface();
 	void show_error_log(const char* sql);

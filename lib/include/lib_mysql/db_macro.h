@@ -5,7 +5,6 @@
 
 #include <lib_log.h>
 
-#include "db_error_base.h" 
 #include "proto_header.h" 
 
 #define mysql_str_len(n) ((n) * 2 + 1)
@@ -53,7 +52,7 @@ inline uint64_t atoi_safe(char* str)
 			}\
 			mysql_free_result(res);	\
 		}else {\
-			this->ret = DB_ERR;\
+			this->ret = ice::DB_ERR;\
 		}\
 	}
 
@@ -68,17 +67,17 @@ inline double atof_safe (char *str)
 #define STD_OPEN_AUTOCOMMIT()	   mysql_autocommit(&(this->db->handle), T)
 #define STD_ROLLBACK()  mysql_rollback(&(this->db->handle))
 #define STD_CLOSE_AUTOCOMMIT(nret) {\
-		if (mysql_autocommit(&(this->db->handle), 0)==SUCC){\
-				nret = SUCC;\
+		if (mysql_autocommit(&(this->db->handle), 0)==ice::SUCC){\
+				nret = ice::SUCC;\
 		}else {\
-				nret = DB_ERR;\
+				nret = ice::DB_ERR;\
 		}\
 	}
 #define STD_COMMIT(nret) {\
-		if (mysql_commit(&(this->db->handle))==SUCC){\
-				nret = SUCC;\
+		if (mysql_commit(&(this->db->handle))==ice::SUCC){\
+				nret = ice::SUCC;\
 		}else {\
-				nret = DB_ERR;\
+				nret = ice::DB_ERR;\
 		}\
 	}
 
@@ -105,13 +104,13 @@ inline double atof_safe (char *str)
         int list_size;\
         int i;\
         this->db->set_id(this->id);\
-        if (( this->db->exec_query_sql(sqlstr,&res))==SUCC){\
+        if (( this->db->exec_query_sql(sqlstr,&res))==ice::SUCC){\
             *p_count=mysql_num_rows(res);\
             *pp_list =(typeof(*pp_list))this->dbser_return_buf;\
             list_size = sizeof(typeof(**pp_list))*(*p_count);\
             if(list_size > PROTO_MAX_SIZE ){\
                 DEBUG_LOG("THE SYS_ERR");\
-                return SYS_ERR;\
+                return ice::SYS_ERR;\
             }\
             memset(*pp_list,0,PROTO_MAX_SIZE );\
             i=0;\
@@ -123,9 +122,9 @@ inline double atof_safe (char *str)
                 i++;\
             }\
             mysql_free_result(res); \
-            return SUCC;\
+            return ice::SUCC;\
         }else {\
-            return DB_ERR;\
+            return ice::DB_ERR;\
         }\
     }
 
@@ -137,7 +136,7 @@ inline double atof_safe (char *str)
 		MYSQL_RES *res;\
 		MYSQL_ROW  row;\
         this->db->set_id(this->id);\
-		if (( this->db->exec_query_sql(sqlstr,&res))==SUCC){\
+		if (( this->db->exec_query_sql(sqlstr,&res))==ice::SUCC){\
 			typeof(item_list[0]) item ;\
 			while((row = mysql_fetch_row(res))){\
 				int _fi;\
@@ -148,9 +147,9 @@ inline double atof_safe (char *str)
 			_item_list.push_back(item);\
 			}\
 			mysql_free_result(res);	\
-			return SUCC;\
+			return ice::SUCC;\
 		}else {\
-			return DB_ERR;\
+			return ice::DB_ERR;\
 		}\
 	}
 
@@ -167,7 +166,7 @@ inline double atof_safe (char *str)
 		MYSQL_RES *res;\
 		MYSQL_ROW  row;\
         this->db->set_id(this->id);\
-		if (( this->db->exec_query_sql(sqlstr,&res))==SUCC){\
+		if (( this->db->exec_query_sql(sqlstr,&res))==ice::SUCC){\
 			typeof(item_list[0]) item ;\
 			while((row = mysql_fetch_row(res))){\
 				int _fi;\
@@ -177,9 +176,9 @@ inline double atof_safe (char *str)
             _item_list.push_back(item);\
             }\
             mysql_free_result(res); \
-            return SUCC;\
+            return ice::SUCC;\
         }else {\
-            return DB_ERR;\
+		return ice::DB_ERR;\
         }\
     }
 
@@ -207,7 +206,7 @@ inline double atof_safe (char *str)
 				return 0;\
 			}\
 		}else {\
-			return DB_ERR;\
+		return ice::DB_ERR;\
 		}\
 	}
 
@@ -215,7 +214,7 @@ inline double atof_safe (char *str)
 				mysql_free_result(res);		 \
 			} \
 		}else { \
-			return DB_ERR;	 \
+		return ice::DB_ERR;	 \
 		}\
 	}
 

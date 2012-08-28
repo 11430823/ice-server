@@ -1,115 +1,37 @@
 
 #include <lib_include.h>
 #include <lib_log.h>
-#include <bench_conf.h>
-#include <interface.h>
-#include <lib_timer.h>
 #include <lib_proto/lib_proto.h>
 #include <lib_proto/lib_msgbuf.h>
-#include <lib_websocket/lib_websocket.h>
+
 #include <lib_util.h>
+#include <lib_net/lib_udp.h>
+
+#include <service_if.h>
 
 #include "handle_cli.h"
 
-ice::lib_websocket_t g_lib_websocket;
-/*
-class test_timer;
-test_timer* p;
-
-class test_timer
-{
-public:
-		static const int mmm= 1;
-public:
-	test_timer(void){
-		INIT_LIST_HEAD(&timer_list);
-		ADD_TIMER_EVENT(this, &test_timer::s_timer,NULL, ice::get_now_tv()->tv_sec + 1);
-
-		timeval next_time;
-		next_time.tv_sec = ice::get_now_tv()->tv_sec;
-		next_time.tv_usec = ice::get_now_tv()->tv_usec + 300000;
-		ice::add_micro_event(&test_timer::m_timer, &next_time, this, NULL);
-	}
-	virtual ~test_timer(){
-		REMOVE_TIMERS(this);
-	}
-protected:
-	
-private:
-	list_head_t timer_list;
-	static int s_timer(void* owner, void* data){
-		test_timer* pp = (test_timer*)owner;
-		ADD_TIMER_EVENT(pp,&test_timer::s_timer, NULL,
-			 ice::get_now_tv()->tv_sec+1);
-		DEBUG_LOG("s_timer[%ld]", ice::get_now_tv()->tv_sec);
-		return 0;
-	}
-	static int m_timer(void* owner, void* data){
-		test_timer* pp = (test_timer*)owner;
-		timeval next_time;
-		next_time.tv_sec = ice::get_now_tv()->tv_sec;
-		next_time.tv_usec = ice::get_now_tv()->tv_usec + 300000;
-		ice::add_micro_event(&test_timer::m_timer, &next_time, pp, NULL);
-		DEBUG_LOG("m_timer[%ld]", ice::get_now_tv()->tv_usec);
-		return 0;
-	}
-	test_timer(const test_timer &cr);
-	test_timer & operator=( const test_timer &cr);
-};
-ice::lib_timer_t g_timer;
-*/
 /**
   * @brief Initialize service
   *
   */
-#include <lib_net/lib_udp.h>
+
 extern "C" int on_init(int isparent)
 {
 	if(isparent){
 		DEBUG_LOG("======daemon start======");
-		std::string sip;
-		ice::lib_net_util_t::get_ip_addr("eth0", AF_INET, sip);
-		DEBUG_LOG("======%s,%lu======", sip.c_str(), sip.size());
+// 		std::string sip;
+// 		ice::lib_net_util_t::get_ip_addr("eth0", AF_INET, sip);
+// 		DEBUG_LOG("======%s,%lu======", sip.c_str(), sip.size());
 		
-		ice::lib_net_util_t::get_local_ip(sip);
-		DEBUG_LOG(" %s", sip.c_str());
-		ice::lib_udp_t udp;
-		udp.connect("192.168.0.102", 8001);
-		int num = udp.send("1234567", 7);
-		DEBUG_LOG("udp send num=%u", num);
+// 		ice::lib_net_util_t::get_local_ip(sip);
+// 		DEBUG_LOG(" %s", sip.c_str());
+// 		ice::lib_udp_t udp;
+// 		udp.connect("192.168.0.102", 8001);
+// 		int num = udp.send("1234567", 7);
+// 		DEBUG_LOG("udp send num=%u", num);
 	}else{
 		DEBUG_LOG("======server start======");
-		//p = new test_timer;
-
-		//test g_slice_alloc
-		struct a 
-		{
-			int i;
-			int j;
-			int k;
-		};
-
-		/*
-		for (int j = 0; j < 10; j++){
-			ice::renew_now();
-			uint32_t t_b = ice::get_now_tv()->tv_sec;
-
-			for (int i = 0; i < 2000000000; i++){
-				//a* aa = (a*)g_slice_alloc(sizeof(a));
-				a* aa = (a*)malloc(sizeof(a));
-				aa->i = 1;
-				aa->j = 2;
-				aa->k = 3;
-				//g_slice_free1(sizeof(a), aa);
-				free(aa);
-			}
-
-			ice::renew_now();
-			uint32_t t_e = ice::get_now_tv()->tv_sec;
-			DEBUG_LOG("todo test %u", t_e - t_b);
-		}
-		*/
-
 	}
 	return 0;
 }
@@ -123,7 +45,6 @@ extern "C" int on_fini(int isparent)
 	if (isparent) {
 		DEBUG_LOG("======daemon done======");
 	}else{
-		//delete p;
 		DEBUG_LOG("======server done======");
 	}
 	return 0;
@@ -137,7 +58,6 @@ extern "C" void on_events()
 {
 	if (fire::is_parent()){
 	}else{
-		//ice::lib_timer_t::handle_timer();
 	}
 }
 
@@ -150,15 +70,6 @@ extern "C" int on_get_pkg_len(ice::lib_tcp_peer_info_t* cli_fd_info, const void*
 	if (len < 4){
 		return 0;
 	}
-	
-// 	int ret = ice::lib_websocket_t::is_full_pack((char*)data, len); 
-// 	if (0 == ret){
-// 		TRACE_LOG("");
-// 		return len;
-// 	} else if (-1 == ret){
-// 		TRACE_LOG("");
-// 		return ret;
-// 	}
 
 	ice::lib_recv_data_cli_t in(data);
 	uint32_t pkg_len = in.get_len();
@@ -183,17 +94,11 @@ extern "C" int on_cli_pkg(const void* pkg, int pkglen, ice::lib_tcp_peer_info_t*
 	ice::bin2hex(outbuf, (char*)pkg, pkglen);
 	TRACE_LOG("on_cli_pkg[len:%d, %s]", pkglen, outbuf.c_str());
 
-// 	if (0 == g_lib_websocket.proc((char*)pkg, pkglen)){
-// 		TRACE_LOG("xxxxxxxx");
-// 		fire::s2peer(peer_fd_info, g_lib_websocket.get_websocket_buf(), g_lib_websocket.get_websocket_len());
-// 		return 0;
-// 	}
 	ice::proto_head_t* head = (ice::proto_head_t*)pkg;
 	TRACE_LOG("[len:%u, cmd:%u, seq:%u, ret:%u, uid:%u, fd:%d, pkglen:%d]",
 		head->len, head->cmd, head->seq, head->ret, head->id, peer_fd_info->get_fd(), pkglen);
 	
 	return g_handle_cli.handle(pkg, pkglen);
-	//fire::s2peer(peer_fd_info, pkg, pkglen);
 }
 
 /**

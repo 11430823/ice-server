@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <sys/epoll.h>
+#include <lib_include.h>
 
 #include <lib_util.h>
 

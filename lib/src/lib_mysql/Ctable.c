@@ -1,6 +1,7 @@
 #include <mysql/mysqld_error.h>
 
 #include <lib_log.h>
+#include <lib_err_code.h>
 
 #include "Ctable.h"
 
@@ -42,7 +43,7 @@ int Ctable::exec_update_sql(char* sql_str, int nofind_err )
 			return nofind_err; 
 		}
 	}else {
-		return DB_ERR;
+		return ice::DB_ERR;
 	} 
 }	
 
@@ -65,7 +66,7 @@ int Ctable::exec_insert_sql(char* sql_str, int existed_err )
 		if (ER_DUP_ENTRY == dbret){
 			return  existed_err;
 		} else {
-			return DB_ERR;
+			return ice::DB_ERR;
 		}
 	}
 }
@@ -77,5 +78,5 @@ int Ctable::exec_update_sqls(char * sql_str, int nofind_err )
 	if (0 == this->db->exec_update_sql(sql_str, &acount)){
 		return 0;
 	}
-	return DB_ERR;
+	return ice::DB_ERR;
 }
