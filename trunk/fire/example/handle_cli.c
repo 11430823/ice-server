@@ -2,7 +2,7 @@
 #include <lib_proto/lib_proto.h>
 #include <lib_proto/lib_msg.h>
 
-#include "../../protocol/cpp/protocol_online.h"
+#include "../../protocol/gen_cpp/cpp_proto/protocol_online.h"
 #include "handle_cli.h"
 
 handle_cli g_handle_cli;
@@ -43,7 +43,7 @@ handle_cli::handle_cli()
 #undef  BIND_PROTO_CMD
 #define BIND_PROTO_CMD(cmd_id, fun_name, p_in)\
 	this->cmd_map.insert(cmd_id, &handle_cli::fun_name, new (p_in));
-#include "../../protocol/cpp/protocol_online_cmd.h"
+#include "../../protocol/gen_cpp/cpp_proto/protocol_online_cmd.h"
 #undef  BIND_PROTO_CMD
 }
 

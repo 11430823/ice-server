@@ -1,11 +1,10 @@
 
 #include <lib_include.h>
 #include <lib_log.h>
-#include <bench_conf.h>
-#include <interface.h>
 #include <lib_proto.h>
 #include <lib_msgbuf.h>
 #include <lib_util.h>
+#include <service_if.h>
 
 #include "cli_handle.h"
 

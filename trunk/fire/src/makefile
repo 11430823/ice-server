@@ -3,7 +3,8 @@ EXE=fire-server.exe
 CC=g++
 
 #编译选项
-ICE_LIB_PATH=../../lib/
+USER_NAME=$(shell whoami)
+ICE_LIB_PATH=/home/$(USER_NAME)/ice/
 ICE_LIBS_FLAG=-Wl,-rpath,$(ICE_LIB_PATH)
 FLAG=-Wall -DDEBUG -DENABLE_TRACE_LOG -g -O0 -o
 

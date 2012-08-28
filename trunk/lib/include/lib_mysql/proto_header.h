@@ -1,10 +1,9 @@
 #pragma once
 
-#include <inttypes.h>
-#include <string.h>
-#include <stdlib.h>
+#include <lib_include.h>
 
-#include <lib_msgbuf.h>
+#include <lib_proto/lib_msgbuf.h>
+#include <lib_proto/lib_proto.h>
 
 //define userid type
 typedef uint32_t userid_t;

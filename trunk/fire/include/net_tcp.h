@@ -7,9 +7,7 @@
 *********************************************************************/
 #pragma  once
 
-#include <map>
-#include <string>
-#include <sys/epoll.h>
+#include <lib_include.h>
 
 #include <lib_net/lib_tcp_server.h>
 #include <lib_util.h>
@@ -83,7 +81,5 @@ private:
 	net_server_t(const net_server_t &cr);
 	net_server_t & operator=( const net_server_t &cr);
 };
-
-
 
 extern net_server_t g_net_server;

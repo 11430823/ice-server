@@ -23,5 +23,4 @@ struct bind_pipe_t {
 	int create();
 };
 
-
 #pragma pack()

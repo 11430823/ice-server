@@ -8,12 +8,13 @@ EXE=libicemysql.so
 CC=g++
 
 #编译选项
-ICE_LIB_PATH=../../
+USER_NAME=$(shell whoami)
+ICE_LIB_PATH=/home/$(USER_NAME)/ice/
 ICE_LIBS_FLAG=-Wl,-rpath,$(ICE_LIB_PATH)
 
 FLAG=-Wall -DDEBUG -DENABLE_TRACE_LOG -fPIC -shared -O0 -g -o
 
-INCLUDES=-I/usr/include/ -I../../include/lib_mysql/ -I../../include/
+INCLUDES=-I/usr/include/ -I../../include/ -I../../include/lib_mysql/
 GLIB_INCLUDES=-I/usr/include/glib-2.0/ -I/usr/lib/glib-2.0/include/ 
 
 LOCAL_SRCS=$(wildcard ./*.c)
@@ -22,7 +23,7 @@ LINK=-lglib-2.0 -lice $(ICE_LIBS_FLAG)
 
 $(EXE):
 	$(CC) $(LOCAL_SRCS) $(INCLUDES) $(GLIB_INCLUDES) $(LIBS) $(LINK) $(MYSQL_FLAGS) $(FLAG) $@
-	cp -f $@ ../../
+	cp -f $@ $(ICE_LIB_PATH) 
 	rm $@
 install:
 # 将头文件放入指定的目录中

@@ -7,7 +7,7 @@
 #include "net_tcp.h"
 #include "service.h"
 #include "daemon.h"
-#include "interface.h"
+#include "service_if.h"
 
 int fire::s2peer( ice::lib_tcp_peer_info_t* peer_info, const void* data, uint32_t len )
 {

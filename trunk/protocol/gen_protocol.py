@@ -13,6 +13,6 @@ def gen_proto(xml_name, gen_cpp_name, gen_cpp_cmd_name):
 
 def main():
 	gen_proto(r"./xml/protocol_online.xml", r"./gen_cpp/cpp_proto/protocol_online.h", r"./gen_cpp/cpp_proto/protocol_online_cmd.h");
-
+	gen_proto(r"./xml/db.xml", r"./gen_cpp/cpp_proto/db.h", r"./gen_cpp/cpp_proto/db_cmd.h");
 if __name__ == "__main__":
 	main();

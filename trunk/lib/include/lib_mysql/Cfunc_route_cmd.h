@@ -7,7 +7,6 @@
 #include <lib_msgbuf.h>
 
 #include "proto_header.h"
-#include "db_error_base.h"
 
 class Cfunc_route;
 #define  DEAL_FUN_ARG const ice::proto_head_t& head, ice::lib_recv_data_cli_t& in, char** sendbuf, int& sndlen
